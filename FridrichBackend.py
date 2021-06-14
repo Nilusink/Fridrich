@@ -14,11 +14,6 @@ class Connection:
 
         self.AuthKey = None
 
-    def send(self, dictionary):
-        dictionary['AuthKey'] = self.AuthKey
-        msg = json.dumps(dictionary).encode('utf-8')
-        self.Server.send(msg)
-
     def errorHandler(self, error):
         if error == 'AccessError':
             raise err.AccessError('Access denied')
@@ -28,10 +23,21 @@ class Connection:
         
         elif error == 'NotVoted':
             raise NameError('Not Voted')
+        
+        elif error == 'json':
+            raise err.JsonError('Crypled message')
+
+    def send(self, dictionary):
+        dictionary['AuthKey'] = self.AuthKey
+        msg = json.dumps(dictionary).encode('utf-8')
+        self.Server.send(msg)
 
     def recieve(self, length=1024):
         msg = self.Server.recv(length).decode('utf-8')
-        msg = json.loads(msg)
+        try:
+            msg = json.loads(msg)
+        except json.JSONDecodeError:
+            self.errorHandler('json')
 
         if 'Error' in msg:
             success = False
