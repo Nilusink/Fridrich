@@ -46,7 +46,7 @@ def inverseDict(dictionary:dict):
     return x
 
 class ClientFuncs:  # class for the Switch
-    global nowFile, CalFile, votes, server, reqCounter
+    globals()
     def vote(message, *args):
         global nowFile, votes, ClientKeys
         votes = json.load(open(nowFile))    # update votes
@@ -125,6 +125,14 @@ class ClientFuncs:  # class for the Switch
         cVote = votes[name]
         client.send(json.dumps({'Vote':cVote}).encrypt('utf-8'))
 
+    def getVersion(mesage, client, *args):
+        vers = open(versFile, 'r').read()
+        client.send(json.dumps({'Version':vers}))
+
+    def setVersion(message, *args):
+        with open(versFile, 'w') as out:
+            out.write(message['version'])
+
     def end(message, *args):
         global ClientKeys
         ClientKeys.pop(message['AuthKey'])
@@ -156,7 +164,9 @@ def recieve():  # Basicly the whole server
                 'req':ClientFuncs.reqHandler,
                 'end':ClientFuncs.end,
                 'changePwd':ClientFuncs.changePwd,
-                'getVote':ClientFuncs.getVote
+                'getVote':ClientFuncs.getVote,
+                'getVersion':ClientFuncs.getVersion,
+                'setVersion':ClientFuncs.setVersion
             }
 
             gSwitch = {                                  # instead of 5 billion if'S
@@ -324,6 +334,7 @@ if __name__=='__main__':
     KingFile = direc+'KingLog.json'
     CalFile = direc+'Calendar.json'
     crypFile = direc+'users.enc'
+    versFile = direc+'Version'
 
     with open(crypFile, 'r') as inp:
         cstring = inp.read()

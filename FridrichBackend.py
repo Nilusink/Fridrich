@@ -14,7 +14,7 @@ class Connection:
 
         self.AuthKey = None
 
-    def errorHandler(self, error):
+    def errorHandler(self, error:str):
         if error == 'AccessError':
             raise err.AccessError('Access denied')
         
@@ -27,7 +27,7 @@ class Connection:
         elif error == 'json':
             raise err.JsonError('Crypled message')
 
-    def send(self, dictionary):
+    def send(self, dictionary:dict):
         dictionary['AuthKey'] = self.AuthKey
         msg = json.dumps(dictionary).encode('utf-8')
         self.Server.send(msg)
@@ -51,12 +51,15 @@ class Connection:
         
         self.errorHandler(msg['Error'])
 
-    def auth(self, username:str, password:str):
+    def reconnect(self):
         try:
             self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.Server.connect((self.ServerIp, self.port))
         except socket.error:
             raise ValueError
+
+    def auth(self, username:str, password:str):
+        self.reconnect()
 
         msg = json.dumps({
             'type':'auth',
@@ -71,11 +74,7 @@ class Connection:
         return resp['Auth']
 
     def getAttendants(self, flag = 'now'): # flag can be 'now' or 'last'
-        try:
-            self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.Server.connect((self.ServerIp, self.port))
-        except socket.error:
-            raise ValueError
+        self.reconnect()
 
         self.send({'type':'req', 'reqType':'attds', 'atype':flag})
         resp = self.recieve()
@@ -83,11 +82,7 @@ class Connection:
         return resp['Names']
 
     def sendVote(self, *args, flag = 'vote'): # flag can be 'vote' or 'unvote'
-        try:
-            self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.Server.connect((self.ServerIp, self.port))
-        except socket.error:
-            raise ValueError
+        self.reconnect()
 
         if flag == 'vote':
             msg = {'type':flag, 'vote':args[0]}
@@ -98,11 +93,7 @@ class Connection:
         self.recieve()
     
     def getResults(self, flag = 'now'): # flag can be 'now', 'last'
-        try:
-            self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.Server.connect((self.ServerIp, self.port))
-        except socket.error:
-            raise ValueError
+        self.reconnect()
 
         msg = {'type':'req', 'reqType':flag}
         self.send(msg)
@@ -121,11 +112,7 @@ class Connection:
         return votes, attds
     
     def getLog(self):
-        try:
-            self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.Server.connect((self.ServerIp, self.port))
-        except socket.error:
-            raise ValueError
+        self.reconnect()
 
         msg = {'type':'req', 'reqType':'log'}
         self.send(msg)
@@ -134,11 +121,7 @@ class Connection:
         return res
     
     def getTemps(self):
-        try:
-            self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.Server.connect((self.ServerIp, self.port))
-        except socket.error:
-            raise ValueError
+        self.reconnect()
 
         msg = {'type':'req', 'reqType':'temps'}
         self.send(msg)
@@ -148,11 +131,7 @@ class Connection:
         return res['Room'], res['CPU']
     
     def getCal(self):
-        try:
-            self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.Server.connect((self.ServerIp, self.port))
-        except socket.error:
-            raise ValueError
+        self.reconnect()
 
         msg = {'type':'req', 'reqType':'cal'}
         self.send(msg)
@@ -161,31 +140,19 @@ class Connection:
         return res
 
     def sendCal(self, date:str, event:str):
-        try:
-            self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.Server.connect((self.ServerIp, self.port))
-        except socket.error:
-            raise ValueError
+        self.reconnect()
 
         msg = {'type':'CalEntry', 'date':date, 'event':event}
         self.send(msg)
 
     def changePwd(self, newPassword:str):
-        try:
-            self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.Server.connect((self.ServerIp, self.port))
-        except socket.error:
-            raise ValueError
+        self.reconnect()
         
         mes = {'type':'changePwd', 'newPwd':newPassword}
         self.send(mes)
 
     def getVote(self):
-        try:
-            self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.Server.connect((self.ServerIp, self.port))
-        except socket.error:
-            raise ValueError
+        self.reconnect()
         
         mes = {'type':'getVote'}
         self.send(mes)
@@ -193,6 +160,22 @@ class Connection:
         resp = self.recieve()
 
         return resp['Vote']
+
+    def getVersion(self):
+        self.reconnect()
+
+        mes = {'type':'getVersion'}
+        self.send(mes)
+        resp = self.recieve()
+
+        return resp['Version']
+
+    def setVersion(self, version:str):
+        self.reconnect()
+
+        mes = {'type':'setVersion', 'version':version}
+        self.send(mes)
+        self.recieve()
 
     def end(self):
         try:
@@ -254,5 +237,5 @@ if __name__ == '__main__':
             if x:   # if vlue is returned
                 print(x)    # print it
 
-        except:   # if error occures, return it
+        except Exception:   # if error occures, return it
             print(format_exc())
