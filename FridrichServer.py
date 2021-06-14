@@ -120,10 +120,10 @@ class ClientFuncs:  # class for the Switch
     def getVote(message, client, *args):
         name = ClientKeys[message['AuthKey']]
         if not name in votes:
-            client.send(json.dump({'Error':'NotVoted'}))
+            client.send(json.dumps({'Error':'NotVoted'}).encode('utf-8'))
             return
         cVote = votes[name]
-        client.send(json.dumps({'Vote':cVote}).encrypt('utf-8'))
+        client.send(json.dumps({'Vote':cVote}).encode('utf-8'))
 
     def getVersion(mesage, client, *args):
         vers = open(versFile, 'r').read()
@@ -250,7 +250,7 @@ def update():   # updates every few seconds
         if t()-start>=2:    # every 2 seconds
             start+=2
             s = str(reqCounter)
-            print('Requests in last 2 seconds: '+'0'*(3-len(s))+s, end='\r')
+            print(' Requests in last 2 seconds: '+'0'*(3-len(s))+s, end='\r')
             reqCounter = 0
             currTemp = cpu.temperature
             time.sleep(1)

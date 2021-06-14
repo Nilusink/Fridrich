@@ -3,6 +3,16 @@ from wolframalpha import Client
 import err_classes as err
 import socket, json
 
+
+############################################################################
+#                             other functions                              #
+############################################################################
+def jsonRepair(string:str):
+    parts = string.split('}{')
+    if len(parts)>1:
+        return parts[0]+'}'
+    return string
+
 ############################################################################
 #                      Server Communication Class                          #
 ############################################################################
@@ -33,7 +43,7 @@ class Connection:
         self.Server.send(msg)
 
     def recieve(self, length=1024):
-        msg = self.Server.recv(length).decode('utf-8')
+        msg = jsonRepair(self.Server.recv(length).decode('utf-8'))
         try:
             msg = json.loads(msg)
         except json.JSONDecodeError:
@@ -46,8 +56,6 @@ class Connection:
 
         if success:
             return msg
-        print('Error:')
-        print(msg['Error'])
         
         self.errorHandler(msg['Error'])
 
