@@ -47,7 +47,7 @@ class Connection:
         try:
             msg = json.loads(msg)
         except json.JSONDecodeError:
-            self.errorHandler('json')
+            self.errorHandler(msg)
 
         if 'Error' in msg:
             success = False

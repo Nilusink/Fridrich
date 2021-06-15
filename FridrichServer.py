@@ -47,7 +47,7 @@ def inverseDict(dictionary:dict):
 
 class ClientFuncs:  # class for the Switch
     globals()
-    def vote(message, *args):
+    def vote(message, client, *args):
         global nowFile, votes, ClientKeys
         votes = json.load(open(nowFile))    # update votes
         resp = checkif(message['vote'], votes)
@@ -55,16 +55,20 @@ class ClientFuncs:  # class for the Switch
         votes[name] = resp    # set <hostname of client> to clients vote
         print(f'got vote: {message["vote"]}                     .')   # print that it recievd vote (debugging)
         json.dump(votes, open(nowFile, 'w'), indent=4)  # write to file
+
+        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
     
-    def unvote(message, *args):
+    def unvote(message, client, *args):
         global nowFile, votes
         votes = json.load(open(nowFile))    # update votes
         name = ClientKeys[message['AuthKey']]
         with suppress(KeyError): 
             del votes[name]  # try to remove vote from client, if client hasn't voted yet, ignore it
         json.dump(votes, open(nowFile, 'w'), indent=4) # update file
+
+        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
     
-    def CalendarHandler(message, *args):
+    def CalendarHandler(message, client, *args):
         global CalFile
         cal = json.load(open(CalFile, 'r'))
         if not message['event'] in cal[message['date']]:    # if event is not there yet, create it
@@ -75,6 +79,8 @@ class ClientFuncs:  # class for the Switch
 
             json.dump(cal, open(CalFile, 'w'))  # update fil
             print(f'got Calender: {message["date"]} - "{message["event"]}"')    # notify that threr has been a calendar entry
+        
+        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
 
     def reqHandler(message, client, *args):
         global reqCounter, nowFile
@@ -105,7 +111,7 @@ class ClientFuncs:  # class for the Switch
         else:   # notify if an invalid request has been sent
             print(f'Invalid Request {message["reqType"]}')
 
-    def changePwd(message, *args):
+    def changePwd(message, client,  *args):
         global validUsers, ClientKeys
         name = ClientKeys[message['AuthKey']]
         for element in validUsers:
@@ -116,6 +122,8 @@ class ClientFuncs:  # class for the Switch
             fstring = json.dumps(validUsers)
             cstring = low.encrypt(fstring)
             out.write(cstring)
+        
+        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
 
     def getVote(message, client, *args):
         name = ClientKeys[message['AuthKey']]
@@ -127,15 +135,19 @@ class ClientFuncs:  # class for the Switch
 
     def getVersion(mesage, client, *args):
         vers = open(versFile, 'r').read()
-        client.send(json.dumps({'Version':vers}))
+        client.send(json.dumps({'Version':vers}).encode('utf-8'))
 
-    def setVersion(message, *args):
+    def setVersion(message, client, *args):
         with open(versFile, 'w') as out:
             out.write(message['version'])
 
-    def end(message, *args):
+        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
+
+    def end(message, client, *args):
         global ClientKeys
         ClientKeys.pop(message['AuthKey'])
+
+        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
 
 def recieve():  # Basicly the whole server
     global votes, CalFile, server, reqCounter, ValidUsers, ClientKeys
@@ -183,7 +195,8 @@ def recieve():  # Basicly the whole server
                         IsValid = True  # set to True
                         iDict = inverseDict(ClientKeys) # inversed dict
                         if mes['Name'] in iDict:    # if key already exists for user
-                            ClientKeys.pop(iDict[mes['Name']])  # remove key from list
+                            with suppress(KeyError):
+                                ClientKeys.pop(iDict[mes['Name']])  # remove key from list
                             print('Cleard keys from '+mes['Name']+'             ')
 
                         key = KeyFunc(length=20)    # create unique Authorization key (so this function doesn't need to be executed every time)
@@ -216,7 +229,6 @@ def recieve():  # Basicly the whole server
                 elif mes['AuthKey'] in KeyValue(GuestKeys):
                     if mes['type'] in gSwitch:
                         switch[mes['type']](mes, client)
-                        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
                     
                     else:
                         if mes['type'] in switch:
