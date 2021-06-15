@@ -195,8 +195,6 @@ def recieve():  # Basicly the whole server
                         IsValid = True  # set to True
                         iDict = inverseDict(ClientKeys) # inversed dict
                         if mes['Name'] in iDict:    # if key already exists for user
-                            with suppress(KeyError):
-                                ClientKeys.pop(iDict[mes['Name']])  # remove key from list
                             print('Cleard keys from '+mes['Name']+'             ')
 
                         key = KeyFunc(length=20)    # create unique Authorization key (so this function doesn't need to be executed every time)

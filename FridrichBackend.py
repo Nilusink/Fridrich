@@ -45,7 +45,9 @@ class Connection:
         self.Server.send(msg)   # send request
 
     def recieve(self, length=1024):
-        msg = jsonRepair(self.Server.recv(length).decode('utf-8'))  # recieve message
+        msg = ''
+        while msg=='':
+            msg = jsonRepair(self.Server.recv(length).decode('utf-8'))  # recieve message
         try:    # test if message is valid json message
             msg = json.loads(msg)
         except json.JSONDecodeError:    # if not raise error
@@ -70,11 +72,11 @@ class Connection:
             raise ValueError
 
     def auth(self, username:str, password:str):
-        msg = json.dumps({  # message
+        msg = {  # message
             'type':'auth',
             'Name':username,
             'pwd':password
-        })
+        }
         self.send(msg)  # send message
         resp = self.recieve()   # recieve authKey (or error)
 
