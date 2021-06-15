@@ -18,11 +18,11 @@ def jsonRepair(string:str):
 ############################################################################
 class Connection:
     def __init__(self):
-        self.ServerIp = socket.gethostbyname('Fridrich')
+        self.ServerIp = socket.gethostbyname('Fridrich')    # get ip of fridrich
         print('Server IP: '+self.ServerIp)
-        self.port = 12345
+        self.port = 12345   # set communication port with server
 
-        self.AuthKey = None
+        self.AuthKey = None 
 
     def errorHandler(self, error:str):
         if error == 'AccessError':
@@ -38,162 +38,138 @@ class Connection:
             raise err.JsonError('Crypled message')
 
     def send(self, dictionary:dict):
-        dictionary['AuthKey'] = self.AuthKey
-        msg = json.dumps(dictionary).encode('utf-8')
-        self.Server.send(msg)
+        self.reconnect() # reconnect to the server
+
+        dictionary['AuthKey'] = self.AuthKey    # add AuthKey to the dictionary
+        msg = json.dumps(dictionary).encode('utf-8')    # convert to bytes
+        self.Server.send(msg)   # send request
 
     def recieve(self, length=1024):
-        msg = jsonRepair(self.Server.recv(length).decode('utf-8'))
-        try:
+        msg = jsonRepair(self.Server.recv(length).decode('utf-8'))  # recieve message
+        try:    # test if message is valid json message
             msg = json.loads(msg)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError:    # if not raise error
+            print(f'Message: "{msg}"')
             self.errorHandler(msg)
 
-        if 'Error' in msg:
+        if 'Error' in msg:  # if error was send by server
             success = False
         else:
             success = True
 
         if success:
-            return msg
+            return msg  # if no error was detected, return dict
         
-        self.errorHandler(msg['Error'])
+        self.errorHandler(msg['Error']) #raise error if serverside-error
 
     def reconnect(self):
-        try:
-            self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.Server.connect((self.ServerIp, self.port))
+        try:    # try to reconnect to the server
+            self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # create socket instance
+            self.Server.connect((self.ServerIp, self.port)) # connect to server
         except socket.error:
             raise ValueError
 
     def auth(self, username:str, password:str):
-        self.reconnect()
-
-        msg = json.dumps({
+        msg = json.dumps({  # message
             'type':'auth',
             'Name':username,
             'pwd':password
         })
-        self.Server.send(msg.encode('utf-8'))
-        resp = json.loads(self.Server.recv(1024).decode('utf-8'))
+        self.send(msg)  # send message
+        resp = self.recieve()   # recieve authKey (or error)
 
         self.AuthKey = resp['AuthKey']
 
-        return resp['Auth']
+        return resp['Auth'] # return True or False
 
     def getAttendants(self, flag = 'now'): # flag can be 'now' or 'last'
-        self.reconnect()
+        self.send({'type':'req', 'reqType':'attds', 'atype':flag})  # send message
+        resp = self.recieve()   # get response
 
-        self.send({'type':'req', 'reqType':'attds', 'atype':flag})
-        resp = self.recieve()
-
-        return resp['Names']
+        return resp['Names']    # return names
 
     def sendVote(self, *args, flag = 'vote'): # flag can be 'vote' or 'unvote'
-        self.reconnect()
-
         if flag == 'vote':
-            msg = {'type':flag, 'vote':args[0]}
+            msg = {'type':flag, 'vote':args[0]} # if vote send vote
         else:
-            msg = {'type':flag}
+            msg = {'type':flag} # if no vote send no vote
         
-        self.send(msg)
-        self.recieve()
+        self.send(msg)  # send vote
+        self.recieve()  # recieve success or error
     
     def getResults(self, flag = 'now'): # flag can be 'now', 'last'
-        self.reconnect()
+        msg = {'type':'req', 'reqType':flag}    # set message
+        self.send(msg)  # send message
 
-        msg = {'type':'req', 'reqType':flag}
-        self.send(msg)
+        res = self.recieve()    # get response
 
-        res = self.recieve()
-
-        attds = dict()
+        attds = dict()  # create dictionary with all attendants:votes
         for element in [res[element] for element in res]+['Lukas', 'Niclas', 'Melvin']:
             attds[element] = int()
 
         votes = int()
-        for element in res:
+        for element in res: # assign votes to attendant
             votes+=1
             attds[res[element]]+=1
         
-        return votes, attds
+        return votes, attds # retur total votes and dict
     
     def getLog(self):
-        self.reconnect()
+        msg = {'type':'req', 'reqType':'log'}   # set message
+        self.send(msg)  # send request
 
-        msg = {'type':'req', 'reqType':'log'}
-        self.send(msg)
-
-        res = self.recieve()
-        return res
+        res = self.recieve()    # get response
+        return res  # return response
     
     def getTemps(self):
-        self.reconnect()
+        msg = {'type':'req', 'reqType':'temps'} # set message
+        self.send(msg)  # send message
 
-        msg = {'type':'req', 'reqType':'temps'}
-        self.send(msg)
+        res = self.recieve()    # get response
 
-        res = self.recieve()
-
-        return res['Room'], res['CPU']
+        return res['Room'], res['CPU']  # return room and cpu temperature
     
     def getCal(self):
-        self.reconnect()
+        msg = {'type':'req', 'reqType':'cal'}   # set message
+        self.send(msg)  # send request
 
-        msg = {'type':'req', 'reqType':'cal'}
-        self.send(msg)
-
-        res = self.recieve()
-        return res
+        res = self.recieve()    # get response
+        return res  # return response
 
     def sendCal(self, date:str, event:str):
-        self.reconnect()
-
-        msg = {'type':'CalEntry', 'date':date, 'event':event}
-        self.send(msg)
+        msg = {'type':'CalEntry', 'date':date, 'event':event}   # set message
+        self.send(msg)  # send message
+        self.recieve()  # recieve response (success, error)
 
     def changePwd(self, newPassword:str):
-        self.reconnect()
-        
-        mes = {'type':'changePwd', 'newPwd':newPassword}
-        self.send(mes)
+        mes = {'type':'changePwd', 'newPwd':newPassword}    # set message
+        self.send(mes)  # send message
+        self.recieve()  # get response (success, error)
 
     def getVote(self):
-        self.reconnect()
-        
-        mes = {'type':'getVote'}
-        self.send(mes)
+        mes = {'type':'getVote'}    # set message
+        self.send(mes)  # send request
 
-        resp = self.recieve()
+        resp = self.recieve()   # get response
 
-        return resp['Vote']
+        return resp['Vote'] # return vote
 
     def getVersion(self):
-        self.reconnect()
+        mes = {'type':'getVersion'} # set message
+        self.send(mes)  # send request
+        resp = self.recieve()   # get response
 
-        mes = {'type':'getVersion'}
-        self.send(mes)
-        resp = self.recieve()
-
-        return resp['Version']
+        return resp['Version']  # return version
 
     def setVersion(self, version:str):
-        self.reconnect()
-
-        mes = {'type':'setVersion', 'version':version}
-        self.send(mes)
-        self.recieve()
+        mes = {'type':'setVersion', 'version':version}  # set message
+        self.send(mes)  # send message
+        self.recieve()  # get response (success, error)
 
     def end(self):
-        try:
-            self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.Server.connect((self.ServerIp, self.port))
-        except socket.error:
-            raise ValueError
-        
-        msg = {'type':'end'}
-        self.send(msg)
+        msg = {'type':'end'}    # set message
+        self.send(msg)  # send message
+        self.recieve()  # get response (success, error)
 
 ############################################################################
 #                   Class for Searching Wolfram Alpha                      #
