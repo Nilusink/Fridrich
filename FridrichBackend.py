@@ -1,8 +1,10 @@
 from contextlib import suppress
 from wolframalpha import Client
-import err_classes as err
 import socket, json
 
+# local imports
+import err_classes as err
+from useful import Dict, List, inverse
 
 ############################################################################
 #                             other functions                              #
@@ -122,7 +124,29 @@ class Connection:
 
         res = self.recieve()    # get response
         return res  # return response
-    
+
+    def getStreak(self):
+        log = self.getLog() # get log dictionary
+
+        sortedlog = {x:log[x] for x in sorted(log, key=lambda x: '.'.join(reversed(x.split('.'))) )}    # sort list by year, month, date
+
+        fullList = list(reversed(list(Dict.Values(sortedlog)))) # get list of all Kings
+        StreakGuys = list(fullList[0].split('|'))   # if a|b|c make list of (a, b, c), else just (a)
+
+        StreakDict = {StreakGuy:int() for StreakGuy in StreakGuys}  # create Dictionary with scheme: {a:0, b:0, c:0}
+        for StreakGuy in StreakGuys:    # iterate all guys
+            for element in fullList:    # iterate all votes
+                if StreakGuy in element:    # guy was in previous vote
+                    StreakDict[StreakGuy]+=1    # add to streak and continue
+                else:
+                    break   # else begin with new guy
+
+        iDict = Dict.inverse(StreakDict)    # inversed Dict ({1:a, 3:b, 0:c} instead of {a:1, b:3, c:0})
+        Name = iDict[max(iDict)]    # get name of the guy with max streak
+        Streak = StreakDict[Name]   # get streak by name
+        
+        return Name, Streak # return results
+
     def getTemps(self):
         msg = {'type':'req', 'reqType':'temps'} # set message
         self.send(msg)  # send message
