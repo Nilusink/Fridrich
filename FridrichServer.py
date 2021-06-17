@@ -350,7 +350,7 @@ def update():   # updates every few seconds
                 with open(KingFile, 'w') as out:
                     json.dump(kIn, out, indent=4)
                 
-                with open(varKingLogFile, 'w') as out:
+                with open(varLogFile, 'w') as out:
                     json.dump(kIn, out, indent=4)
                 
                 with open(varKingLogFile, 'w') as out:
