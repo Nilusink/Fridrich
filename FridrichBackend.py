@@ -20,7 +20,7 @@ def jsonRepair(string:str):
 ############################################################################
 class Connection:
     def __init__(self):
-        self.ServerIp = socket.gethostbyname('Fridrich')    # get ip of fridrich
+        self.ServerIp = socket.gethostbyname('fridrich')    # get ip of fridrich
         print('Server IP: '+self.ServerIp)
         self.port = 12345   # set communication port with server
 
@@ -153,7 +153,7 @@ class Connection:
 
         res = self.recieve()    # get response
 
-        return res['Room'], res['CPU']  # return room and cpu temperature
+        return res['Room'], res['CPU'], res['Hum']  # return room and cpu temperature
     
     def getCal(self):
         msg = {'type':'req', 'reqType':'cal'}   # set message
