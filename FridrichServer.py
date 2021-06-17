@@ -64,9 +64,13 @@ def debug(*args):
 
 def readTemp():
     result = instance.read()
-
+    invalids = int()
     while not result.is_valid():
+        invalids+=1
         result = instance.read()
+
+        if invalids==10:
+            return None, None
     
     return result.temperature, result.humidity
 
@@ -280,13 +284,14 @@ def update():   # updates every few seconds
         # -------- Requests Counter ---------
         if t()-start>=2:    # every 2 seconds
             start+=2
-            s = str(reqCounter)
+            #s = str(reqCounter)
             #debug(' Requests in last 2 seconds: '+'0'*(3-len(s))+s, end='\r')
             reqCounter = 0
             currTemp = cpu.temperature
             roomTemp, roomHum = readTemp()
             with open(tempLog, 'w') as out:
                 json.dump({"temp":roomTemp, "cptemp":currTemp, "hum":roomHum}, out)
+                print('wrote to file '+tempLog)
             time.sleep(1)
         
         # --------  00:00 switch ---------
