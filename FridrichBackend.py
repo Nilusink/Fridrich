@@ -1,5 +1,5 @@
 from contextlib import suppress
-from wolframalpha import Client
+#from wolframalpha import Client
 import socket, json
 
 # local imports
@@ -200,31 +200,31 @@ class Connection:
 ############################################################################
 #                   Class for Searching Wolfram Alpha                      #
 ############################################################################
-class wiki:
-    def __init__(self):
-        # App id obtained by the above steps
-        app_id = 'U3ETL7-RL45EG5R6Y'
-        # Instance of wolf ram alpha 
-        # client class
-        self.client = Client(app_id)
+# class wiki:
+#     def __init__(self):
+#         # App id obtained by the above steps
+#         app_id = 'U3ETL7-RL45EG5R6Y'
+#         # Instance of wolf ram alpha 
+#         # client class
+#         self.client = Client(app_id)
     
-    def getInfos(self, keyword):
-        # Stores the response from 
-        # wolf ram alpha
-        res = self.client.query(keyword)
-        resDict = dict()
-        if res['@success']:
-            for element in res['pod']:
-                t = element['@title']
-                with suppress(TypeError):
-                    resDict[t] = element['subpod']['plaintext']
-        return resDict
+#     def getInfos(self, keyword):
+#         # Stores the response from 
+#         # wolf ram alpha
+#         res = self.client.query(keyword)
+#         resDict = dict()
+#         if res['@success']:
+#             for element in res['pod']:
+#                 t = element['@title']
+#                 with suppress(TypeError):
+#                     resDict[t] = element['subpod']['plaintext']
+#         return resDict
 
 if __name__ == '__main__':
     from traceback import format_exc    # imports for shell
 
     c = Connection()    # create connection instance
-    w = wiki()  # create wiki instance
+    #w = wiki()  # create wiki instance
     print('initialised Connections')
 
     print('\n\nfunctions of Connection: ')  #return all functions of the two classes
@@ -233,12 +233,12 @@ if __name__ == '__main__':
         if not element.startswith('__'):
             print('  - '+element)
     
-    print('\nfunctions of wiki: ')
-    funcs = dir(wiki)
-    for element in funcs:
-        if not element.startswith('__'):
-            print('  - '+element)
-    print()
+    # print('\nfunctions of wiki: ')
+    # funcs = dir(wiki)
+    # for element in funcs:
+    #     if not element.startswith('__'):
+    #         print('  - '+element)
+    # print()
 
     while True: # shell for debugging
         try:

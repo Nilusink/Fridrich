@@ -271,7 +271,7 @@ def recieve():  # Basicly the whole server
     server.close()
 
 def update():   # updates every few seconds
-    global currTemp, reqCounter, votes
+    global currTemp, reqCounter, votes, tempLog
 
     t = time.time   # time instance (for comfort)
     start = t()
@@ -284,6 +284,9 @@ def update():   # updates every few seconds
             #debug(' Requests in last 2 seconds: '+'0'*(3-len(s))+s, end='\r')
             reqCounter = 0
             currTemp = cpu.temperature
+            roomTemp, roomHum = readTemp()
+            with open(tempLog, 'w') as out:
+                json.dump({"temp":roomTemp, "cptemp":currTemp, "hum":roomHum})
             time.sleep(1)
         
         # --------  00:00 switch ---------
@@ -361,6 +364,8 @@ if __name__=='__main__':
     CalFile = direc+'Calendar.json'
     crypFile = direc+'users.enc'
     versFile = direc+'Version'
+
+    tempLog = direc+'tempData.json'
 
     logFile = direc+'Server.log'
 
