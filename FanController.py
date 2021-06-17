@@ -1,5 +1,5 @@
 from gpiozero import CPUTemperature, LED
-import time
+import time, json
 
 def CPUHeatHandler():
     global currTemp
@@ -8,8 +8,9 @@ def CPUHeatHandler():
     Trigger = False
     triggmap = {True:On.on, False:On.off}
     while True:
+        maxtemp = json.load(open(tempFile, 'r'))['temp']+25
         currTemp = cpu.temperature
-        if currTemp>50:
+        if currTemp>maxtemp:
             with open(errFile, 'w') as out:
                 out.write(f'CPU temp: {currTemp} - {time.strftime("%H:%M")} | Fan: {Trigger}')
             from os import system
@@ -30,6 +31,9 @@ def CPUHeatHandler():
 if __name__=='__main__':
     logFile = '/home/pi/Server/temp.log'
     errFile = '/home/pi/Server/temp.err.log'
+
+    tempFile = '/home/pi/Server/tempData.json'
+
     On = LED(21)
 
     CPUHeatHandler()

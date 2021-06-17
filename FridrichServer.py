@@ -307,8 +307,9 @@ def update():   # updates every few seconds
             reqCounter = 0
             currTemp = cpu.temperature
             roomTemp, roomHum = readTemp()
-            with open(tempLog, 'w') as out:
-                json.dump({"temp":roomTemp, "cptemp":currTemp, "hum":roomHum}, out)
+            for element in (tempLog, varTempLog):
+                with open(element, 'w') as out:
+                    json.dump({"temp":roomTemp, "cptemp":currTemp, "hum":roomHum}, out)
             time.sleep(1)
         
         # --------  00:00 switch ---------
@@ -393,8 +394,9 @@ if __name__=='__main__':
     CalFile = direc+'Calendar.json'
     crypFile = direc+'users.enc'
     versFile = direc+'Version'
+    tempLog = direc+'tempData.json'
 
-    tempLog = vardirec+'json/tempData.json'
+    varTempLog = vardirec+'json/tempData.json'
     varKingLogFile = vardirec+'KingLog.log'
     varLogFile = vardirec+'json/KingLog.json'
 
