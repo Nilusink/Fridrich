@@ -300,8 +300,8 @@ def update():   # updates every few seconds
     while not Terminate:
 
         # -------- Requests Counter ---------
-        if t()-start>=2:    # every 2 seconds
-            start+=2
+        if t()-start>=1:    # every 2 seconds
+            start+=1
             #s = str(reqCounter)
             #debug(' Requests in last 2 seconds: '+'0'*(3-len(s))+s, end='\r')
             reqCounter = 0
@@ -310,10 +310,10 @@ def update():   # updates every few seconds
             for element in (tempLog, varTempLog):
                 with open(element, 'w') as out:
                     json.dump({"temp":roomTemp, "cptemp":currTemp, "hum":roomHum}, out)
-            time.sleep(1)
+            time.sleep(.8)
         
         # --------  00:00 switch ---------
-        if time.strftime('%H:%M') in ('00:00'):
+        if time.strftime('%H:%M') == '00:00':
             with open(lastFile, 'w') as out:    # get newest version of the "votes" dict and write it to the lastFile
                 with open(nowFile, 'r') as inp:
                     last = inp.read()
