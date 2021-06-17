@@ -19,11 +19,27 @@ GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.cleanup()
 
+class VOTES:
+    def __init__(self, getFile, *args):
+        self.getFile = getFile
+        self.FilesToWrite = args
+    
+    def get(self):
+        odict = json.load(open(self.getFile, 'r'))
+        return odict
+    
+    def write(self, newValue:dict):
+        json.dump(newValue, open(self.getFile, 'w'), indent=4)
+
+        for element in self.FilesToWrite:
+            json.dump(newValue, open(element, 'w'), indent=4)
+
+
 def getNewones(flag):   # get all attendants wich are not in the default name list
-    global votes
+    global Vote
     newones = list()
     if flag=='now':
-        tmp = votes
+        tmp = Vote.get()
     elif flag=='last':
         tmp = json.load(open(lastFile, 'r'))
     
@@ -70,6 +86,7 @@ def readTemp():
         result = instance.read()
 
         if invalids==10:
+            print('failed to read sensor')
             return None, None
     
     return result.temperature, result.humidity
@@ -77,23 +94,23 @@ def readTemp():
 class ClientFuncs:  # class for the Switch
     globals()
     def vote(message, client, *args):
-        global nowFile, votes, ClientKeys
-        votes = json.load(open(nowFile))    # update votes
+        global nowFile, Vote, ClientKeys
+        votes = Vote.get()    # update votes
         resp = checkif(message['vote'], votes)
         name = ClientKeys[message['AuthKey']]
         votes[name] = resp    # set <hostname of client> to clients vote
         debug(f'got vote: {message["vote"]}                     .')   # print that it recievd vote (debugging)
-        json.dump(votes, open(nowFile, 'w'), indent=4)  # write to file
+        Vote.write(votes)  # write to file
 
         client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
     
     def unvote(message, client, *args):
-        global nowFile, votes
-        votes = json.load(open(nowFile))    # update votes
+        global nowFile, Vote
+        votes = Vote.get()    # update votes
         name = ClientKeys[message['AuthKey']]
         with suppress(KeyError): 
             del votes[name]  # try to remove vote from client, if client hasn't voted yet, ignore it
-        json.dump(votes, open(nowFile, 'w'), indent=4) # update file
+        Vote.write(votes) # update file
 
         client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
     
@@ -157,7 +174,7 @@ class ClientFuncs:  # class for the Switch
 
     def getVote(message, client, *args):
         name = ClientKeys[message['AuthKey']]
-        if not name in votes:
+        if not name in Vote.get():
             client.send(json.dumps({'Error':'NotVoted'}).encode('utf-8'))
             return
         cVote = votes[name]
@@ -180,7 +197,7 @@ class ClientFuncs:  # class for the Switch
         client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
 
 def recieve():  # Basicly the whole server
-    global votes, CalFile, server, reqCounter, ValidUsers, ClientKeys
+    global CalFile, server, reqCounter, ValidUsers, ClientKeys
     while not Terminate:
         try:
             # Accept Connection
@@ -275,7 +292,7 @@ def recieve():  # Basicly the whole server
     server.close()
 
 def update():   # updates every few seconds
-    global currTemp, reqCounter, votes, tempLog
+    global currTemp, reqCounter, Vote, tempLog
 
     t = time.time   # time instance (for comfort)
     start = t()
@@ -302,8 +319,7 @@ def update():   # updates every few seconds
                     out.write(last)
             
             votes = dict()  # reset votes in file and the variable
-            with open(nowFile, 'w') as out:
-                out.write('{}')
+            Vote.write({})
             
             last = json.loads(last) # get last ones
 
@@ -332,6 +348,12 @@ def update():   # updates every few seconds
                 kIn[time.strftime('%d.%m.%Y')] = Highest
                 with open(KingFile, 'w') as out:
                     json.dump(kIn, out, indent=4)
+                
+                with open(varKingLogFile, 'w') as out:
+                    json.dump(kIn, out, indent=4)
+                
+                with open(varKingLogFile, 'w') as out:
+                    out.write(Highest)
                 
                 debug(f"backed up files and logged the GayKing ({time.strftime('%H:%M')})\nGaymaster: {Highest}")
             
@@ -373,6 +395,10 @@ if __name__=='__main__':
     versFile = direc+'Version'
 
     tempLog = vardirec+'json/tempData.json'
+    varKingLogFile = vardirec+'KingLog.log'
+    varLogFile = vardirec+'json/KingLog.json'
+
+    varNowFile = vardirec+'json/now.json'
 
     logFile = direc+'Server.log'
 
@@ -413,10 +439,7 @@ if __name__=='__main__':
     # read data using pin 18
     instance = dht11.DHT11(pin = 18)
 
-    try:
-        votes = json.load(open(nowFile, 'r'))
-    except Exception:
-        votes = dict()
+    Vote = VOTES(nowFile, varNowFile)
 
     try:
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
