@@ -40,6 +40,9 @@ class const:
     def __init__(self, val):
         self.value = deepcopy(val) # create deepcopy of list (cause python is strange and source lists are dependent on it's cloned lists)
     
+    def __repr__(self):
+        return str(self.value)
+
     def get(self):
         return deepcopy(self.value)    # return value with an extra deep copy
     
@@ -86,7 +89,7 @@ if __name__ == '__main__':
     while True:
         try:
             com = input('>> ')
-            sadjfkljasdkljf = exec(com)
+            exec(com)
             
         except:
             print(format_exc())

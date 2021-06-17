@@ -4,7 +4,7 @@ import socket, json
 
 # local imports
 import err_classes as err
-from useful import Dict, List, inverse
+from useful import Dict
 
 ############################################################################
 #                             other functions                              #
@@ -244,7 +244,7 @@ if __name__ == '__main__':
         try:
             cmd = input('>> ')  # take input command as string
             x = eval(cmd)   # execute the code
-            if x:   # if vlue is returned
+            if True:   # if vlue is returned
                 print(x)    # print it
 
         except Exception:   # if error occures, return it

@@ -3,10 +3,21 @@ from gpiozero import CPUTemperature
 import datetime, socket, time, json
 from traceback import format_exc
 from contextlib import suppress
-from cryption_tools import low
 from threading import Thread
 from random import sample
 import sys
+
+# TemperatureReader import
+import RPi.GPIO as GPIO
+import dht11
+
+# local imports
+from cryption_tools import low
+
+# initialize GPIO
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.cleanup()
 
 def getNewones(flag):   # get all attendants wich are not in the default name list
     global votes
@@ -50,6 +61,14 @@ def debug(*args):
     with open(logFile, 'a') as out:
         for element in args:
             out.write(str(element)+'\n')  
+
+def readTemp():
+    result = instance.read()
+
+    while not result.is_valid():
+        result = instance.read()
+    
+    return result.temperature, result.humidity
 
 class ClientFuncs:  # class for the Switch
     globals()
@@ -109,7 +128,8 @@ class ClientFuncs:  # class for the Switch
             client.send(json.dumps({'Names':['Lukas', 'Niclas', 'Melvin']+newones}).encode('utf-8'))    # return stardart users + new ones
                 
         elif message['reqType'] == 'temps': # returns the temperatures
-            client.send(json.dumps({'Room':None, 'CPU':currTemp}).encode('utf-8'))
+            rtemp, rhum = readTemp()
+            client.send(json.dumps({'Room':rtemp, 'CPU':currTemp, 'Hum':rhum}).encode('utf-8'))
                 
         elif message['reqType'] == 'cal':   # returns the calendar dictionary
             client.send(open(CalFile, 'r').read().encode('utf-8'))
@@ -377,6 +397,9 @@ if __name__=='__main__':
             dForm = f'{a.day}.{a.month}.{a.year}'
             cal[dForm] = list()
         json.dump(cal, open(CalFile, 'w'))
+
+    # read data using pin 18
+    instance = dht11.DHT11(pin = 18)
 
     try:
         votes = json.load(open(nowFile, 'r'))
