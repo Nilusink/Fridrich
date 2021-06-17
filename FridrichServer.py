@@ -173,6 +173,7 @@ class ClientFuncs:  # class for the Switch
         client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
 
     def getVote(message, client, *args):
+        votes = Vote.get()
         name = ClientKeys[message['AuthKey']]
         if not name in Vote.get():
             client.send(json.dumps({'Error':'NotVoted'}).encode('utf-8'))
@@ -308,7 +309,6 @@ def update():   # updates every few seconds
             roomTemp, roomHum = readTemp()
             with open(tempLog, 'w') as out:
                 json.dump({"temp":roomTemp, "cptemp":currTemp, "hum":roomHum}, out)
-                print('wrote to file '+tempLog)
             time.sleep(1)
         
         # --------  00:00 switch ---------
