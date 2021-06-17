@@ -286,7 +286,7 @@ def update():   # updates every few seconds
             currTemp = cpu.temperature
             roomTemp, roomHum = readTemp()
             with open(tempLog, 'w') as out:
-                json.dump({"temp":roomTemp, "cptemp":currTemp, "hum":roomHum})
+                json.dump({"temp":roomTemp, "cptemp":currTemp, "hum":roomHum}, out)
             time.sleep(1)
         
         # --------  00:00 switch ---------
@@ -358,6 +358,8 @@ if __name__=='__main__':
     Terminate = False
 
     direc = '/home/pi/Server/'
+    vardirec = '/var/www/html/'
+
     lastFile = direc+'yes.json'
     nowFile = direc+'now.json'
     KingFile = direc+'KingLog.json'
@@ -365,7 +367,7 @@ if __name__=='__main__':
     crypFile = direc+'users.enc'
     versFile = direc+'Version'
 
-    tempLog = direc+'tempData.json'
+    tempLog = vardirec+'json/tempData.json'
 
     logFile = direc+'Server.log'
 
