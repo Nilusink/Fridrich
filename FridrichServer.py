@@ -276,7 +276,9 @@ class ClientFuncs:  # class for the Switch
         frees = DV.getFrees(name)
 
         if frees == False:
-            client.send(json.dumps({'Error':'RegistryError'}))
+            client.send(json.dumps({'Error':'RegistryError'}).encode('utf-8'))
+            return
+        client.send(json.dumps({'Value':frees}).encode('utf-8'))
 
     def end(message, client, *args):
         global ClientKeys

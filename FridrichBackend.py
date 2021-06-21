@@ -201,6 +201,12 @@ class Connection:
         self.send(mes)  # send message
         self.recieve()  # get response (success, error)
 
+    def getFrees(self):
+        msg = {'type':'getFrees'}
+        self.send(msg)
+        resp = self.recieve()
+        return resp['Value']
+
     def end(self):
         msg = {'type':'end'}    # set message
         self.send(msg)  # send message
