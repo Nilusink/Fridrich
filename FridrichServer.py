@@ -57,6 +57,8 @@ class DoubleVote:
         json.dump(value, open(self.filePath, 'w'))
 
     def vote(self, vote, User):
+        global Vote
+
         votes = Vote.get()
         value = self.read()
         if value[User] < 1:
@@ -65,11 +67,15 @@ class DoubleVote:
         votes[User+'2'] = vote
         Vote.write(votes)
 
+        print('set votes:', Vote.get())
+
         value[User] -= 1
         self.write(value)
         return True
 
     def unVote(self, User):
+        global Vote
+
         votes = Vote.get()
         with suppress(NameError):
             votes.pop(User+'2')

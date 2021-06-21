@@ -102,7 +102,7 @@ class Connection:
         return resp['Names']    # return names
 
     def sendVote(self, *args, flag = 'vote'): # flag can be 'vote', 'unvote', 'dvote' or 'dUvote'
-        if flag == 'vote':
+        if flag in ('vote', 'dvote'):
             msg = {'type':flag, 'vote':args[0]} # if vote send vote
         else:
             msg = {'type':flag} # if no vote send no vote
