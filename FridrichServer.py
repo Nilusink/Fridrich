@@ -54,9 +54,11 @@ class DoubleVote:
         return json.load(open(self.filePath, 'r'))
     
     def write(self, value:dict):
+        print('updating Write')
         json.dump(value, open(self.filePath, 'w'))
 
     def vote(self, vote, User):
+        print('called double vote')
         global Vote
 
         votes = Vote.get()
@@ -146,7 +148,7 @@ def readTemp():
         invalids+=1
         result = instance.read()
 
-        if invalids==10:
+        if invalids==50:
             print('failed to read sensor')
             return None, None
     
@@ -351,6 +353,7 @@ def recieve():  # Basicly the whole server
                 if mes['AuthKey'] in KeyValue(ClientKeys):    # if AuthKey is correct, go along
                     if mes['type'] in switch:
                         switch[mes['type']](mes, client)
+                        print('message: '+mes)
 
                     else:
                         debug(f'Invalid Type {mes["type"]}                  ')
