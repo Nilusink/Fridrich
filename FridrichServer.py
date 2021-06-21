@@ -34,6 +34,42 @@ class VOTES:
         for element in self.FilesToWrite:
             json.dump(newValue, open(element, 'w'), indent=4)
 
+class DoubleVote:
+    globals()
+    def __init__(self, filePath):
+        global validUsers
+        self.filePath = filePath
+
+        try:
+            self.value = json.load(open(self.filePath, 'r'))
+
+        except FileNotFoundError:
+            self.value = dict()
+            for element in validUsers:
+                self.value[element['Name']] = 1
+    
+    def vote(self, vote, User):
+        votes = Vote.get()
+        if self.value[User] < 1:
+            return False
+        
+        votes[User+'2'] = vote
+        Vote.write(votes)
+
+        self.value[User] -= 1
+        return True
+
+    def unVote(self, User):
+        votes = Vote.get()
+        with suppress(NameError):
+            votes.pop(User+'2')
+        Vote.write(votes)
+    
+    def getFrees(self, User):
+        if User in self.value:
+            return self.value[User]
+        
+        return False
 
 def getNewones(flag):   # get all attendants wich are not in the default name list
     global Vote
@@ -191,6 +227,30 @@ class ClientFuncs:  # class for the Switch
 
         client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
 
+    def DoubVote(message, client, *args):
+        global DV
+        name = ClientKeys[message['Authkey']]
+        resp = checkif(message['vote'], VOTES.get())     
+        resp = DV.vote(resp, name)
+        if resp:
+            client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
+        else:
+            client.send(json.dumps({'Error':'NoVotes'}).encode('utf-8'))
+    
+    def DoubUnVote(message, client, *args):
+        global DV
+        name = ClientKeys[message['Authkey']]
+        DV.unVote(name)
+        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
+    
+    def getFreeVotes(message, client, *args):
+        global DV
+        name = ClientKeys[message['Authkey']]
+        frees = DV.getFrees(name)
+
+        if frees == False:
+            client.send(json.dumps({'Error':'RegistryError'}))
+
     def end(message, client, *args):
         global ClientKeys
         ClientKeys.pop(message['AuthKey'])
@@ -226,7 +286,10 @@ def recieve():  # Basicly the whole server
                 'changePwd':ClientFuncs.changePwd,
                 'getVote':ClientFuncs.getVote,
                 'getVersion':ClientFuncs.getVersion,
-                'setVersion':ClientFuncs.setVersion
+                'setVersion':ClientFuncs.setVersion,
+                'dvote':ClientFuncs.DoubVote,
+                'dUvote':ClientFuncs.DoubUnVote,
+                'getFrees':ClientFuncs.getFreeVotes
             }
 
             gSwitch = {                                  # instead of 5 billion if'S
@@ -287,6 +350,8 @@ def recieve():  # Basicly the whole server
             client.close()  # close so it can be reused
 
         except Exception:
+            client.send(json.dumps({'Error':'Unknown'}).encode('utf-8'))
+            client.close()
             debug('Thread 1 error:')
             debug(format_exc())
 
@@ -404,6 +469,8 @@ if __name__=='__main__':
 
     logFile = direc+'Server.log'
 
+    doubFile = direc+'dVotes.json'
+
     with open(logFile, 'w') as out:
         out.write('')
 
@@ -442,6 +509,7 @@ if __name__=='__main__':
     instance = dht11.DHT11(pin = 18)
 
     Vote = VOTES(nowFile, varNowFile)
+    DV   = DoubleVote(doubFile)
 
     try:
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -8,11 +8,12 @@ def CPUHeatHandler():
     Trigger = False
     triggmap = {True:On.on, False:On.off}
     while True:
-        maxtemp = json.load(open(tempFile, 'r'))['temp']+25
+        file = json.load(open(tempFile, 'r'))
+        maxtemp = file['temp']+25
         currTemp = cpu.temperature
         if currTemp>maxtemp:
             with open(errFile, 'w') as out:
-                out.write(f'CPU temp: {currTemp} - {time.strftime("%H:%M")} | Fan: {Trigger}')
+                out.write(f'CPU temp: {currTemp}, Room Temperature: {file["temp"]} - {time.strftime("%H:%M")} | Fan: {Trigger}')
             from os import system
             system('sudo shutdown now')
         

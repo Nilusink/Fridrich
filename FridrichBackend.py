@@ -38,6 +38,15 @@ class Connection:
         
         elif error == 'json':
             raise err.JsonError('Crypled message')
+        
+        elif error == 'NoVotes':
+            raise err.NoVotes('No Votes left')
+
+        elif error == 'RegistryError':
+            raise err.RegistryError('Not registered')
+        
+        else:
+            raise err.UnknownError('An Unknown Error Occured')
 
     def send(self, dictionary:dict):
         self.reconnect() # reconnect to the server
@@ -92,7 +101,7 @@ class Connection:
 
         return resp['Names']    # return names
 
-    def sendVote(self, *args, flag = 'vote'): # flag can be 'vote' or 'unvote'
+    def sendVote(self, *args, flag = 'vote'): # flag can be 'vote', 'unvote', 'dvote' or 'dUvote'
         if flag == 'vote':
             msg = {'type':flag, 'vote':args[0]} # if vote send vote
         else:

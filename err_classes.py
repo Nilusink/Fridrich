@@ -6,3 +6,12 @@ class AuthError(Exception):
 
 class JsonError(Exception):
     pass
+
+class NoVotes(Exception):
+    pass
+
+class UnknownError(Exception):
+    pass
+
+class RegistryError(Exception):
+    pass
