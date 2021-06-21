@@ -255,9 +255,9 @@ class ClientFuncs:  # class for the Switch
         client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
 
     def DoubVote(message, client, *args):
-        global DV
+        global DV, Vote
         name = ClientKeys[message['AuthKey']]
-        resp = checkif(message['vote'], VOTES.get())     
+        resp = checkif(message['vote'], Vote.get())     
         resp = DV.vote(resp, name)
         if resp:
             client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
