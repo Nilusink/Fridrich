@@ -229,7 +229,7 @@ class ClientFuncs:  # class for the Switch
 
     def DoubVote(message, client, *args):
         global DV
-        name = ClientKeys[message['Authkey']]
+        name = ClientKeys[message['AuthKey']]
         resp = checkif(message['vote'], VOTES.get())     
         resp = DV.vote(resp, name)
         if resp:
@@ -239,13 +239,13 @@ class ClientFuncs:  # class for the Switch
     
     def DoubUnVote(message, client, *args):
         global DV
-        name = ClientKeys[message['Authkey']]
+        name = ClientKeys[message['AuthKey']]
         DV.unVote(name)
         client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
     
     def getFreeVotes(message, client, *args):
         global DV
-        name = ClientKeys[message['Authkey']]
+        name = ClientKeys[message['AuthKey']]
         frees = DV.getFrees(name)
 
         if frees == False:
@@ -317,7 +317,7 @@ def recieve():  # Basicly the whole server
                 client.send(json.dumps({'Auth':IsValid, 'AuthKey':key}).encode('utf-8'))    # send result to client
 
             else:
-                if not 'AuthKey' in mes:    # if no authkey in message
+                if not 'AuthKey' in mes:    # if no AuthKey in message
                     debug('auth error, Key not in message')
                     client.send(json.dumps({'Error':'AuthError'}).encode('utf-8'))
                     client.close()
@@ -344,7 +344,7 @@ def recieve():  # Basicly the whole server
                             debug(f'Invalid Type{mes["tpe"]}')
                             debug(mes)
                 
-                else:   # wrong authkey
+                else:   # wrong AuthKey
                     client.send(json.dumps({'Error':'AuthError'}).encode('utf-8'))
                 
             client.close()  # close so it can be reused

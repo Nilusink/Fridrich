@@ -9,7 +9,7 @@ def CPUHeatHandler():
     triggmap = {True:On.on, False:On.off}
     while True:
         file = json.load(open(tempFile, 'r'))
-        maxtemp = file['temp']+25
+        maxtemp = file['temp']+25 if file['temp'] else 100
         currTemp = cpu.temperature
         if currTemp>maxtemp:
             with open(errFile, 'w') as out:
