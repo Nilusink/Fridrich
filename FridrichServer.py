@@ -41,34 +41,53 @@ class DoubleVote:
         self.filePath = filePath
 
         try:
-            self.value = json.load(open(self.filePath, 'r'))
+            value = json.load(open(self.filePath, 'r'))
 
         except FileNotFoundError:
-            self.value = dict()
+            value = dict()
             for element in validUsers:
-                self.value[element['Name']] = 1
+                value[element['Name']] = 1
+        
+        json.dump(value, open(self.filePath, 'w'))
     
+    def read(self):
+        return json.load(open(self.filePath, 'r'))
+    
+    def write(self, value:dict):
+        json.dump(value, open(self.filePath, 'w'))
+
     def vote(self, vote, User):
         votes = Vote.get()
-        if self.value[User] < 1:
+        value = self.read()
+        if value[User] < 1:
             return False
         
         votes[User+'2'] = vote
         Vote.write(votes)
 
-        self.value[User] -= 1
+        value[User] -= 1
+        self.write(value)
         return True
 
     def unVote(self, User):
         votes = Vote.get()
         with suppress(NameError):
             votes.pop(User+'2')
+        
+        value = self.read()
+        if User in value:
+            value[User]+=1
+        
+        self.write(value)
+
         Vote.write(votes)
     
     def getFrees(self, User):
-        if User in self.value:
-            return self.value[User]
+        value = self.read()
+        if User in value:
+            return value[User]
         
+        self.write(value)
         return False
 
 def getNewones(flag):   # get all attendants wich are not in the default name list
