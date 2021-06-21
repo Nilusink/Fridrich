@@ -145,7 +145,7 @@ class Connection:
         StreakDict = {StreakGuy:int() for StreakGuy in StreakGuys}  # create Dictionary with scheme: {a:0, b:0, c:0}
         for StreakGuy in StreakGuys:    # iterate all guys
             for element in fullList:    # iterate all votes
-                if StreakGuy in element:    # guy was in previous vote
+                if StreakGuy.lower() in element.lower():    # guy was in previous vote
                     StreakDict[StreakGuy]+=1    # add to streak and continue
                 else:
                     break   # else begin with new guy
