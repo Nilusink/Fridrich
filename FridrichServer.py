@@ -353,7 +353,6 @@ def recieve():  # Basicly the whole server
                 if mes['AuthKey'] in KeyValue(ClientKeys):    # if AuthKey is correct, go along
                     if mes['type'] in switch:
                         switch[mes['type']](mes, client)
-                        print('message: '+mes)
 
                     else:
                         debug(f'Invalid Type {mes["type"]}                  ')

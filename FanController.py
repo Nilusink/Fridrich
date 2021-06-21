@@ -3,7 +3,7 @@ import time, json
 
 def CPUHeatHandler():
     global currTemp
-
+    On = LED(21)
     cpu = CPUTemperature()
     Trigger = False
     triggmap = {True:On.on, False:On.off}
@@ -34,7 +34,5 @@ if __name__=='__main__':
     errFile = '/home/pi/Server/temp.err.log'
 
     tempFile = '/home/pi/Server/tempData.json'
-
-    On = LED(21)
 
     CPUHeatHandler()
