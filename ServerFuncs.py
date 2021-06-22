@@ -1,4 +1,5 @@
 from json import load, dump
+from contextlib import suppress
 
 # TemperatureReader import
 import RPi.GPIO as GPIO
@@ -13,17 +14,36 @@ GPIO.cleanup()
 instance = dht11.DHT11(pin = 18)
 
 def readTemp():
-    result = instance.read()
-    invalids = int()
-    while not result.is_valid():
-        invalids+=1
-        result = instance.read()
+    try:
+        result = instance.read()    # happens, don't know why
+    except RuntimeError:
+        return None, None
 
-        if invalids==50:
-            print('failed to read sensor')
-            return None, None
-    
-    return result.temperature, result.humidity
+    for _ in range(10): # to get a more pecice value, measure 10 times
+        with suppress(AttributeError):
+            tmp1 = list()
+            tmp2 = list()
+            invalids = int()
+
+            while not result.is_valid():    # only if result is valid
+                invalids+=1
+                with suppress(RuntimeError):
+                    result = instance.read()
+                
+                if invalids>50: # if the value of the sensor is None for 50 times
+                    break
+            
+            if result.temperature: tmp1.append(result.temperature)  # only append values
+            if result.humidity:    tmp2.append(result.humidity) # only append values
+
+    if len(tmp1) == 0 or len(tmp2) == 0:    # if either of the list has zero elements, return error
+        print('Failed to read sensor')
+        return None, None
+
+    temp = round(sum(tmp1)/len(tmp1), 2)    # get average
+    hum  = round(sum(tmp2)/len(tmp2), 2)
+
+    return temp, hum
 
 class VOTES:    # class for votes "variable"
     def __init__(self, getFile, *args): # spciefie main file and other files to update
