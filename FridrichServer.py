@@ -13,90 +13,11 @@ import dht11
 
 # local imports
 from cryption_tools import low
-
+from ServerFuncs import *
 # initialize GPIO
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.cleanup()
-
-class VOTES:
-    def __init__(self, getFile, *args):
-        self.getFile = getFile
-        self.FilesToWrite = args
-    
-    def get(self):
-        odict = json.load(open(self.getFile, 'r'))
-        return odict
-    
-    def write(self, newValue:dict):
-        json.dump(newValue, open(self.getFile, 'w'), indent=4)
-
-        for element in self.FilesToWrite:
-            json.dump(newValue, open(element, 'w'), indent=4)
-
-class DoubleVote:
-    globals()
-    def __init__(self, filePath):
-        global validUsers
-        self.filePath = filePath
-
-        try:
-            value = json.load(open(self.filePath, 'r'))
-
-        except FileNotFoundError:
-            value = dict()
-            for element in validUsers:
-                value[element['Name']] = 1
-        
-        json.dump(value, open(self.filePath, 'w'))
-    
-    def read(self):
-        return json.load(open(self.filePath, 'r'))
-    
-    def write(self, value:dict):
-        print('updating Write')
-        json.dump(value, open(self.filePath, 'w'))
-
-    def vote(self, vote, User):
-        print('called double vote')
-        global Vote
-
-        votes = Vote.get()
-        value = self.read()
-        if value[User] < 1:
-            return False
-        
-        votes[User+'2'] = vote
-        Vote.write(votes)
-
-        print('set votes:', Vote.get())
-
-        value[User] -= 1
-        self.write(value)
-        return True
-
-    def unVote(self, User):
-        global Vote
-
-        votes = Vote.get()
-        with suppress(NameError):
-            votes.pop(User+'2')
-        
-        value = self.read()
-        if User in value:
-            value[User]+=1
-        
-        self.write(value)
-
-        Vote.write(votes)
-    
-    def getFrees(self, User):
-        value = self.read()
-        if User in value:
-            return value[User]
-        
-        self.write(value)
-        return False
 
 def getNewones(flag):   # get all attendants wich are not in the default name list
     global Vote
