@@ -2,20 +2,21 @@ from gpiozero import CPUTemperature, LED
 from traceback import format_exc
 import time, json
 
-def CPUHeatHandler():
-    global currTemp
-    On = LED(21)
-    cpu = CPUTemperature()
-    Trigger = False
-    triggmap = {True:On.on, False:On.off}
-    while True:
+class CPUHeatHandler():
+    def __init__(self):
+        self.On = LED(21)
+        self.cpu = CPUTemperature()
+        self.Trigger = False
+        self.triggmap = {True:self.On.on, False:self.On.off}
+    
+    def iter(self):
         try:
             file = json.load(open(tempFile, 'r'))
             maxtemp = file['temp']+25 if file['temp'] else 100
-            currTemp = cpu.temperature
+            currTemp = self.cpu.temperature
             if currTemp>maxtemp:
                 with open(errFile, 'w') as out:
-                    out.write(f'CPU temp: {currTemp}, Room Temperature: {file["temp"]} - {time.strftime("%H:%M")} | Fan: {Trigger}')
+                    out.write(f'CPU temp: {currTemp}, Room Temperature: {file["temp"]} - {time.strftime("%H:%M")} | Fan: {self.Trigger}')
                 from os import system
                 system('sudo shutdown now')
             
@@ -24,7 +25,7 @@ def CPUHeatHandler():
             else:
                 Trigger = True
             
-            triggmap[Trigger]()
+            self.triggmap[Trigger]()
             
             print(' CPU temp: ', currTemp, time.strftime('%H:%M'), ' | Fan: ', Trigger, end='\r')
             with open(logFile, 'w') as out:
@@ -34,7 +35,7 @@ def CPUHeatHandler():
         except:
             with open(errFile, 'a') as out:
                 out.write(format_exc())
-            exit()
+    
 
 if __name__=='__main__':
     logFile = '/home/pi/Server/temp.log'

@@ -10,6 +10,7 @@ import sys
 # local imports
 from cryption_tools import low
 from ServerFuncs import *
+from FanController import CPUHeatHandler
 
 class DoubleVote:
     globals()
@@ -31,7 +32,6 @@ class DoubleVote:
         return load(open(self.filePath, 'r'))
     
     def write(self, value:dict):
-        print('updating Write')
         dump(value, open(self.filePath, 'w'))
 
     def vote(self, vote, User):
@@ -315,7 +315,7 @@ def recieve():  # Basicly the whole server
     server.close()
 
 def update():   # updates every few seconds
-    global currTemp, reqCounter, Vote, tempLog
+    global currTemp, reqCounter, Vote, FanC
 
     t = time.time   # time instance (for comfort)
     start = t()
@@ -384,6 +384,9 @@ def update():   # updates every few seconds
                 debug.debug('no votes recieved')
             time.sleep(61)
 
+        # -------- Fan Controller --------
+        FanC.iter()
+
 ############################################################################
 #                              Main Program                                #
 ############################################################################
@@ -391,6 +394,8 @@ if __name__=='__main__':
     reqCounter = 0
     cpu = CPUTemperature()
     currTemp = cpu.temperature
+
+    FanC = CPUHeatHandler()
 
     ClientKeys = dict() # list for Client AuthKeys
     GuestKeys = list()
