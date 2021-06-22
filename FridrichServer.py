@@ -210,7 +210,8 @@ class ClientFuncs:  # class for the Switch
 
     def end(message, client, *args):
         global ClientKeys
-        ClientKeys.pop(message['AuthKey'])
+        with suppress(Exception):
+            ClientKeys.pop(message['AuthKey'])
 
         client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
 
