@@ -216,7 +216,7 @@ class ClientFuncs:  # class for the Switch
 
 def recieve():  # Basicly the whole server
     global CalFile, server, reqCounter, ValidUsers, ClientKeys
-    while not Terminate:
+    while not Const.Terminate:
         try:
             # Accept Connection
             try:
@@ -319,7 +319,7 @@ def update():   # updates every few seconds
 
     t = time.time   # time instance (for comfort)
     start = t()
-    while not Terminate:
+    while not Const.Terminate:
 
         # -------- Requests Counter ---------
         if t()-start>=1:    # every 2 seconds

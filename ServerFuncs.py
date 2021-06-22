@@ -46,7 +46,7 @@ class Debug:
     
     def debug(self, *args):
         print(*args)
-        with open(logFile, 'a') as out:
+        with open(self.file, 'a') as out:
             for element in args:
                 out.write(str(element)+'\n')  
 
