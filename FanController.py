@@ -35,11 +35,13 @@ class CPUHeatHandler():
             print(' CPU temp: ', currTemp, time.strftime('%H:%M'), ' | Fan: ', Trigger, end='\r')
             with open(self.logFile, 'w') as out:
                 out.write(f'CPU temp: {currTemp} - {time.strftime("%H:%M")} | Fan: {Trigger}')        
-            time.sleep(10)
+            return True
 
         except:
+            print(format_exc())
             with open(self.errFile, 'a') as out:
                 out.write(format_exc())
+            return format_exc()
     
 
 if __name__=='__main__':

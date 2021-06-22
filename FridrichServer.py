@@ -319,8 +319,8 @@ def update():   # updates every few seconds
 
     t = time.time   # time instance (for comfort)
     start = t()
+    start1 = start
     while not Const.Terminate:
-
         # -------- Requests Counter ---------
         if t()-start>=1:    # every 2 seconds
             start+=1
@@ -385,7 +385,11 @@ def update():   # updates every few seconds
             time.sleep(61)
 
         # -------- Fan Controller --------
-        FanC.iter()
+        if t()-start1>=10:
+            start1+=10
+            resp = FanC.iter()
+            if resp != True:
+                debug.debug('Fan Controller Error\n'+resp)
 
 ############################################################################
 #                              Main Program                                #
