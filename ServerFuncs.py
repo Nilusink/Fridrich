@@ -1,5 +1,30 @@
 from json import load, dump
 
+# TemperatureReader import
+import RPi.GPIO as GPIO
+import dht11
+
+# initialize GPIO
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.cleanup()
+
+# read data using pin 18
+instance = dht11.DHT11(pin = 18)
+
+def readTemp():
+    result = instance.read()
+    invalids = int()
+    while not result.is_valid():
+        invalids+=1
+        result = instance.read()
+
+        if invalids==50:
+            print('failed to read sensor')
+            return None, None
+    
+    return result.temperature, result.humidity
+
 class VOTES:    # class for votes "variable"
     def __init__(self, getFile, *args): # spciefie main file and other files to update
         self.getFile = getFile
@@ -15,66 +40,76 @@ class VOTES:    # class for votes "variable"
         for element in self.FilesToWrite:
             dump(newValue, open(element, 'w'), indent=4)
 
-class DoubleVote:
-    globals()
-    def __init__(self, filePath):
-        global validUsers
-        self.filePath = filePath
-
-        try:
-            value = load(open(self.filePath, 'r'))
-
-        except FileNotFoundError:
-            value = dict()
-            for element in validUsers:
-                value[element['Name']] = 1
-        
-        dump(value, open(self.filePath, 'w'))
+class Debug:
+    def __init__(self, debFile):
+        self.file = debFile
     
-    def read(self):
-        return load(open(self.filePath, 'r'))
+    def debug(self, *args):
+        print(*args)
+        with open(logFile, 'a') as out:
+            for element in args:
+                out.write(str(element)+'\n')  
+
+def checkif(s:str, d:dict): # if s is already voted, return False, else True
+    keys = [d[key] for key in d]+['Lukas', 'Melvin', 'Niclas']  # keys is (ex.) ['Fridrich', 'Lukas', 'Melvin', 'Niclas]
+    for element in keys:
+        if s.lower().replace(' ', '') == element.lower().replace(' ', ''):
+            return element
+    return s
+
+def KeyValue(dictionary:dict):   # funktion to return a list from the Values (funktion becuz of changes)
+    return list(dictionary)
+
+def inverseDict(dictionary:dict):
+    x = dict()
+    for element in dictionary:
+        x[dictionary[element]] = element
+    return x
+
+def getNewones(flag, VoteInstance, lastFile):   # get all attendants wich are not in the default name list
+    newones = list()
+    if flag=='now':
+        tmp = VoteInstance.get()
+    elif flag=='last':
+        tmp = load(open(lastFile, 'r'))
     
-    def write(self, value:dict):
-        print('updating Write')
-        dump(value, open(self.filePath, 'w'))
-
-    def vote(self, vote, User):
-        print('called double vote')
-        global Vote
-
-        votes = Vote.get()
-        value = self.read()
-        if value[User] < 1:
-            return False
-        
-        votes[User+'2'] = vote
-        Vote.write(votes)
-
-        print('set votes:', Vote.get())
-
-        value[User] -= 1
-        self.write(value)
-        return True
-
-    def unVote(self, User):
-        global Vote
-
-        votes = Vote.get()
-        with suppress(NameError):
-            votes.pop(User+'2')
-        
-        value = self.read()
-        if User in value:
-            value[User]+=1
-        
-        self.write(value)
-
-        Vote.write(votes)
+    for element in tmp:
+        if not tmp[element] in ['Lukas', 'Niclas', 'Melvin']+newones:
+            newones.append(tmp[element])
     
-    def getFrees(self, User):
-        value = self.read()
-        if User in value:
-            return value[User]
-        
-        self.write(value)
-        return False
+    return newones
+
+class Constants:
+    def __init__(self):
+        self.port = 12345
+        self.ip = '0.0.0.0'
+        self.Terminate = False
+
+        direc = '/home/pi/Server/'
+        vardirec = '/var/www/html/'
+
+        self.lastFile = direc+'yes.json'
+        self.nowFile = direc+'now.json'
+        self.KingFile = direc+'KingLog.json'
+        self.CalFile = direc+'Calendar.json'
+        self.crypFile = direc+'users.enc'
+        self.versFile = direc+'Version'
+        self.tempLog = direc+'tempData.json'
+
+        self.varTempLog = vardirec+'json/tempData.json'
+        self.varKingLogFile = vardirec+'KingLog.log'
+        self.varLogFile = vardirec+'json/KingLog.json'
+
+        self.varNowFile = vardirec+'json/now.json'
+
+        self.logFile = direc+'Server.log'
+
+        self.doubFile = direc+'dVotes.json'
+
+        self.String = 'abcdefghijklmnopqrstuvwxyz'                               # string for creating auth Keys
+        self.String += self.String.upper()+'1234567890ß´^°!"§$%&/()=?`+*#.:,;µ@€<>|'
+
+        self.defUser = {
+            'Name':'Hurensohn', 
+            'pwd':'Hurensohn'
+        }
