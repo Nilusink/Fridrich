@@ -472,14 +472,6 @@ if __name__=='__main__':
     
     Const = Constants()
 
-    tmp = {
-            'Name':'admin',
-            'pwd':'Nic13.10.25#0213'
-        }
-    
-    with open(Const.AdCrypFile, 'w') as out:
-        out.write(low.encrypt(json.dumps(tmp)))
-
     debug = Debug(Const.logFile)
 
     with open(Const.logFile, 'w') as out:
