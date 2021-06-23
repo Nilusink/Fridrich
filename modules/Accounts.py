@@ -36,5 +36,7 @@ class manager:
 
     def newUser(self, username, password, secClearance):
         accs = self.getAccs()
+        print(username, password, secClearance)
         accs.append({'Name':username, 'pwd':password, 'sec':secClearance})
+        print(accs)
         self.writeAccs(accs)
