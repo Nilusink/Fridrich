@@ -15,7 +15,7 @@ from FanController import CPUHeatHandler
 class DoubleVote:
     globals()
     def __init__(self, filePath):
-        global validUsers
+        validUsers = json.loads(low.decrypt(open(Const.crypFile, 'r').read()))
         self.filePath = filePath
 
         try:
@@ -102,9 +102,11 @@ class AdminFuncs:
         acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read())) # getting and decrypting accounts list
         for element in acclist:
             if element['Name'] == message['OldUser']:
-                debug.debug(element['Name'], ' - ', message['OldUser'])
                 element['Name'] = message['NewUser']  # if user is selected user, change its password
                 continue    # to not further iterate all users
+        
+        with open(Const.crypFile, 'w') as out:  # write output to file
+            out.write(low.encrypt(json.dumps(acclist)))
 
 class ClientFuncs:  # class for the Switch
     globals()
@@ -174,7 +176,8 @@ class ClientFuncs:  # class for the Switch
             debug.debug(f'Invalid Request {message["reqType"]}')
 
     def changePwd(message, client,  *args):
-        global validUsers, ClientKeys
+        global ClientKeys
+        validUsers = json.loads(low.decrypt(open(Const.crypFile, 'r').read()))
         name = ClientKeys[message['AuthKey']]
         for element in validUsers:
             if element['Name'] == name:
@@ -287,6 +290,8 @@ def recieve():  # Basicly the whole server
             }
 
             if mes['type'] == 'auth':   # authorization function
+                validUsers = json.loads(low.decrypt(open(Const.crypFile, 'r').read()))  # get new validUsers list
+
                 IsValid = False
                 key = None
                 if mes['Name'] == Const.AdminUser['Name'] and mes['pwd'] == Const.AdminUser['pwd']:
@@ -454,12 +459,6 @@ if __name__=='__main__':
 
     with open(Const.logFile, 'w') as out:
         out.write('')
-
-    with open(Const.crypFile, 'r') as inp:
-        cstring = inp.read()
-        fstring = low.decrypt(cstring)
-        validUsers = json.loads(fstring)
-        #debug.debug(validUsers)  # prints all users and passwords, not recommendet!
 
     dayRange = 30
     try:
