@@ -201,7 +201,12 @@ class ClientFuncs:  # class for the Switch
 
     def getVote(message, client, *args):
         votes = Vote.get()
-        name = ClientKeys[message['AuthKey']] + '2' if message['flag'] == 'double' else ''
+        if 'double' in message:
+            x = '2' if message['flag'] == 'double' else ''
+        else:
+            x = ''
+            
+        name = ClientKeys[message['AuthKey']] + x
         if not name in Vote.get():
             client.send(json.dumps({'Error':'NotVoted'}).encode('utf-8'))
             return
