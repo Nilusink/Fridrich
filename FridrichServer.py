@@ -306,7 +306,7 @@ def recieve():  # Basicly the whole server
 
                 if mes['AuthKey'] in AdminKeys:
                     if mes['type'] in aswitch:
-                        aswitch[mes['type']]
+                        aswitch[mes['type']](mes, client)
                     
                     else:
                         client.send(json.dumps({'Error':'NotAFunction'}).encode('utf-8'))
