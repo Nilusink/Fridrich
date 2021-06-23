@@ -54,7 +54,7 @@ class DoubleVote:
         global Vote
 
         votes = Vote.get()
-        with suppress(NameError):
+        with suppress(KeyError):
             votes.pop(User+'2')
         
         value = self.read()
