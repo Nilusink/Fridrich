@@ -48,7 +48,7 @@ class window:
                                         font = "Helvetica 15"
                                         )
         
-        self.updateButton = tk.Button(self.mainFrame, text='Update', 
+        self.updateButton = tk.Button(self.mainFrame, text='Set', 
                                         command=self.update, background='grey', 
                                         fg='white', width=10, 
                                         relief=tk.FLAT, 
@@ -86,6 +86,8 @@ class window:
                 tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold")
                 ))
 
+            self.userEs[-1][0].delete(0, 'end')
+            self.userEs[-1][1].delete(0, 'end')
             self.userEs[-1][0].insert(0, user['Name'])
             self.userEs[-1][1].insert(0, user['pwd'])
             self.userEs[-1][0].place(x=50, y=i*50+10)
