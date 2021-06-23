@@ -90,6 +90,5 @@ if __name__=='__main__':
             input('\npress enter to continue\n\n')
 
     except KeyboardInterrupt:
-        print('Closing Cleint...')
-        del (st, start, c, e, end, start1, c1, end1, e1, end2)
+        print('Closing Client...')
         exit()

@@ -82,6 +82,20 @@ def KeyFunc(length=10): # generate random key
         s = ''.join(sample(Const.String), length) # if try #1 is already in ClientKeys, try again
     return s
 
+class AdminFuncs:
+    def getAccounts(message, client):
+        acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read()))
+        client.send(json.dumps(acclist).encode('utf-8'))
+    
+    def setPassword(message, *args):
+        acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read()))
+        acclist[message['User']] = message['newPwd']
+        with open(Const.crypFile, 'w') as out:
+            out.write(low.encrypt(json.dumps(acclist)))
+
+    def setUsername(message, *args):
+        None
+
 class ClientFuncs:  # class for the Switch
     globals()
     def vote(message, client, *args):
@@ -235,6 +249,10 @@ def recieve():  # Basicly the whole server
                 continue    # if message is invalid or an other error occured, ignore the message and jump to start
             #debug.debug(f'Got message: {mes}')
 
+            aswitch = {
+                'getUsers':AdminFuncs.getAccounts
+            }
+
             switch = {                                  # instead of 5 billion if'S
                 'vote':ClientFuncs.vote, 
                 'unvote':ClientFuncs.unvote, 
@@ -259,17 +277,22 @@ def recieve():  # Basicly the whole server
             if mes['type'] == 'auth':   # authorization function
                 IsValid = False
                 key = None
+                if mes['Name'] == Const.AdminUser['Name'] and mes['pwd'] == Const.AdminUser['pwd']:
+                    IsValid = True
+                    key = KeyFunc(lenght=30)
+                    AdminKeys.append(key)
+
+                elif mes['Name'] == Const.defUser['Name'] and mes['pwd'] == Const.defUser['pwd']:
+                        IsValid = True
+                        key = KeyFunc(length=20)
+                        GuestKeys.append(key)
+
                 for element in validUsers:  # if username and password is Correct (in list)
                     if mes['Name'] == element['Name'] and mes['pwd'] == element['pwd']:
                         IsValid = True  # set to True
                         iDict = inverseDict(ClientKeys) # inversed dict
                         key = KeyFunc(length=20)    # create unique Authorization key (so this function doesn't need to be executed every time)
                         ClientKeys[key] = mes['Name']  # append key to valid keys
-
-                    elif mes['Name'] == Const.defUser['Name'] and mes['pwd'] == Const.defUser['pwd']:
-                        IsValid = True
-                        key = KeyFunc(length=20)
-                        GuestKeys.append(key)
 
                 debug.debug(f'Username : {mes["Name"]}, Auth: {IsValid}       ')
                 client.send(json.dumps({'Auth':IsValid, 'AuthKey':key}).encode('utf-8'))    # send result to client
@@ -281,7 +304,14 @@ def recieve():  # Basicly the whole server
                     client.close()
                     continue
 
-                if mes['AuthKey'] in KeyValue(ClientKeys):    # if AuthKey is correct, go along
+                if mes['AuthKey'] in AdminKeys:
+                    if mes['type'] in aswitch:
+                        aswitch[mes['type']]
+                    
+                    else:
+                        client.send(json.dumps({'Error':'NotAFunction'}).encode('utf-8'))
+
+                elif mes['AuthKey'] in KeyValue(ClientKeys):    # if AuthKey is correct, go along
                     if mes['type'] in switch:
                         switch[mes['type']](mes, client)
 
@@ -402,6 +432,7 @@ if __name__=='__main__':
 
     FanC = CPUHeatHandler()
 
+    AdminKeys  = list()
     ClientKeys = dict() # list for Client AuthKeys
     GuestKeys = list()
     

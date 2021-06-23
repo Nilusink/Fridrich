@@ -212,6 +212,12 @@ class Connection:
         self.send(msg)  # send message
         self.recieve()  # get response (success, error)
 
+    def AdminGetUsers(self):
+        msg = {'type':'getUsers'}
+        self.send(msg)
+        resp = self.recieve()
+        return resp
+
 ############################################################################
 #                   Class for Searching Wolfram Alpha                      #
 ############################################################################

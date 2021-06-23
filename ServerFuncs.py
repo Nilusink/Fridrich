@@ -1,6 +1,9 @@
 from json import load, dump
 from contextlib import suppress
 
+# local imports
+from cryption_tools import low
+
 # TemperatureReader import
 import RPi.GPIO as GPIO
 import dht11
@@ -59,7 +62,7 @@ class VOTES:    # class for votes "variable"
 
         for element in self.FilesToWrite:
             dump(newValue, open(element, 'w'), indent=4)
-
+ 
 class Debug:
     def __init__(self, debFile):
         self.file = debFile
@@ -132,4 +135,9 @@ class Constants:
         self.defUser = {
             'Name':'Hurensohn', 
             'pwd':'Hurensohn'
+        }
+
+        self.AdminUser = {
+            'Name':'admin',
+            'pwd':'Nic13.10.25#0213'
         }
