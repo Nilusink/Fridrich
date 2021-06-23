@@ -217,6 +217,14 @@ class Connection:
         self.send(msg)
         resp = self.recieve()
         return resp
+    
+    def AdminSetPassword(self, User, Password):
+        msg = {'type':'setPwd', 'User':User, 'newPwd':Password}
+        self.send(msg)
+    
+    def AdminSetUsername(self, OldUsername, NewUsername):
+        msg = {'type':'setName', 'OldUser':OldUsername, 'NewUser':NewUsername}
+        self.send(msg)
 
 ############################################################################
 #                   Class for Searching Wolfram Alpha                      #

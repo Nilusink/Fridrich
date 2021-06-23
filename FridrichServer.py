@@ -84,17 +84,25 @@ def KeyFunc(length=10): # generate random key
 
 class AdminFuncs:
     def getAccounts(message, client):
-        acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read()))
-        client.send(json.dumps(acclist).encode('utf-8'))
+        acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read())) # getting and decrypting accounts list
+        client.send(json.dumps(acclist).encode('utf-8')) # sending list to client
     
     def setPassword(message, *args):
-        acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read()))
-        acclist[message['User']] = message['newPwd']
-        with open(Const.crypFile, 'w') as out:
+        acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read())) # getting and decrypting accounts list
+        for element in acclist:
+            if element['Name'] == message['User']:
+                element['pwd'] = message['newPwd']  # if user is selected user, change its password
+                continue    # to not further iterate all users
+
+        with open(Const.crypFile, 'w') as out:  # write output to file
             out.write(low.encrypt(json.dumps(acclist)))
 
     def setUsername(message, *args):
-        None
+        acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read())) # getting and decrypting accounts list
+        for element in acclist:
+            if element['Name'] == message['OldUser']:
+                element['Name'] = message['NewUser']  # if user is selected user, change its password
+                continue    # to not further iterate all users
 
 class ClientFuncs:  # class for the Switch
     globals()
@@ -250,7 +258,9 @@ def recieve():  # Basicly the whole server
             #debug.debug(f'Got message: {mes}')
 
             aswitch = {
-                'getUsers':AdminFuncs.getAccounts
+                'getUsers':AdminFuncs.getAccounts,
+                'setPwd':AdminFuncs.setPassword,
+                'setName':AdminFuncs.setUsername
             }
 
             switch = {                                  # instead of 5 billion if'S
@@ -279,7 +289,7 @@ def recieve():  # Basicly the whole server
                 key = None
                 if mes['Name'] == Const.AdminUser['Name'] and mes['pwd'] == Const.AdminUser['pwd']:
                     IsValid = True
-                    key = KeyFunc(lenght=30)
+                    key = KeyFunc(length=30)
                     AdminKeys.append(key)
 
                 elif mes['Name'] == Const.defUser['Name'] and mes['pwd'] == Const.defUser['pwd']:
