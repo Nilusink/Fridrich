@@ -102,7 +102,7 @@ class AdminFuncs:
         acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read())) # getting and decrypting accounts list
         for element in acclist:
             if element['Name'] == message['OldUser']:
-                debug.debug(element['Name'], ' - ', element['OldUser'])
+                debug.debug(element['Name'], ' - ', message['OldUser'])
                 element['Name'] = message['NewUser']  # if user is selected user, change its password
                 continue    # to not further iterate all users
 
