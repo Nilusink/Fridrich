@@ -303,10 +303,11 @@ def recieve():  # Basicly the whole server
 
             if mes['type'] == 'auth':   # authorization function
                 validUsers = json.loads(low.decrypt(open(Const.crypFile, 'r').read()))  # get new validUsers list
+                AdminUser  = json.loads(low.decrypt(open(Const.AdCrypFile, 'r').read()))  # get Admin User dict
 
                 IsValid = False
                 key = None
-                if mes['Name'] == Const.AdminUser['Name'] and mes['pwd'] == Const.AdminUser['pwd']:
+                if mes['Name'] == AdminUser['Name'] and mes['pwd'] == AdminUser['pwd']:
                     IsValid = True
                     key = KeyFunc(length=30)
                     AdminKeys.append(key)
@@ -470,6 +471,14 @@ if __name__=='__main__':
     GuestKeys = list()
     
     Const = Constants()
+
+    tmp = {
+            'Name':'admin',
+            'pwd':'Nic13.10.25#0213'
+        }
+    
+    with open(Const.AdCrypFile, 'w') as out:
+        out.write(low.encrypt(json.dumps(tmp)))
 
     debug = Debug(Const.logFile)
 

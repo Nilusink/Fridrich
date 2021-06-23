@@ -119,6 +119,8 @@ class Constants:
         self.versFile = direc+'Version'
         self.tempLog = direc+'tempData.json'
 
+        self.AdCrypFile = direc+'admin.enc'
+
         self.varTempLog = vardirec+'json/tempData.json'
         self.varKingLogFile = vardirec+'KingLog.log'
         self.varLogFile = vardirec+'json/KingLog.json'
@@ -135,9 +137,4 @@ class Constants:
         self.defUser = {
             'Name':'Hurensohn', 
             'pwd':'Hurensohn'
-        }
-
-        self.AdminUser = {
-            'Name':'admin',
-            'pwd':'Nic13.10.25#0213'
         }
