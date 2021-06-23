@@ -347,7 +347,7 @@ def recieve():  # Basicly the whole server
                             client.send(json.dumps({'Error':'SwitchToUser'}).encode('utf-8'))
                     
                         else:
-                            client.send(json.dumps({'Error':'NotAFunction'}).encode('utf-8'))
+                            client.send(json.dumps({'Error':'InvalidRequest', 'request':mes['type']}).encode('utf-8'))
 
                 elif mes['AuthKey'] in KeyValue(ClientKeys):    # if AuthKey is correct, go along
                     if mes['type'] in switch:

@@ -115,10 +115,7 @@ class window:
             
             if pwd!=opwd:
                 self.c.AdminSetPassword(name, pwd)
-        
-        self.updateButton.config(relief=tk.SUNKEN)
-        sleep(1)
-        self.updateButton.config(relief=tk.FLAT)
+
         self.refresh()
 
     def end(self, *args):

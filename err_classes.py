@@ -15,3 +15,9 @@ class UnknownError(Exception):
 
 class RegistryError(Exception):
     pass
+
+class NotAUser(Exception):
+    pass
+
+class InvalidRequest(Exception):
+    pass

@@ -26,7 +26,7 @@ class Connection:
 
         self.AuthKey = None 
 
-    def errorHandler(self, error:str):
+    def errorHandler(self, error:str, *args):
         if error == 'AccessError':
             raise err.AccessError('Access denied')
         
@@ -45,8 +45,14 @@ class Connection:
         elif error == 'RegistryError':
             raise err.RegistryError('Not registered')
         
+        elif error == 'SwitchToUser':
+            raise err.NotAUser('Switch to user account to vote')
+        
+        elif error == 'InvalidRequest':
+            raise err.InvalidRequest('Invalid erquest: '+args[0]['request'])
+        
         else:
-            raise err.UnknownError('An Unknown Error Occured')
+            raise err.UnknownError('An Unknown Error Occured: '+error)
 
     def send(self, dictionary:dict):
         self.reconnect() # reconnect to the server
@@ -73,7 +79,7 @@ class Connection:
         if success:
             return msg  # if no error was detected, return dict
         
-        self.errorHandler(msg['Error']) #raise error if serverside-error
+        self.errorHandler(msg['Error'], msg) #raise error if serverside-error
 
     def reconnect(self):
         try:    # try to reconnect to the server
