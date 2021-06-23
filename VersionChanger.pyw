@@ -1,7 +1,7 @@
 import tkinter as tk
 
 # local imports
-from FridrichBackend import Connection
+from modules.FridrichBackend import Connection
 
 class window:
     def __init__(self, ConnectionInstance):
