@@ -11,6 +11,7 @@ import sys
 from modules.cryption_tools import low
 from modules.ServerFuncs import *
 from modules.FanController import CPUHeatHandler
+from modules.Accounts import manager
 
 class DoubleVote:
     globals()
@@ -82,33 +83,15 @@ def KeyFunc(length=10): # generate random key
 
 class AdminFuncs:
     def getAccounts(message, client, *args):
-        acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read())) # getting and decrypting accounts list
+        acclist = AccManager.getAccs() # getting and decrypting accounts list
         client.send(json.dumps(acclist).encode('utf-8')) # sending list to client
     
     def setPassword(message, client, *args):
-        acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read())) # getting and decrypting accounts list
-        for element in acclist:
-            if element['Name'] == message['User']:
-                element['pwd'] = message['newPwd']  # if user is selected user, change its password
-                continue    # to not further iterate all users
-
-        with open(Const.crypFile, 'w') as out:  # write output to file
-            out.write(low.encrypt(json.dumps(acclist)))
-        
+        AccManager.setPwd(message['User'], message['newPwd'])   # set new password
         client.send(json.dumps({'Success':'Done'}).encode('utf-8')) # send success
 
     def setUsername(message, client, *args):
-        acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read())) # getting and decrypting accounts list
-        for i, element in enumerate(acclist):
-            if element['Name'] == message['OldUser']:
-                element['Name'] = message['NewUser']  # if user is selected user, change its password
-                continue    # to not further iterate all users and get i value of element
-
-        acclist[i] = element    # make sure the new element is in list and on correct position
-
-        with open(Const.crypFile, 'w') as out:  # write output to file
-            out.write(low.encrypt(json.dumps(acclist)))
-        
+        AccManager.setUserN(message['OldUser'], message['NewUser']) # change account name     
         client.send(json.dumps({'Success':'Done'}).encode('utf-8')) # send success
 
     def end(*args):
@@ -467,6 +450,7 @@ if __name__=='__main__':
     currTemp = cpu.temperature
 
     FanC = CPUHeatHandler()
+    AccManager = manager()
 
     AdminKeys  = list()
     ClientKeys = dict() # list for Client AuthKeys
