@@ -83,11 +83,11 @@ def KeyFunc(length=10): # generate random key
     return s
 
 class AdminFuncs:
-    def getAccounts(message, client):
+    def getAccounts(message, client, *args):
         acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read())) # getting and decrypting accounts list
         client.send(json.dumps(acclist).encode('utf-8')) # sending list to client
     
-    def setPassword(message, *args):
+    def setPassword(message, client, *args):
         acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read())) # getting and decrypting accounts list
         for element in acclist:
             if element['Name'] == message['User']:
@@ -96,19 +96,27 @@ class AdminFuncs:
 
         with open(Const.crypFile, 'w') as out:  # write output to file
             out.write(low.encrypt(json.dumps(acclist)))
+        
+        client.send(json.dumps({'Success':'Done'}).encode('utf-8')) # send success
 
-    def setUsername(message, *args):
+    def setUsername(message, client, *args):
         debug.debug(message)
         acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read())) # getting and decrypting accounts list
         for i, element in enumerate(acclist):
             if element['Name'] == message['OldUser']:
                 element['Name'] = message['NewUser']  # if user is selected user, change its password
-                continue    # to not further iterate all users
+                continue    # to not further iterate all users and get i value of element
 
-        acclist[i] = element
+        acclist[i] = element    # make sure the new element is in list and on correct position
 
         with open(Const.crypFile, 'w') as out:  # write output to file
             out.write(low.encrypt(json.dumps(acclist)))
+        
+        client.send(json.dumps({'Success':'Done'}).encode('utf-8')) # send success
+
+    def end(*args):
+        global AdminKeys
+        AdminKeys = list()
 
 class ClientFuncs:  # class for the Switch
     globals()
@@ -237,12 +245,10 @@ class ClientFuncs:  # class for the Switch
             return
         client.send(json.dumps({'Value':frees}).encode('utf-8'))
 
-    def end(message, client, *args):
+    def end(message, *args):
         global ClientKeys
         with suppress(Exception):
             ClientKeys.pop(message['AuthKey'])
-
-        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
 
 def recieve():  # Basicly the whole server
     global CalFile, server, reqCounter, ValidUsers, ClientKeys
@@ -267,7 +273,11 @@ def recieve():  # Basicly the whole server
             aswitch = {
                 'getUsers':AdminFuncs.getAccounts,
                 'setPwd':AdminFuncs.setPassword,
-                'setName':AdminFuncs.setUsername
+                'setName':AdminFuncs.setUsername,
+                'end':AdminFuncs.end,
+
+                'setVersion':ClientFuncs.setVersion,
+                'getVersion':ClientFuncs.setVersion
             }
 
             switch = {                                  # instead of 5 billion if'S
@@ -327,8 +337,12 @@ def recieve():  # Basicly the whole server
                     if mes['type'] in aswitch:
                         aswitch[mes['type']](mes, client)
                     
-                    else:
-                        client.send(json.dumps({'Error':'NotAFunction'}).encode('utf-8'))
+                    else: 
+                        if mes['type'] in switch:
+                            client.send(json.dumps({'Error':'SwitchToUser'}).encode('utf-8'))
+                    
+                        else:
+                            client.send(json.dumps({'Error':'NotAFunction'}).encode('utf-8'))
 
                 elif mes['AuthKey'] in KeyValue(ClientKeys):    # if AuthKey is correct, go along
                     if mes['type'] in switch:

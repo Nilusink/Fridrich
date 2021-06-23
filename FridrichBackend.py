@@ -207,10 +207,6 @@ class Connection:
         resp = self.recieve()
         return resp['Value']
 
-    def end(self):
-        msg = {'type':'end'}    # set message
-        self.send(msg)  # send message
-        self.recieve()  # get response (success, error)
 
     def AdminGetUsers(self):
         msg = {'type':'getUsers'}
@@ -221,11 +217,17 @@ class Connection:
     def AdminSetPassword(self, User, Password):
         msg = {'type':'setPwd', 'User':User, 'newPwd':Password}
         self.send(msg)
+        self.recieve()
     
     def AdminSetUsername(self, OldUsername, NewUsername):
         msg = {'type':'setName', 'OldUser':OldUsername, 'NewUser':NewUsername}
         self.send(msg)
+        self.recieve()
 
+
+    def end(self):
+        msg = {'type':'end'}    # set message
+        self.send(msg)  # send message
 ############################################################################
 #                   Class for Searching Wolfram Alpha                      #
 ############################################################################
