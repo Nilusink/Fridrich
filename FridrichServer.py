@@ -100,7 +100,6 @@ class AdminFuncs:
         client.send(json.dumps({'Success':'Done'}).encode('utf-8')) # send success
 
     def setUsername(message, client, *args):
-        debug.debug(message)
         acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read())) # getting and decrypting accounts list
         for i, element in enumerate(acclist):
             if element['Name'] == message['OldUser']:
@@ -202,7 +201,7 @@ class ClientFuncs:  # class for the Switch
 
     def getVote(message, client, *args):
         votes = Vote.get()
-        name = ClientKeys[message['AuthKey']]
+        name = ClientKeys[message['AuthKey']] + '2' if message['flag'] == 'double' else ''
         if not name in Vote.get():
             client.send(json.dumps({'Error':'NotVoted'}).encode('utf-8'))
             return

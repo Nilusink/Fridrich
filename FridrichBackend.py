@@ -181,8 +181,8 @@ class Connection:
         self.send(mes)  # send message
         self.recieve()  # get response (success, error)
 
-    def getVote(self):
-        mes = {'type':'getVote'}    # set message
+    def getVote(self, flag='normal'):   # flag can be normal or double
+        mes = {'type':'getVote', 'flag':flag}    # set message
         self.send(mes)  # send request
 
         resp = self.recieve()   # get response
