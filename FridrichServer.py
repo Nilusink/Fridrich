@@ -8,7 +8,7 @@ from random import sample
 import sys
 
 # local imports
-from cryption_tools import low
+from modules.cryption_tools import low
 from modules.ServerFuncs import *
 from modules.FanController import CPUHeatHandler
 
