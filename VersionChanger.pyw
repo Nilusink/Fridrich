@@ -12,7 +12,7 @@ class window:
         # tkinter
         self.c = ConnectionInstance
         self.root = tk.Tk()
-        self.root.title('Fridrich AdminTool')
+        self.root.title('Fridrich Version Changer')
         
         self.root.minsize(width=600, height=150)
         self.root.maxsize(width=600, height=150)
