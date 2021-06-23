@@ -46,8 +46,6 @@ class DoubleVote:
         votes[User+'2'] = vote
         Vote.write(votes)
 
-        print('set votes:', Vote.get())
-
         value[User] -= 1
         self.write(value)
         return True
