@@ -376,12 +376,12 @@ def recieve():  # Basicly the whole server
             client.close()  # close so it can be reused
 
         except Exception:
-            client.send(json.dumps({'Error':'Unknown'}).encode('utf-8'))
-            client.close()
+            with suppress(BrokenPipeError):
+                client.send(json.dumps({'Error':'Unknown'}).encode('utf-8'))
+                client.close()
+
             debug.debug('Thread 1 error:')
             debug.debug(format_exc())
-
-    server.close()
 
 def update():   # updates every few seconds
     global currTemp, reqCounter, Vote, FanC
