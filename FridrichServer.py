@@ -100,11 +100,13 @@ class AdminFuncs:
     def setUsername(message, *args):
         debug.debug(message)
         acclist = json.loads(low.decrypt(open(Const.crypFile, 'r').read())) # getting and decrypting accounts list
-        for element in acclist:
+        for i, element in enumerate(acclist):
             if element['Name'] == message['OldUser']:
                 element['Name'] = message['NewUser']  # if user is selected user, change its password
                 continue    # to not further iterate all users
-        
+
+        acclist[i] = element
+
         with open(Const.crypFile, 'w') as out:  # write output to file
             out.write(low.encrypt(json.dumps(acclist)))
 
