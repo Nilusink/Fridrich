@@ -1,10 +1,8 @@
-from contextlib import suppress
-#from wolframalpha import Client
 import socket, json
 
 # local imports
-import err_classes as err
-from useful import Dict
+import modules.err_classes as err
+from modules.useful import Dict
 
 ############################################################################
 #                             other functions                              #

@@ -9,8 +9,8 @@ import sys
 
 # local imports
 from cryption_tools import low
-from ServerFuncs import *
-from FanController import CPUHeatHandler
+from modules.ServerFuncs import *
+from modules.FanController import CPUHeatHandler
 
 class DoubleVote:
     globals()

@@ -2,7 +2,7 @@ from time import sleep
 import tkinter as tk
 
 # local imports
-from FridrichBackend import Connection
+from modules.FridrichBackend import Connection
 
 class window:
     def __init__(self, ConnectionInstance):
@@ -10,23 +10,23 @@ class window:
         self.userEs = list()
 
         # tkinter
-        self.c = ConnectionInstance
+        self.c = ConnectionInstance # setup root
         self.root = tk.Tk()
         self.root.title('Fridrich AdminTool')
         
         self.root.minsize(width=600, height=700)
         self.root.maxsize(width=600, height=700)
 
-        self.root.bind('<Escape>', self.end)
+        self.root.bind('<Escape>', self.end)    # bin esc to exit
 
-
+        #   login Frame
         self.loginFrame = tk.Frame(self.root, bg='black', width=600, height=700)
 
-        tk.Label(self.loginFrame, text='Password', font = "Helvetica 50 bold", bg='black', fg='white').place(x=137, y=250)
-        self.loginPassword = tk.Entry(self.loginFrame, width=20, font = "Helvetica 25 bold", show='*')
+        tk.Label(self.loginFrame, text='Password', font = "Helvetica 50 bold", bg='black', fg='white').place(x=137, y=250)  # Password Label
+        self.loginPassword = tk.Entry(self.loginFrame, width=20, font = "Helvetica 25 bold", show='*')  # Password entry
         self.loginPassword.place(x=115, y=350)
 
-        self.loginButton = tk.Button(self.loginFrame, 
+        self.loginButton = tk.Button(self.loginFrame,   # button for login
                                     text='login', bg='grey5', 
                                     fg='white', relief=tk.FLAT,
                                     command=self.login,
@@ -36,19 +36,19 @@ class window:
 
         self.loginFrame.place(x=0, y=0, anchor='nw')
 
-        self.root.bind("<Return>", self.login)
+        self.root.bind("<Return>", self.login)  # bind Return to login
 
         # mainframe
         self.mainFrame = tk.Frame(self.root, bg='grey', width=600, height=700)
 
-        self.refreshButton = tk.Button(self.mainFrame, text='Refresh', 
+        self.refreshButton = tk.Button(self.mainFrame, text='Refresh', # button for refreshing
                                         command=self.refresh, background='grey', 
                                         fg='white', width=10, 
                                         relief=tk.FLAT, 
                                         font = "Helvetica 15"
                                         )
         
-        self.updateButton = tk.Button(self.mainFrame, text='Set', 
+        self.updateButton = tk.Button(self.mainFrame, text='Set',   # button for setting new usernames/passwords
                                         command=self.update, background='grey', 
                                         fg='white', width=10, 
                                         relief=tk.FLAT, 
