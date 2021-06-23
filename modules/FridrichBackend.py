@@ -228,6 +228,8 @@ class Connection:
         self.send(msg)
         self.recieve()
 
+    def AdminAddUser(self, username, password, clearance):
+        msg = {'type':'newUser', 'Name':username, 'pwd':password, 'sec':clearance}
 
     def end(self):
         msg = {'type':'end'}    # set message

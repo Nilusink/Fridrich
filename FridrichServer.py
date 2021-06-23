@@ -81,6 +81,8 @@ def KeyFunc(length=10): # generate random key
         s = ''.join(sample(Const.String), length) # if try #1 is already in ClientKeys, try again
     return s
 
+def sendSuccess(client):
+    client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
 class AdminFuncs:
     def getAccounts(message, client, *args):
         acclist = AccManager.getAccs() # getting and decrypting accounts list
@@ -88,11 +90,15 @@ class AdminFuncs:
     
     def setPassword(message, client, *args):
         AccManager.setPwd(message['User'], message['newPwd'])   # set new password
-        client.send(json.dumps({'Success':'Done'}).encode('utf-8')) # send success
+        sendSuccess(client) # send success
 
     def setUsername(message, client, *args):
         AccManager.setUserN(message['OldUser'], message['NewUser']) # change account name     
-        client.send(json.dumps({'Success':'Done'}).encode('utf-8')) # send success
+        sendSuccess(client) # send success
+
+    def addUser(message, client, *args):
+        AccManager.newUser(message['Name'], message['pwd'], message['sec'])
+        sendSuccess(client)
 
     def end(*args):
         global AdminKeys
@@ -259,6 +265,7 @@ def recieve():  # Basicly the whole server
                 'getUsers':AdminFuncs.getAccounts,
                 'setPwd':AdminFuncs.setPassword,
                 'setName':AdminFuncs.setUsername,
+                'newUser':AdminFuncs.addUser,
                 'end':AdminFuncs.end,
 
                 'setVersion':ClientFuncs.setVersion,
@@ -450,13 +457,13 @@ if __name__=='__main__':
     currTemp = cpu.temperature
 
     FanC = CPUHeatHandler()
-    AccManager = manager()
 
     AdminKeys  = list()
     ClientKeys = dict() # list for Client AuthKeys
     GuestKeys = list()
     
     Const = Constants()
+    AccManager = manager(Const.crypFile)
 
     debug = Debug(Const.logFile)
 
