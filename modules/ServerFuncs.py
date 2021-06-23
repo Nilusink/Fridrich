@@ -2,7 +2,7 @@ from json import load, dump
 from contextlib import suppress
 
 # local imports
-from cryption_tools import low
+from modules.cryption_tools import low
 
 # TemperatureReader import
 import RPi.GPIO as GPIO
