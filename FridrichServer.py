@@ -109,6 +109,7 @@ class FunctionManager:
                 'setName':AdminFuncs.setUsername,
                 'setSec':AdminFuncs.setSecurity,
                 'newUser':AdminFuncs.addUser,
+                'rmUser':AdminFuncs.rmUser,
                 'end':AdminFuncs.end,
 
                 'setVersion':ClientFuncs.setVersion,

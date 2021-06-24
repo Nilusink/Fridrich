@@ -86,7 +86,9 @@ class window:
             self.userEs.append((
                 tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold"), 
                 tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold"),
-                tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold")
+                tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold"),
+                tk.Button(self.mainFrame, width=1, font = "Helvetica 10 bold", text = '-', 
+                    bg = 'red', command = lambda e=None: self.c.AdminRemoveUser(user['Name']))
                 ))
 
             self.userEs[-1][0].delete(0, 'end')
@@ -98,6 +100,8 @@ class window:
             self.userEs[-1][0].place(x=50, y=i*50+10)
             self.userEs[-1][1].place(x=300, y=i*50+10)
             self.userEs[-1][2].place(x=550, y=i*50+10)
+
+            self.userEs[-1][3].place(x=10,  y=i*50+10)
         
         newWindowHeight = i*50+100
         self.root.maxsize(width=800, height=newWindowHeight)

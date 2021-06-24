@@ -242,6 +242,11 @@ class Connection:
         self.send(msg)
         self.recieve()
 
+    def AdminRemoveUser(self, username):
+        msg = {'type':'rmUser', 'Name':username}
+        self.send(msg)
+        self.recieve()
+
     def end(self):
         msg = {'type':'end'}    # set message
         self.send(msg)  # send message
