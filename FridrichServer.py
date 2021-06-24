@@ -373,6 +373,8 @@ def recieve():  # Basicly the whole server
                         fullTraceback = format_exc()
 
                     if error:
+                        if fullTraceback:
+                            print(fullTraceback)
                         client.send(json.dumps({'Error':error, 'info':info, 'full':fullTraceback}).encode('utf-8'))
                 
             client.close()  # close so it can be reused
