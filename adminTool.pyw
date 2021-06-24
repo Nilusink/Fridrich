@@ -3,6 +3,13 @@ import tkinter as tk
 
 # local imports
 from modules.FridrichBackend import Connection
+from modules.useful import List, Dict
+
+secEquals = {'admin':0, 'user':1, 'guest':2}
+
+def sortUserList(lst:list, flag='sec'):
+    values = sorted(lst, key=lambda element: secEquals[element[flag]])
+    return list(values)
 
 class window:
     def __init__(self, ConnectionInstance):
@@ -81,7 +88,7 @@ class window:
 
         sec = self.c.getSecClearance()
         if sec != 'admin':
-            messagebox.showerror('Error', 'Account is not admin')
+            messagebox.showerror('Error', f'Account is not admin ({sec})')
             return
 
         self.root.bind("<Return>", tk.DISABLED)
@@ -102,7 +109,7 @@ class window:
         
         self.userEs = list()
         
-        for i, user in enumerate(self.users):
+        for i, user in enumerate(sortUserList(self.users)):
             self.userEs.append((
                 tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold"), 
                 tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold"),
@@ -121,7 +128,8 @@ class window:
             self.userEs[-1][1].place(x=300, y=i*50+10)
             self.userEs[-1][2].place(x=550, y=i*50+10)
 
-            self.userEs[-1][3].place(x=10,  y=i*50+10)
+            if user['Name'] != 'admin':
+                self.userEs[-1][3].place(x=10,  y=i*50+10)
         
         newWindowHeight = i*50+100
         self.root.maxsize(width=800, height=newWindowHeight)
@@ -129,7 +137,7 @@ class window:
         self.mainFrame.config(height=newWindowHeight)
 
         self.refreshButton.place(x=50, y=newWindowHeight-50)
-        self.addButton.place(x=400, y=newWindowHeight-50)
+        self.addButton.place(x=350, y=newWindowHeight-50)
         self.updateButton.place(x=650, y=newWindowHeight-50)
 
         self.root.update()
@@ -173,7 +181,7 @@ class window:
         exit()
 
 if __name__ == '__main__':
-    c = Connection(mode='debug')
+    c = Connection()
 
     w = window(c)
     w.run()

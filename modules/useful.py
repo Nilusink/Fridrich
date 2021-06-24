@@ -41,6 +41,9 @@ class Dict:
         for element in dictionary:
             x[dictionary[element]] = element
         return x
+    
+    def sort(dictionary:dict):
+        return {Index:dictionary[Index] for Index in sorted(list(dictionary))}
 
 class const:
     def __init__(self, val):
