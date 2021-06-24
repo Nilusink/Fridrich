@@ -359,7 +359,8 @@ def recieve():  # Basicly the whole server
                 else:
                     try:
                         error, info = FunManager.exec(mes, client)
-                    except Exception as e:
+
+                    except KeyboardInterrupt:# Exception as e:
                         error = str(type(e)).split("'")[1]
                         info  = str(e)
 
