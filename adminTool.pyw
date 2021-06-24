@@ -3,7 +3,6 @@ import tkinter as tk
 
 # local imports
 from modules.FridrichBackend import Connection
-from modules.useful import List, Dict
 
 secEquals = {'admin':0, 'user':1, 'guest':2}
 
