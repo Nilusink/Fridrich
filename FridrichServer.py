@@ -360,12 +360,13 @@ def recieve():  # Basicly the whole server
                     try:
                         error, info = FunManager.exec(mes, client)
 
-                    except KeyboardInterrupt:# Exception as e:
+                    except Exception as e:
                         error = str(type(e)).split("'")[1]
                         info  = str(e)
+                        fullTraceback = format_exc()
 
                     if error:
-                        client.send(json.dumps({'Error':error, 'info':info}).encode('utf-8'))
+                        client.send(json.dumps({'Error':error, 'info':info, 'full':fullTraceback}).encode('utf-8'))
                 
             client.close()  # close so it can be reused
 

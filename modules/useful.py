@@ -23,7 +23,7 @@ class List:
         return nlist
     
     def getInnerDictValues(lst:list, Index): # when given ([{'a':5}, {'b':3}, {'a':2, 'b':3}], 'a') returns (5, 2)
-        out = tuple()
+        out = list()
         for element in lst:
             if Index in element:
                 out.append(element[Index])
