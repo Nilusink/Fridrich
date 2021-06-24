@@ -76,6 +76,12 @@ class window:
         pwd = self.loginPassword.get()
 
         if not self.c.auth(name, pwd):
+            messagebox.showerror('Error', 'Invalid Username/Password')
+            return
+
+        sec = self.c.getSecClearance()
+        if sec != 'admin':
+            messagebox.showerror('Error', 'Account is not admin')
             return
 
         self.root.bind("<Return>", tk.DISABLED)
@@ -167,7 +173,7 @@ class window:
         exit()
 
 if __name__ == '__main__':
-    c = Connection(mode='normal')
+    c = Connection(mode='debug')
 
     w = window(c)
     w.run()

@@ -350,7 +350,7 @@ def recieve():  # Basicly the whole server
                 verify(mes['Name'], mes['pwd'], client)
 
             elif mes['type'] == 'secReq':
-                client.send(json.dumps({'sec':ClientKeys[mes['AuthKey']]}))
+                client.send(json.dumps({'sec':ClientKeys[mes['AuthKey']]}).encode('utf-8'))
 
             else:
                 if not 'AuthKey' in mes:    # if no AuthKey in message
@@ -373,9 +373,12 @@ def recieve():  # Basicly the whole server
                 
             client.close()  # close so it can be reused
 
-        except Exception:
+        except Exception as e:
             with suppress(BrokenPipeError):
-                client.send(json.dumps({'Error':'Unknown'}).encode('utf-8'))
+                error = str(type(e)).split("'")[1]
+                info  = str(e)
+                fullTraceback = format_exc()
+                client.send(json.dumps({'Error':error, 'info':info, 'full':fullTraceback}).encode('utf-8'))
                 client.close()
 
             debug.debug('Thread 1 error:')

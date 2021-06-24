@@ -1,0 +1,2 @@
+
+        pwd = self.loginPassword.get()
