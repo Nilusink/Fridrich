@@ -153,16 +153,17 @@ class window:
             opwd = self.users[i]['pwd']
             osec = self.users[i]['sec'] if 'sec' in self.users[i] else ''
     
-            if name!=oname:
-                print(name, oname)
-                self.c.AdminSetUsername(oname, name)
-            
-            if pwd!=opwd:
-                self.c.AdminSetPassword(name, pwd)
-            
-            if sec!=osec:
-                self.c.AdminSetSecurity(name, sec)
-
+            try:
+                if name!=oname:
+                    self.c.AdminSetUsername(oname, name)
+                
+                if pwd!=opwd:
+                    self.c.AdminSetPassword(name, pwd)
+                
+                if sec!=osec:
+                    self.c.AdminSetSecurity(name, sec)
+            except NameError:
+                messagebox.showerror('Error', 'Name already exists')
         self.refresh()
 
     def remUser(self, user):
