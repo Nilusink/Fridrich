@@ -108,7 +108,7 @@ class Constants:
         self.ip = '0.0.0.0'
         self.Terminate = False
 
-        direc = '/home/pi/Server/'
+        direc = '/home/pi/Server/data/'
         vardirec = '/var/www/html/'
 
         self.lastFile = direc+'yes.json'
