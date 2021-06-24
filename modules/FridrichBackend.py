@@ -49,6 +49,9 @@ class Connection:
         elif error == 'InvalidRequest':
             raise err.InvalidRequest('Invalid erquest: '+args[0]['request'])
         
+        elif error == 'SecurityNotSet':
+            raise err.SecutiryClearanceNotSet('Security clearance not set! Contact administrator')
+        
         else:
             raise err.UnknownError('An Unknown Error Occured: '+error)
 
@@ -230,6 +233,8 @@ class Connection:
 
     def AdminAddUser(self, username, password, clearance):
         msg = {'type':'newUser', 'Name':username, 'pwd':password, 'sec':clearance}
+        self.send(msg)
+        self.recieve()
 
     def end(self):
         msg = {'type':'end'}    # set message

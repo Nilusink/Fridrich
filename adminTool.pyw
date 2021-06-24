@@ -14,8 +14,8 @@ class window:
         self.root = tk.Tk()
         self.root.title('Fridrich AdminTool')
         
-        self.root.minsize(width=600, height=700)
-        self.root.maxsize(width=600, height=700)
+        self.root.minsize(width=850, height=700)
+        self.root.maxsize(width=850, height=700)
 
         self.root.bind('<Escape>', self.end)    # bin esc to exit
 
@@ -83,15 +83,19 @@ class window:
         for i, user in enumerate(self.users):
             self.userEs.append((
                 tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold"), 
+                tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold"),
                 tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold")
                 ))
 
             self.userEs[-1][0].delete(0, 'end')
             self.userEs[-1][1].delete(0, 'end')
+            self.userEs[-1][2].delete(0, 'end')
             self.userEs[-1][0].insert(0, user['Name'])
             self.userEs[-1][1].insert(0, user['pwd'])
+            self.userEs[-1][2].insert(0, user['sec'] if 'sec' in user else '')
             self.userEs[-1][0].place(x=50, y=i*50+10)
             self.userEs[-1][1].place(x=300, y=i*50+10)
+            self.userEs[-1][1].place(x=550, y=i*50+10)
         
         newWindowHeight = i*50+100
         self.root.maxsize(width=600, height=newWindowHeight)
@@ -106,15 +110,20 @@ class window:
         for i in range(len(self.userEs)):
             name = self.userEs[i][0].get()
             pwd = self.userEs[i][1].get()
+            sec = self.userEs[i]['sec'] if 'sec' in self.userEs[i] else ''
 
             oname = self.users[i]['Name']
             opwd = self.users[i]['pwd']
+            osec = self.users[i]['sec'] if 'sec' in self.users[i] else ''
     
             if name!=oname:
                 self.c.AdminSetUsername(oname, name)
             
             if pwd!=opwd:
                 self.c.AdminSetPassword(name, pwd)
+            
+            if sec!=osec:
+                self.c.AdminSetSecurity(name, sec)
 
         self.refresh()
 

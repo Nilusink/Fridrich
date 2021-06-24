@@ -83,6 +83,76 @@ def KeyFunc(length=10): # generate random key
 
 def sendSuccess(client):
     client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
+
+def verify(username, password, client):
+    resp = AccManager.verify(username, password)
+    IsValid = False
+    if resp == None:
+        client.send(json.dumps({'Error':'SecurityNotSet'}))
+        return
+
+    elif resp:
+        IsValid = True
+        key = KeyFunc(length=30)
+        ClientKeys[key] = resp
+        
+    debug.debug(f'Username : {username}, Auth: {IsValid}')
+    client.send(json.dumps({'Auth':IsValid, 'AuthKey':key}).encode('utf-8'))    # send result to client
+
+class FunctionManager:
+    def __init__(self):
+        self.switch = {
+            'admin' : {
+                'getUsers':AdminFuncs.getAccounts,
+                'setPwd':AdminFuncs.setPassword,
+                'setName':AdminFuncs.setUsername,
+                'newUser':AdminFuncs.addUser,
+                'end':AdminFuncs.end,
+                'setVersion':ClientFuncs.setVersion,
+                'getVersion':ClientFuncs.setVersion
+            },
+            'user' : {                                  # instead of 5 billion if'S
+                'vote':ClientFuncs.vote, 
+                'unvote':ClientFuncs.unvote, 
+                'CalEntry':ClientFuncs.CalendarHandler, 
+                'req':ClientFuncs.reqHandler,
+                'end':ClientFuncs.end,
+                'changePwd':ClientFuncs.changePwd,
+                'getVote':ClientFuncs.getVote,
+                'getVersion':ClientFuncs.getVersion,
+                'setVersion':ClientFuncs.setVersion,
+                'dvote':ClientFuncs.DoubVote,
+                'dUvote':ClientFuncs.DoubUnVote,
+                'getFrees':ClientFuncs.getFreeVotes
+            },
+            'guest' : {                                  # instead of 5 billion if'S
+                'CalEntry':ClientFuncs.CalendarHandler, 
+                'req':ClientFuncs.reqHandler,
+                'end':ClientFuncs.end,
+            }
+        }
+    
+    def exec(self, message, client):
+        clearance = message['AuthKey']
+        if clearance in self.switch:
+            if message['type'] in self.switch[clearance]:
+                self.switch[clearance][message['type']](message(client))
+                return False, None
+            
+            else:
+                isIn = False
+                for element in self.switch:
+                    if message['type'] in self.switch(element):
+                        isIn = True
+                        req  = element 
+                        break
+                
+                if isIn:
+                    return 'ClearanceIssue', f'Clrearance reqired: "{req}"'
+
+        else:
+            return 'ClearanceIssue', f'Clearance not set: "{clearance}"'
+        
 class AdminFuncs:
     def getAccounts(message, client, *args):
         acclist = AccManager.getAccs() # getting and decrypting accounts list
@@ -95,9 +165,17 @@ class AdminFuncs:
     def setUsername(message, client, *args):
         AccManager.setUserN(message['OldUser'], message['NewUser']) # change account name     
         sendSuccess(client) # send success
+    
+    def setSecurity(message, client, *args):
+        AccManager.setUserSec(message['Name'], message['sec'])
+        sendSuccess(client)
 
     def addUser(message, client, *args):
         AccManager.newUser(message['Name'], message['pwd'], message['sec'])
+        sendSuccess(client)
+    
+    def rmUser(message, client, *args):
+        AccManager.rmUser(message['Name'])
         sendSuccess(client)
 
     def end(*args):
@@ -242,7 +320,7 @@ class ClientFuncs:  # class for the Switch
             ClientKeys.pop(message['AuthKey'])
 
 def recieve():  # Basicly the whole server
-    global CalFile, server, reqCounter, ValidUsers, ClientKeys
+    global server, reqCounter, ClientKeys
     while not Const.Terminate:
         try:
             # Accept Connection
@@ -261,63 +339,8 @@ def recieve():  # Basicly the whole server
                 continue    # if message is invalid or an other error occured, ignore the message and jump to start
             #debug.debug(f'Got message: {mes}')
 
-            aswitch = {
-                'getUsers':AdminFuncs.getAccounts,
-                'setPwd':AdminFuncs.setPassword,
-                'setName':AdminFuncs.setUsername,
-                'newUser':AdminFuncs.addUser,
-                'end':AdminFuncs.end,
-
-                'setVersion':ClientFuncs.setVersion,
-                'getVersion':ClientFuncs.setVersion
-            }
-
-            switch = {                                  # instead of 5 billion if'S
-                'vote':ClientFuncs.vote, 
-                'unvote':ClientFuncs.unvote, 
-                'CalEntry':ClientFuncs.CalendarHandler, 
-                'req':ClientFuncs.reqHandler,
-                'end':ClientFuncs.end,
-                'changePwd':ClientFuncs.changePwd,
-                'getVote':ClientFuncs.getVote,
-                'getVersion':ClientFuncs.getVersion,
-                'setVersion':ClientFuncs.setVersion,
-                'dvote':ClientFuncs.DoubVote,
-                'dUvote':ClientFuncs.DoubUnVote,
-                'getFrees':ClientFuncs.getFreeVotes
-            }
-
-            gSwitch = {                                  # instead of 5 billion if'S
-                'CalEntry':ClientFuncs.CalendarHandler, 
-                'req':ClientFuncs.reqHandler,
-                'end':ClientFuncs.end,
-            }
-
             if mes['type'] == 'auth':   # authorization function
-                validUsers = json.loads(low.decrypt(open(Const.crypFile, 'r').read()))  # get new validUsers list
-                AdminUser  = json.loads(low.decrypt(open(Const.AdCrypFile, 'r').read()))  # get Admin User dict
-
-                IsValid = False
-                key = None
-                if mes['Name'] == AdminUser['Name'] and mes['pwd'] == AdminUser['pwd']:
-                    IsValid = True
-                    key = KeyFunc(length=30)
-                    AdminKeys.append(key)
-
-                elif mes['Name'] == Const.defUser['Name'] and mes['pwd'] == Const.defUser['pwd']:
-                        IsValid = True
-                        key = KeyFunc(length=20)
-                        GuestKeys.append(key)
-
-                for element in validUsers:  # if username and password is Correct (in list)
-                    if mes['Name'] == element['Name'] and mes['pwd'] == element['pwd']:
-                        IsValid = True  # set to True
-                        iDict = inverseDict(ClientKeys) # inversed dict
-                        key = KeyFunc(length=20)    # create unique Authorization key (so this function doesn't need to be executed every time)
-                        ClientKeys[key] = mes['Name']  # append key to valid keys
-
-                debug.debug(f'Username : {mes["Name"]}, Auth: {IsValid}       ')
-                client.send(json.dumps({'Auth':IsValid, 'AuthKey':key}).encode('utf-8'))    # send result to client
+                verify(mes['Name'], mes['pwd'], client)
 
             else:
                 if not 'AuthKey' in mes:    # if no AuthKey in message
@@ -326,42 +349,47 @@ def recieve():  # Basicly the whole server
                     client.close()
                     continue
 
-                if mes['AuthKey'] in AdminKeys:
-                    if mes['type'] in aswitch:
-                        aswitch[mes['type']](mes, client)
-                    
-                    else: 
-                        if mes['type'] in switch:
-                            client.send(json.dumps({'Error':'SwitchToUser'}).encode('utf-8'))
-                    
-                        else:
-                            client.send(json.dumps({'Error':'InvalidRequest', 'request':mes['type']}).encode('utf-8'))
+                else:
+                    error, info = FunManager.exec(mes, client)
+                    if error:
+                        client.send(json.dumps({'Error':error, 'info':info}))
 
-                elif mes['AuthKey'] in KeyValue(ClientKeys):    # if AuthKey is correct, go along
-                    if mes['type'] in switch:
-                        switch[mes['type']](mes, client)
-
-                    else:
-                        debug.debug(f'Invalid Type {mes["type"]}                  ')
-                        debug.debug(mes)
-                
-                elif mes['AuthKey'] in KeyValue(GuestKeys):
-                    if mes['type'] in gSwitch:
-                        switch[mes['type']](mes, client)
+                # if mes['AuthKey'] in AdminKeys:
+                #     if mes['type'] in aswitch:
+                #         aswitch[mes['type']](mes, client)
                     
-                    else:
-                        if mes['type'] in switch:
-                            debug.debug('Access denied to guest user')
-                            client.send(json.dumps({'Error':'AccessError'}).encode('utf-8'))
+                #     else: 
+                #         if mes['type'] in switch:
+                #             client.send(json.dumps({'Error':'SwitchToUser'}).encode('utf-8'))
+                    
+                #         else:
+                #             client.send(json.dumps({'Error':'InvalidRequest', 'request':mes['type']}).encode('utf-8'))
 
-                        else:
-                            debug.debug(f'Invalid Type{mes["tpe"]}')
-                            debug.debug(mes)
+                # elif mes['AuthKey'] in KeyValue(ClientKeys):    # if AuthKey is correct, go along
+                #     if mes['type'] in switch:
+                #         switch[mes['type']](mes, client)
+
+                #     else:
+                #         debug.debug(f'Invalid Type {mes["type"]}                  ')
+                #         debug.debug(mes)
                 
-                else:   # wrong AuthKey
-                    client.send(json.dumps({'Error':'AuthError'}).encode('utf-8'))
+                # elif mes['AuthKey'] in KeyValue(GuestKeys):
+                #     if mes['type'] in gSwitch:
+                #         switch[mes['type']](mes, client)
+                    
+                #     else:
+                #         if mes['type'] in switch:
+                #             debug.debug('Access denied to guest user')
+                #             client.send(json.dumps({'Error':'AccessError'}).encode('utf-8'))
+
+                #         else:
+                #             debug.debug(f'Invalid Type{mes["tpe"]}')
+                #             debug.debug(mes)
                 
-            client.close()  # close so it can be reused
+                # else:   # wrong AuthKey
+                #     client.send(json.dumps({'Error':'AuthError'}).encode('utf-8'))
+                
+            #client.close()  # close so it can be reused
 
         except Exception:
             with suppress(BrokenPipeError):
@@ -458,12 +486,11 @@ if __name__=='__main__':
 
     FanC = CPUHeatHandler()
 
-    AdminKeys  = list()
     ClientKeys = dict() # list for Client AuthKeys
-    GuestKeys = list()
     
     Const = Constants()
     AccManager = manager(Const.crypFile)
+    FunManager = FunctionManager()
 
     debug = Debug(Const.logFile)
 

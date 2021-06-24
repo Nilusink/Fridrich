@@ -34,9 +34,38 @@ class manager:
 
         self.writeAccs(acclist) # write output to file
 
-    def newUser(self, username, password, secClearance):
-        accs = self.getAccs()
-        print(username, password, secClearance)
-        accs.append({'Name':username, 'pwd':password, 'sec':secClearance})
-        print(accs)
-        self.writeAccs(accs)
+    def setUserSec(self, username, SecurityClearance):
+        acclist = self.getAccs() # getting and decrypting accounts list
+        for i, element in enumerate(acclist):
+            if element['Name'] == username:
+                element['sec'] = SecurityClearance  # if user is selected user, change its security clearance
+                continue    # to not further iterate all users and get i value of element
+
+        acclist[i] = element    # make sure the new element is in list and on correct position
+
+        self.writeAccs(acclist) # write output to file
+
+    def newUser(self, username, password, secClearance):    # add new user
+        accs = self.getAccs()   # get accounts
+        accs.append({'Name':username, 'pwd':password, 'sec':secClearance})  # create user
+        self.writeAccs(accs)    # write user
+    
+    def rmUser(self, username): # remove user
+        accs = self.getAccs()   # get accounts
+        for i in range(len(accs)):  # iterate accounts
+            if accs[i]['Name'] == username: #   if account name is username
+                accs.pop(i) # remove user
+                break
+        
+        self.writeAccs(accs)    # update accounts
+
+    def verify(self, username, password):   # return False or user security Clearance
+        users = self.getAccs()  # get accounts
+        Auth = False
+        for element in users:   # iterate users
+            if username == element['Name'] and password == element['pwd']:  # if username is account name
+                Auth = element['sec']   # set element 'sec' of user
+                if Auth == '':
+                    Auth = None
+
+        return Auth # return result

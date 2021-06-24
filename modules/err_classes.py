@@ -21,3 +21,6 @@ class NotAUser(Exception):
 
 class InvalidRequest(Exception):
     pass
+
+class SecutiryClearanceNotSet(Exception):
+    pass
