@@ -111,6 +111,7 @@ class Constants:
         direc = '/home/pi/Server/data/'
         vardirec = '/var/www/html/'
 
+        # server files
         self.lastFile = direc+'yes.json'
         self.nowFile = direc+'now.json'
         self.KingFile = direc+'KingLog.json'
@@ -118,18 +119,19 @@ class Constants:
         self.crypFile = direc+'users.enc'
         self.versFile = direc+'Version'
         self.tempLog = direc+'tempData.json'
+        self.doubFile = direc+'dVotes.json'
+        self.logFile = direc+'Server.log'
 
-        self.AdCrypFile = direc+'admin.enc'
-
+        # web serveer files
         self.varTempLog = vardirec+'json/tempData.json'
         self.varKingLogFile = vardirec+'KingLog.log'
         self.varLogFile = vardirec+'json/KingLog.json'
-
         self.varNowFile = vardirec+'json/now.json'
 
-        self.logFile = direc+'Server.log'
-
-        self.doubFile = direc+'dVotes.json'
+        # fan controller files
+        self.logFile = direc+'temp.log'
+        self.errFile = direc+'temp.err.log'
+        self.tempFile = direc+'tempData.json'
 
         self.String = 'abcdefghijklmnopqrstuvwxyz'                               # string for creating auth Keys
         self.String += self.String.upper()+'1234567890ß´^°!"§$%&/()=?`+*#.:,;µ@€<>|'
