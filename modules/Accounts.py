@@ -28,7 +28,7 @@ class manager:
         acclist = self.getAccs() # getting and decrypting accounts list
         UsedNames = List.getInnerDictValues(acclist, 'Name').pop(oldUser)
 
-        if newUser in UsedNames:
+        if not newUser in UsedNames:
             for i, element in enumerate(acclist):
                 if element['Name'] == oldUser:
                     element['Name'] = newUser  # if user is selected user, change its password
@@ -53,6 +53,9 @@ class manager:
 
     def newUser(self, username, password, secClearance):    # add new user
         accs = self.getAccs()   # get accounts
+        UsedNames = List.getInnerDictValues(accs, 'Name').pop(username)
+        if username in UsedNames:
+            raise NameError('Username already exists')
         accs.append({'Name':username, 'pwd':password, 'sec':secClearance})  # create user
         self.writeAccs(accs)    # write user
     
