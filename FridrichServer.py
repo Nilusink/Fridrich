@@ -149,6 +149,9 @@ class FunctionManager:
                 
                 if isIn:
                     return 'ClearanceIssue', f'Clrearance reqired: "{req}"'
+                
+                else:
+                    return 'InvalidRequest', f'Invalid Request: "{message["type"]}"'
 
         else:
             return 'ClearanceIssue', f'Clearance not set: "{clearance}"'
@@ -354,42 +357,8 @@ def recieve():  # Basicly the whole server
                     if error:
                         client.send(json.dumps({'Error':error, 'info':info}))
 
-                # if mes['AuthKey'] in AdminKeys:
-                #     if mes['type'] in aswitch:
-                #         aswitch[mes['type']](mes, client)
-                    
-                #     else: 
-                #         if mes['type'] in switch:
-                #             client.send(json.dumps({'Error':'SwitchToUser'}).encode('utf-8'))
-                    
-                #         else:
-                #             client.send(json.dumps({'Error':'InvalidRequest', 'request':mes['type']}).encode('utf-8'))
-
-                # elif mes['AuthKey'] in KeyValue(ClientKeys):    # if AuthKey is correct, go along
-                #     if mes['type'] in switch:
-                #         switch[mes['type']](mes, client)
-
-                #     else:
-                #         debug.debug(f'Invalid Type {mes["type"]}                  ')
-                #         debug.debug(mes)
                 
-                # elif mes['AuthKey'] in KeyValue(GuestKeys):
-                #     if mes['type'] in gSwitch:
-                #         switch[mes['type']](mes, client)
-                    
-                #     else:
-                #         if mes['type'] in switch:
-                #             debug.debug('Access denied to guest user')
-                #             client.send(json.dumps({'Error':'AccessError'}).encode('utf-8'))
-
-                #         else:
-                #             debug.debug(f'Invalid Type{mes["tpe"]}')
-                #             debug.debug(mes)
-                
-                # else:   # wrong AuthKey
-                #     client.send(json.dumps({'Error':'AuthError'}).encode('utf-8'))
-                
-            #client.close()  # close so it can be reused
+            client.close()  # close so it can be reused
 
         except Exception:
             with suppress(BrokenPipeError):
