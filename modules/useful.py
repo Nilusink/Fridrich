@@ -21,7 +21,13 @@ class List:
             if not element in nlist:
                 nlist.append(element)
         return nlist
-
+    
+    def getInnerDictValues(lst:list, Index): # when given ([{'a':5}, {'b':3}, {'a':2, 'b':3}], 'a') returns (5, 2)
+        out = tuple()
+        for element in lst:
+            if Index in element:
+                out.append(element[Index])
+        return out
 class Dict:
     def Indexes(dictionary:dict):   # returns the indexes of the dictionary
         return list(dictionary)

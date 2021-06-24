@@ -169,7 +169,7 @@ class AdminFuncs:
         sendSuccess(client) # send success
 
     def setUsername(message, client, *args):
-        AccManager.setUserN(message['OldUser'], message['NewUser']) # change account name     
+        AccManager.setUserN(message['OldUser'], message['NewUser']) # change account name 
         sendSuccess(client) # send success
     
     def setSecurity(message, client, *args):
@@ -356,7 +356,12 @@ def recieve():  # Basicly the whole server
                     continue
 
                 else:
-                    error, info = FunManager.exec(mes, client)
+                    try:
+                        error, info = FunManager.exec(mes, client)
+                    except Exception as e:
+                        error = str(type(e)).split("'")[1]
+                        info  = str(e)
+                        
                     if error:
                         client.send(json.dumps({'Error':error, 'info':info}).encode('utf-8'))
 

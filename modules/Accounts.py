@@ -1,4 +1,5 @@
 from modules.cryption_tools import low
+from useful import List
 from json import loads, dumps
 
 class manager:
@@ -25,14 +26,19 @@ class manager:
 
     def setUserN(self, oldUser, newUser):
         acclist = self.getAccs() # getting and decrypting accounts list
-        for i, element in enumerate(acclist):
-            if element['Name'] == oldUser:
-                element['Name'] = newUser  # if user is selected user, change its password
-                continue    # to not further iterate all users and get i value of element
+        UsedNames = List.getInnerDictValues(acclist, 'Name').pop(oldUser)
 
-        acclist[i] = element    # make sure the new element is in list and on correct position
+        if newUser in UsedNames:
+            for i, element in enumerate(acclist):
+                if element['Name'] == oldUser:
+                    element['Name'] = newUser  # if user is selected user, change its password
+                    continue    # to not further iterate all users and get i value of element
 
-        self.writeAccs(acclist) # write output to file
+            acclist[i] = element    # make sure the new element is in list and on correct position
+
+            self.writeAccs(acclist) # write output to file
+            return
+        raise NameError('Username already exists')
 
     def setUserSec(self, username, SecurityClearance):
         acclist = self.getAccs() # getting and decrypting accounts list
