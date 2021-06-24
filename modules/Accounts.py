@@ -56,6 +56,8 @@ class manager:
         accs = list(self.getAccs())   # get accounts
         UsedNames = List.getInnerDictValues(accs, 'Name')
         print(UsedNames)
+        print()
+        print()
 
         if username in UsedNames:
             raise NameError('Username already exists')
