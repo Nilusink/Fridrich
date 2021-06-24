@@ -47,7 +47,7 @@ class Connection:
             raise err.NotAUser('Switch to user account to vote')
         
         elif error == 'InvalidRequest':
-            raise err.InvalidRequest('Invalid erquest: '+args[0]['request'])
+            raise err.InvalidRequest('Invalid erquest: '+args[0]['info'])
         
         elif error == 'SecurityNotSet':
             raise err.SecutiryClearanceNotSet('Security clearance not set! Contact administrator')
@@ -233,7 +233,7 @@ class Connection:
         self.recieve()
 
     def AdminSetSecurity(self, username, password):
-        msg = {'type':'set', 'Name':username, 'sec':password}
+        msg = {'type':'setSec', 'Name':username, 'sec':password}
         self.send(msg)
         self.recieve()
 
