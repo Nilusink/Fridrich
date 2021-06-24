@@ -70,13 +70,15 @@ class DoubleVote:
     
     def getFrees(self, User):
         value = self.read()
+        print(value)
+        print(f'user {User} in value: {User in value}')
         if User in value:
             return value[User]
 
         return False
 
 def KeyFunc(length=10): # generate random key
-    global String, ClientKeys
+    global  ClientKeys
     s = ''.join(sample(Const.String, length)) # try #1
     while s in ClientKeys: 
         s = ''.join(sample(Const.String), length) # if try #1 is already in ClientKeys, try again
@@ -193,10 +195,10 @@ class AdminFuncs:
 class ClientFuncs:  # class for the Switch
     globals()
     def vote(message, client, *args):
-        global nowFile, Vote, ClientKeys
+        global  Vote, ClientKeys
         votes = Vote.get()    # update votes
         resp = checkif(message['vote'], votes)
-        name = ClientKeys[message['AuthKey']]
+        name = ClientKeys[message['AuthKey'][1]]
         votes[name] = resp    # set <hostname of client> to clients vote
         debug.debug(f'got vote: {message["vote"]}                     .')   # print that it recievd vote (debugging)
         Vote.write(votes)  # write to file
@@ -206,7 +208,7 @@ class ClientFuncs:  # class for the Switch
     def unvote(message, client, *args):
         global nowFile, Vote
         votes = Vote.get()    # update votes
-        name = ClientKeys[message['AuthKey']]
+        name = ClientKeys[message['AuthKey'][1]]
         with suppress(KeyError): 
             del votes[name]  # try to remove vote from client, if client hasn't voted yet, ignore it
         Vote.write(votes) # update file
@@ -260,7 +262,7 @@ class ClientFuncs:  # class for the Switch
     def changePwd(message, client,  *args):
         global ClientKeys
         validUsers = json.loads(low.decrypt(open(Const.crypFile, 'r').read()))
-        name = ClientKeys[message['AuthKey']]
+        name = ClientKeys[message['AuthKey'][1]]
         for element in validUsers:
             if element['Name'] == name:
                 element['pwd'] = message['newPwd']
@@ -279,7 +281,7 @@ class ClientFuncs:  # class for the Switch
         else:
             x = ''
 
-        name = ClientKeys[message['AuthKey']] + x
+        name = ClientKeys[message['AuthKey'][1]] + x
         if not name in Vote.get():
             client.send(json.dumps({'Error':'NotVoted'}).encode('utf-8'))
             return
@@ -298,7 +300,7 @@ class ClientFuncs:  # class for the Switch
 
     def DoubVote(message, client, *args):
         global DV, Vote
-        name = ClientKeys[message['AuthKey']]
+        name = ClientKeys[message['AuthKey'][1]]
         resp = checkif(message['vote'], Vote.get())     
         resp = DV.vote(resp, name)
         if resp:
@@ -314,7 +316,7 @@ class ClientFuncs:  # class for the Switch
     
     def getFreeVotes(message, client, *args):
         global DV
-        name = ClientKeys[message['AuthKey']]
+        name = ClientKeys[message['AuthKey'][1]]
         frees = DV.getFrees(name)
 
         if frees == False and frees != 0:
@@ -351,7 +353,7 @@ def recieve():  # Basicly the whole server
                 verify(mes['Name'], mes['pwd'], client)
 
             elif mes['type'] == 'secReq':
-                client.send(json.dumps({'sec':ClientKeys[mes['AuthKey']]}).encode('utf-8'))
+                client.send(json.dumps({'sec':ClientKeys[mes['AuthKey'][0]]}).encode('utf-8'))
 
             else:
                 if not 'AuthKey' in mes:    # if no AuthKey in message

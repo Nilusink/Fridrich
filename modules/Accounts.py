@@ -76,7 +76,7 @@ class manager:
         for element in users:   # iterate users
             if username == element['Name'] and password == element['pwd']:  # if username is account name
                 if 'sec' in element:
-                    Auth = element['sec']   # set element 'sec' of user
+                    Auth = element['sec'], element['Name']   # set element 'sec' of user
                     if Auth == '':
                         Auth = None
                 else:
