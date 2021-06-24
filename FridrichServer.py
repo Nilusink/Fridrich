@@ -36,20 +36,24 @@ class DoubleVote:
         dump(value, open(self.filePath, 'w'))
 
     def vote(self, vote, User):
-        print('called double vote')
         global Vote
 
         votes = Vote.get()
         value = self.read()
-        if value[User] < 1:
-            return False
+        if User in value:
+            if value[User] < 1:
+                return False
         
-        votes[User+'2'] = vote
-        Vote.write(votes)
+            votes[User+'2'] = vote
+            Vote.write(votes)
 
-        value[User] -= 1
-        self.write(value)
-        return True
+            value[User] -= 1
+            self.write(value)
+            return True
+        
+        value[User] = 0
+        Vote.write(value)
+        return False
 
     def unVote(self, User):
         global Vote
@@ -58,20 +62,17 @@ class DoubleVote:
         with suppress(KeyError):
             votes.pop(User+'2')
         
-        value = self.read()
-        if User in value:
+            value = self.read()
             value[User]+=1
-        
-        self.write(value)
-
-        Vote.write(votes)
+            
+            self.write(value)
+            Vote.write(votes)
     
     def getFrees(self, User):
         value = self.read()
         if User in value:
             return value[User]
-        
-        self.write(value)
+
         return False
 
 def KeyFunc(length=10): # generate random key
