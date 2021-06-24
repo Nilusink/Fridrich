@@ -185,9 +185,9 @@ class AdminFuncs:
         AccManager.rmUser(message['Name'])
         sendSuccess(client)
 
-    def end(*args):
-        global AdminKeys
-        AdminKeys = list()
+    def end(message, *args):
+        with suppress(Exception):
+            ClientKeys.pop(message['AuthKey'])
 
 class ClientFuncs:  # class for the Switch
     globals()
@@ -348,6 +348,9 @@ def recieve():  # Basicly the whole server
 
             if mes['type'] == 'auth':   # authorization function
                 verify(mes['Name'], mes['pwd'], client)
+
+            elif mes['type'] == 'secReq':
+                client.send(json.dumps({'sec':ClientKeys[mes['AuthKey']]}))
 
             else:
                 if not 'AuthKey' in mes:    # if no AuthKey in message

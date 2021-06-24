@@ -55,6 +55,9 @@ class Connection:
         elif error == 'SecurityNotSet':
             raise err.SecutiryClearanceNotSet('Security clearance not set! Contact administrator')
         
+        elif error == 'NameError':
+            raise NameError('Username Already exits')
+        
         else:
             if self.mode == 'debug':
                 st = f'Error: {error}\nInfo: {args[0]["info"] if "info" in args[0] else "None"}\nFullBug: {args[0]["full"] if "full" in args[0] else "None"}'
@@ -108,6 +111,11 @@ class Connection:
         self.AuthKey = resp['AuthKey']
 
         return resp['Auth'] # return True or False
+
+    def getSecClearance(self):
+        msg = {'type':'secReq'}
+        self.send(msg)
+        self.recieve()
 
     def getAttendants(self, flag = 'now'): # flag can be 'now' or 'last'
         self.send({'type':'req', 'reqType':'attds', 'atype':flag})  # send message

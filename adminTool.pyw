@@ -1,4 +1,4 @@
-from time import sleep
+from tkinter import messagebox
 import tkinter as tk
 
 # local imports
@@ -14,13 +14,19 @@ class window:
         self.root = tk.Tk()
         self.root.title('Fridrich AdminTool')
         
-        self.root.minsize(width=600, height=700)
-        self.root.maxsize(width=600, height=700)
+        self.root.minsize(width=600, height=500)
+        self.root.maxsize(width=600, height=500)
 
         self.root.bind('<Escape>', self.end)    # bin esc to exit
 
         #   login Frame
         self.loginFrame = tk.Frame(self.root, bg='black', width=600, height=700)
+
+        # username label and button
+        tk.Label(self.loginFrame, text='Username', font = "Helvetica 50 bold", bg='black', fg='white').place(x=137, y=50)  # Username Label
+        self.loginUsername = tk.Entry(self.loginFrame, width=20, font = "Helvetica 25 bold")  # Username entry
+        self.loginUsername.place(x=115, y=150)
+        self.loginUsername.insert(0, 'admin')
 
         tk.Label(self.loginFrame, text='Password', font = "Helvetica 50 bold", bg='black', fg='white').place(x=137, y=250)  # Password Label
         self.loginPassword = tk.Entry(self.loginFrame, width=20, font = "Helvetica 25 bold", show='*')  # Password entry
@@ -61,16 +67,15 @@ class window:
                                         relief=tk.FLAT, 
                                         font = "Helvetica 15"
                                         )
-        
-        self.login()
 
     def run(self):
         self.root.mainloop()
 
     def login(self, *args):
+        name = self.loginUsername.get()
         pwd = self.loginPassword.get()
 
-        if not self.c.auth('admin', 'Nic13.10.25#0213'):
+        if not self.c.auth(name, pwd):
             return
 
         self.root.bind("<Return>", tk.DISABLED)
@@ -97,7 +102,7 @@ class window:
                 tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold"),
                 tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold"),
                 tk.Button(self.mainFrame, width=1, font = "Helvetica 10 bold", text = '-', 
-                    bg = 'red', command = lambda e=None: self.remUser(user['Name']))
+                    bg = 'red', command = lambda e=None, name=user['Name']: self.remUser(name))
                 ))
 
             self.userEs[-1][0].delete(0, 'end')
@@ -149,14 +154,20 @@ class window:
         self.update()
 
     def addUser(self):
-        self.c.AdminAddUser('', '', '')
+        self.update()
+        try:
+            self.c.AdminAddUser('', '', '')
+            self.update()
+
+        except Exception:
+            messagebox.showerror('Error', f'User with name "{""}" already exists')
 
     def end(self, *args):
         self.c.end()
         exit()
 
 if __name__ == '__main__':
-    c = Connection(mode='debug')
+    c = Connection(mode='normal')
 
     w = window(c)
     w.run()
