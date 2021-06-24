@@ -53,7 +53,8 @@ class Connection:
             raise err.SecutiryClearanceNotSet('Security clearance not set! Contact administrator')
         
         else:
-            raise err.UnknownError('An Unknown Error Occured: '+args[0]['info'])
+            st = f'Error: {error}\nInfo: {args[0]["info"] if "info" in args[0] else "None"}'
+            raise err.UnknownError('An Unknown Error Occured: \n'+st)
 
     def send(self, dictionary:dict):
         self.reconnect() # reconnect to the server

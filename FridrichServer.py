@@ -139,6 +139,7 @@ class FunctionManager:
         clearance = ClientKeys[message['AuthKey']]
         if clearance in self.switch:
             if message['type'] in self.switch[clearance]:
+                debug.debug(self.switch[clearance][message['type']])
                 self.switch[clearance][message['type']](message(client))
                 return False, None
             
