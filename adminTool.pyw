@@ -129,6 +129,8 @@ class window:
 
             if user['Name'] != 'admin':
                 self.userEs[-1][3].place(x=10,  y=i*50+10)
+            else:
+                self.userEs[-1][0].config(state=tk.DISABLED)
         
         newWindowHeight = i*50+100
         self.root.maxsize(width=800, height=newWindowHeight)
