@@ -365,6 +365,7 @@ def recieve():  # Basicly the whole server
                 else:
                     try:
                         error, info = FunManager.exec(mes, client)
+                        fullTraceback = None
 
                     except Exception as e:
                         error = str(type(e)).split("'")[1]
@@ -372,7 +373,7 @@ def recieve():  # Basicly the whole server
                         fullTraceback = format_exc()
 
                     if error:
-                        client.send(json.dumps({'Error':error, 'info':info, 'full':fullTraceback if fullTraceback else None}).encode('utf-8'))
+                        client.send(json.dumps({'Error':error, 'info':info, 'full':fullTraceback}).encode('utf-8'))
                 
             client.close()  # close so it can be reused
 
