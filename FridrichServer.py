@@ -145,7 +145,7 @@ class FunctionManager:
             else:
                 isIn = False
                 for element in self.switch:
-                    if message['type'] in self.switch(element):
+                    if message['type'] in self.switch[element]:
                         isIn = True
                         req  = element 
                         break
