@@ -7,7 +7,7 @@ from modules.FridrichBackend import Connection
 secEquals = {'admin':0, 'user':1, 'guest':2}
 
 def sortUserList(lst:list, flag='sec'):
-    values = sorted(lst, key=lambda element: secEquals[element[flag]])
+    values = sorted(lst, key=lambda element: secEquals[element[flag]] if element[flag] in secEquals else 3)
     return list(values)
 
 class window:
@@ -98,7 +98,7 @@ class window:
         self.refresh()
     
     def refresh(self):
-        self.users = c.AdminGetUsers()
+        self.users = sortUserList(c.AdminGetUsers())
 
         for element in self.userEs:
             element[0].place_forget()
@@ -108,7 +108,7 @@ class window:
         
         self.userEs = list()
         
-        for i, user in enumerate(sortUserList(self.users)):
+        for i, user in enumerate(self.users):
             self.userEs.append((
                 tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold"), 
                 tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold"),
@@ -152,6 +152,7 @@ class window:
             osec = self.users[i]['sec'] if 'sec' in self.users[i] else ''
     
             if name!=oname:
+                print(name, oname)
                 self.c.AdminSetUsername(oname, name)
             
             if pwd!=opwd:
@@ -180,7 +181,7 @@ class window:
         exit()
 
 if __name__ == '__main__':
-    c = Connection(mode='debug')
+    c = Connection()
 
     w = window(c)
     w.run()
