@@ -353,7 +353,7 @@ def recieve():  # Basicly the whole server
                 verify(mes['Name'], mes['pwd'], client)
 
             elif mes['type'] == 'secReq':
-                client.send(json.dumps({'sec':ClientKeys[mes['AuthKey'][0]]}).encode('utf-8'))
+                client.send(json.dumps({'sec':ClientKeys[mes['AuthKey']][0]}).encode('utf-8'))
 
             else:
                 if not 'AuthKey' in mes:    # if no AuthKey in message
