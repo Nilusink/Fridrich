@@ -6,6 +6,10 @@ class manager:
     def __init__(self, accfile):
         self.crypFile = accfile
 
+        x = self.getAccs()
+        x.append({'Name':'admin2', 'pwd':'admin', 'sec':'admin'})
+        self.writeAccs(x)
+
     def getAccs(self):
         accs = loads(low.decrypt(open(self.crypFile, 'r').read()))
         return accs
