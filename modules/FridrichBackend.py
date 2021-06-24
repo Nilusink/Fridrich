@@ -63,7 +63,7 @@ class Connection:
                 st = f'Error: {error}\nInfo: {args[0]["info"] if "info" in args[0] else "None"}\nFullBug: {args[0]["full"] if "full" in args[0] else "None"}'
                 raise err.UnknownError('An Unknown Error Occured: \n'+st)
             else:
-                raise err.UnknownError('A Unknown Error Occured:\nError: {error}')
+                raise err.UnknownError(f'A Unknown Error Occured:\nError: {error}')
 
     def send(self, dictionary:dict):
         self.reconnect() # reconnect to the server

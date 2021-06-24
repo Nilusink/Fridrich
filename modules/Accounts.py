@@ -26,7 +26,8 @@ class manager:
 
     def setUserN(self, oldUser, newUser):
         acclist = self.getAccs() # getting and decrypting accounts list
-        UsedNames = List.getInnerDictValues(acclist, 'Name').remove(oldUser)  # so it doesnt matter if you don't change the username
+        UsedNames = List.getInnerDictValues(acclist, 'Name')  # so it doesnt matter if you don't change the username
+        UsedNames.remove(oldUser)
 
         if not newUser in UsedNames:
             for i, element in enumerate(acclist):
