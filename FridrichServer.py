@@ -208,7 +208,7 @@ class ClientFuncs:  # class for the Switch
     def unvote(message, client, *args):
         global nowFile, Vote
         votes = Vote.get()    # update votes
-        name = ClientKeys[message['AuthKey']][1]
+        name = ClientKeys[message['AuthKey']][1] # WHY U NOT WORKING
         with suppress(KeyError): 
             del votes[name]  # try to remove vote from client, if client hasn't voted yet, ignore it
         Vote.write(votes) # update file
