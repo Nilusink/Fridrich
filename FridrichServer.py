@@ -361,10 +361,9 @@ def recieve():  # Basicly the whole server
                     except Exception as e:
                         error = str(type(e)).split("'")[1]
                         info  = str(e)
-                        
+
                     if error:
                         client.send(json.dumps({'Error':error, 'info':info}).encode('utf-8'))
-
                 
             client.close()  # close so it can be reused
 
