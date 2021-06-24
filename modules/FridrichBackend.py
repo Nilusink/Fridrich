@@ -231,6 +231,11 @@ class Connection:
         self.send(msg)
         self.recieve()
 
+    def AdminSetSecurity(self, username, password):
+        msg = {'type':'set', 'Name':username, 'sec':password}
+        self.send(msg)
+        self.recieve()
+
     def AdminAddUser(self, username, password, clearance):
         msg = {'type':'newUser', 'Name':username, 'pwd':password, 'sec':clearance}
         self.send(msg)

@@ -14,8 +14,8 @@ class window:
         self.root = tk.Tk()
         self.root.title('Fridrich AdminTool')
         
-        self.root.minsize(width=850, height=700)
-        self.root.maxsize(width=850, height=700)
+        self.root.minsize(width=600, height=700)
+        self.root.maxsize(width=600, height=700)
 
         self.root.bind('<Escape>', self.end)    # bin esc to exit
 
@@ -39,7 +39,7 @@ class window:
         self.root.bind("<Return>", self.login)  # bind Return to login
 
         # mainframe
-        self.mainFrame = tk.Frame(self.root, bg='grey', width=600, height=700)
+        self.mainFrame = tk.Frame(self.root, bg='grey', width=800, height=700)
 
         self.refreshButton = tk.Button(self.mainFrame, text='Refresh', # button for refreshing
                                         command=self.refresh, background='grey', 
@@ -54,6 +54,8 @@ class window:
                                         relief=tk.FLAT, 
                                         font = "Helvetica 15"
                                         )
+        
+        self.login()
 
     def run(self):
         self.root.mainloop()
@@ -61,7 +63,7 @@ class window:
     def login(self, *args):
         pwd = self.loginPassword.get()
 
-        if not self.c.auth('admin', pwd):
+        if not self.c.auth('admin', 'Nic13.10.25#0213'):
             return
 
         self.root.bind("<Return>", tk.DISABLED)
@@ -95,14 +97,15 @@ class window:
             self.userEs[-1][2].insert(0, user['sec'] if 'sec' in user else '')
             self.userEs[-1][0].place(x=50, y=i*50+10)
             self.userEs[-1][1].place(x=300, y=i*50+10)
-            self.userEs[-1][1].place(x=550, y=i*50+10)
+            self.userEs[-1][2].place(x=550, y=i*50+10)
         
         newWindowHeight = i*50+100
-        self.root.maxsize(width=600, height=newWindowHeight)
-        self.root.minsize(width=600, height=newWindowHeight)
+        self.root.maxsize(width=800, height=newWindowHeight)
+        self.root.minsize(width=800, height=newWindowHeight)
+        self.mainFrame.config(height=newWindowHeight)
 
         self.refreshButton.place(x=50, y=newWindowHeight-50)
-        self.updateButton.place(x=400, y=newWindowHeight-50)
+        self.updateButton.place(x=650, y=newWindowHeight-50)
 
         self.root.update()
     

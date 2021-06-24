@@ -106,8 +106,10 @@ class FunctionManager:
                 'getUsers':AdminFuncs.getAccounts,
                 'setPwd':AdminFuncs.setPassword,
                 'setName':AdminFuncs.setUsername,
+                'setPwd':AdminFuncs.setSecurity,
                 'newUser':AdminFuncs.addUser,
                 'end':AdminFuncs.end,
+                
                 'setVersion':ClientFuncs.setVersion,
                 'getVersion':ClientFuncs.setVersion
             },
