@@ -103,7 +103,7 @@ def verify(username, password, client):
 class FunctionManager:
     def __init__(self):
         self.switch = {
-            'admin' : {
+            '' : {
                 'getUsers':AdminFuncs.getAccounts,
                 'setPwd':AdminFuncs.setPassword,
                 'setName':AdminFuncs.setUsername,

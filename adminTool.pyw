@@ -113,7 +113,7 @@ class window:
         for i in range(len(self.userEs)):
             name = self.userEs[i][0].get()
             pwd = self.userEs[i][1].get()
-            sec = self.userEs[i]['sec'] if 'sec' in self.userEs[i] else ''
+            sec = self.userEs[i][2].get()
 
             oname = self.users[i]['Name']
             opwd = self.users[i]['pwd']
