@@ -26,8 +26,7 @@ class manager:
 
     def setUserN(self, oldUser, newUser):
         acclist = self.getAccs() # getting and decrypting accounts list
-        UsedNames = List.getInnerDictValues(acclist, 'Name')
-        UsedNames.remove(oldUser)
+        UsedNames = List.RemoveAll(List.getInnerDictValues(acclist, 'Name'),  oldUser)  # so it doesnt matter if you don't change the username
 
         if not newUser in UsedNames:
             for i, element in enumerate(acclist):
@@ -55,7 +54,7 @@ class manager:
     def newUser(self, username, password, secClearance):    # add new user
         accs = list(self.getAccs())   # get accounts
         UsedNames = List.getInnerDictValues(accs, 'Name')
-        UsedNames.remove(username)
+
         if username in UsedNames:
             raise NameError('Username already exists')
         accs.append({'Name':username, 'pwd':password, 'sec':secClearance})  # create user

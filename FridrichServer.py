@@ -8,10 +8,10 @@ from random import sample
 import sys
 
 # local imports
-from modules.cryption_tools import low
-from modules.ServerFuncs import *
 from modules.FanController import CPUHeatHandler
+from modules.cryption_tools import low
 from modules.Accounts import manager
+from modules.ServerFuncs import *
 
 class DoubleVote:
     globals()
