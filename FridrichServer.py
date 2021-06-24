@@ -281,7 +281,7 @@ class ClientFuncs:  # class for the Switch
         else:
             x = ''
 
-        name = ClientKeys[message['AuthKey'][1]] + x
+        name = ClientKeys[message['AuthKey']][1] + x
         if not name in Vote.get():
             client.send(json.dumps({'Error':'NotVoted'}).encode('utf-8'))
             return
