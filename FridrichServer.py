@@ -87,6 +87,7 @@ def sendSuccess(client):
 def verify(username, password, client):
     resp = AccManager.verify(username, password)
     IsValid = False
+    key = None
     if resp == None:
         client.send(json.dumps({'Error':'SecurityNotSet'}))
         return
@@ -109,7 +110,7 @@ class FunctionManager:
                 'setPwd':AdminFuncs.setSecurity,
                 'newUser':AdminFuncs.addUser,
                 'end':AdminFuncs.end,
-                
+
                 'setVersion':ClientFuncs.setVersion,
                 'getVersion':ClientFuncs.setVersion
             },

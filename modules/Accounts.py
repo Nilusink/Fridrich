@@ -64,8 +64,11 @@ class manager:
         Auth = False
         for element in users:   # iterate users
             if username == element['Name'] and password == element['pwd']:  # if username is account name
-                Auth = element['sec']   # set element 'sec' of user
-                if Auth == '':
+                if 'sec' in element:
+                    Auth = element['sec']   # set element 'sec' of user
+                    if Auth == '':
+                        Auth = None
+                else:
                     Auth = None
 
         return Auth # return result
