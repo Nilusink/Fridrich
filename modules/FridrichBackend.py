@@ -17,9 +17,12 @@ def jsonRepair(string:str):
 #                      Server Communication Class                          #
 ############################################################################
 class Connection:
-    def __init__(self):
+    def __init__(self, mode='normal'):
+        self.mode = mode
+
         self.ServerIp = socket.gethostbyname('fridrich')    # get ip of fridrich
-        print('Server IP: '+self.ServerIp)
+        if self.mode == 'debug':
+            print('Server IP: '+self.ServerIp)
         self.port = 12345   # set communication port with server
 
         self.AuthKey = None 
@@ -53,8 +56,11 @@ class Connection:
             raise err.SecutiryClearanceNotSet('Security clearance not set! Contact administrator')
         
         else:
-            st = f'Error: {error}\nInfo: {args[0]["info"] if "info" in args[0] else "None"}'
-            raise err.UnknownError('An Unknown Error Occured: \n'+st)
+            if self.mode == 'debug':
+                st = f'Error: {error}\nInfo: {args[0]["info"] if "info" in args[0] else "None"}\nFullBug: {args[0]["full"] if "full" in args[0] else "None"}'
+                raise err.UnknownError('An Unknown Error Occured: \n'+st)
+            else:
+                raise err.UnknownError('A Unknown Error Occured!')
 
     def send(self, dictionary:dict):
         self.reconnect() # reconnect to the server

@@ -156,7 +156,7 @@ class window:
         exit()
 
 if __name__ == '__main__':
-    c = Connection()
+    c = Connection(mode='debug')
 
     w = window(c)
     w.run()
