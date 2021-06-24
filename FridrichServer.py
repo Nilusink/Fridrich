@@ -140,7 +140,7 @@ class FunctionManager:
         }
     
     def exec(self, message, client):
-        clearance = ClientKeys[message['AuthKey']]
+        clearance = ClientKeys[message['AuthKey'][0]]
         if clearance in self.switch:
             if message['type'] in self.switch[clearance]:
                 self.switch[clearance][message['type']](message, client)
