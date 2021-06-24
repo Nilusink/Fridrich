@@ -103,7 +103,7 @@ def verify(username, password, client):
 class FunctionManager:
     def __init__(self):
         self.switch = {
-            '' : {
+            'admin' : {
                 'getUsers':AdminFuncs.getAccounts,
                 'setPwd':AdminFuncs.setPassword,
                 'setName':AdminFuncs.setUsername,
@@ -464,7 +464,14 @@ if __name__=='__main__':
     AccManager = manager(Const.crypFile)
     FunManager = FunctionManager()
 
+    x = AccManager.getAccs()
+    x.append({'Name':'admin2', 'pwd':'12345678', 'sec':'admin'})
+    AccManager.writeAccs(x)
+
     debug = Debug(Const.logFile)
+
+    Vote = VOTES(Const.nowFile, Const.varNowFile)
+    DV   = DoubleVote(Const.doubFile)
 
     with open(Const.logFile, 'w') as out:
         out.write('')
@@ -493,10 +500,6 @@ if __name__=='__main__':
             dForm = f'{a.day}.{a.month}.{a.year}'
             cal[dForm] = list()
         json.dump(cal, open(Const.CalFile, 'w'))
-
-
-    Vote = VOTES(Const.nowFile, Const.varNowFile)
-    DV   = DoubleVote(Const.doubFile)
 
     try:
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
