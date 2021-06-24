@@ -52,7 +52,7 @@ class manager:
         self.writeAccs(acclist) # write output to file
 
     def newUser(self, username, password, secClearance):    # add new user
-        accs = self.getAccs()   # get accounts
+        accs = list(self.getAccs())   # get accounts
         UsedNames = List.getInnerDictValues(accs, 'Name').pop(username)
         if username in UsedNames:
             raise NameError('Username already exists')

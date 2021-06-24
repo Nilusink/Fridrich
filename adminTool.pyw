@@ -55,6 +55,13 @@ class window:
                                         font = "Helvetica 15"
                                         )
         
+        self.addButton = tk.Button(self.mainFrame, text='Add',   # button for setting new usernames/passwords
+                                        command=self.addUser, background='green', 
+                                        fg='white', width=10, 
+                                        relief=tk.FLAT, 
+                                        font = "Helvetica 15"
+                                        )
+        
         self.login()
 
     def run(self):
@@ -79,6 +86,8 @@ class window:
         for element in self.userEs:
             element[0].place_forget()
             element[1].place_forget()
+            element[2].place_forget()
+            element[3].place_forget()
         
         self.userEs = list()
         
@@ -88,7 +97,7 @@ class window:
                 tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold"),
                 tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold"),
                 tk.Button(self.mainFrame, width=1, font = "Helvetica 10 bold", text = '-', 
-                    bg = 'red', command = lambda e=None: self.c.AdminRemoveUser(user['Name']))
+                    bg = 'red', command = lambda e=None: self.remUser(user['Name']))
                 ))
 
             self.userEs[-1][0].delete(0, 'end')
@@ -109,6 +118,7 @@ class window:
         self.mainFrame.config(height=newWindowHeight)
 
         self.refreshButton.place(x=50, y=newWindowHeight-50)
+        self.addButton.place(x=400, y=newWindowHeight-50)
         self.updateButton.place(x=650, y=newWindowHeight-50)
 
         self.root.update()
@@ -133,6 +143,13 @@ class window:
                 self.c.AdminSetSecurity(name, sec)
 
         self.refresh()
+
+    def remUser(self, user):
+        self.c.AdminRemoveUser(user)
+        self.update()
+
+    def addUser(self):
+        self.c.AdminAddUser('', '', '')
 
     def end(self, *args):
         self.c.end()
