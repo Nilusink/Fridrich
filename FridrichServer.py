@@ -89,7 +89,7 @@ def verify(username, password, client):
     IsValid = False
     key = None
     if resp == None:
-        client.send(json.dumps({'Error':'SecurityNotSet'}))
+        client.send(json.dumps({'Error':'SecurityNotSet'}).encode('utf-8'))
         return
 
     elif resp:
@@ -358,7 +358,7 @@ def recieve():  # Basicly the whole server
                 else:
                     error, info = FunManager.exec(mes, client)
                     if error:
-                        client.send(json.dumps({'Error':error, 'info':info}))
+                        client.send(json.dumps({'Error':error, 'info':info}).encode('utf-8'))
 
                 
             client.close()  # close so it can be reused
