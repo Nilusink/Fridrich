@@ -3,7 +3,7 @@ from modules.FridrichBackend import Connection
 if __name__ == '__main__':
     from traceback import format_exc    # imports for shell
 
-    c = Connection()    # create connection instance
+    c = Connection(mode='debug')    # create connection instance
     #w = wiki()  # create wiki instance
     print('initialised Connections')
 
