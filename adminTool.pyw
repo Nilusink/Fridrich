@@ -63,7 +63,7 @@ class window:
     def login(self, *args):
         pwd = self.loginPassword.get()
 
-        if not self.c.auth('admin', 'Nic13.10.25#0213'):
+        if not self.c.auth('admin2', '12345678'):
             return
 
         self.root.bind("<Return>", tk.DISABLED)

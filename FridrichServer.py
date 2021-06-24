@@ -464,10 +464,6 @@ if __name__=='__main__':
     AccManager = manager(Const.crypFile)
     FunManager = FunctionManager()
 
-    x = AccManager.getAccs()
-    x.append({'Name':'admin2', 'pwd':'12345678', 'sec':'admin'})
-    AccManager.writeAccs(x)
-
     debug = Debug(Const.logFile)
 
     Vote = VOTES(Const.nowFile, Const.varNowFile)
