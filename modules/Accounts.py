@@ -55,6 +55,7 @@ class manager:
     def newUser(self, username, password, secClearance):    # add new user
         accs = list(self.getAccs())   # get accounts
         UsedNames = List.getInnerDictValues(accs, 'Name')
+        print(UsedNames)
 
         if username in UsedNames:
             raise NameError('Username already exists')
