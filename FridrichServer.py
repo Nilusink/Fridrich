@@ -483,8 +483,6 @@ if __name__=='__main__':
     AccManager = manager(Const.crypFile)
     FunManager = FunctionManager()
 
-    print(AccManager.getAccs())
-
     debug = Debug(Const.SerlogFile)
 
     Vote = VOTES(Const.nowFile, Const.varNowFile)
