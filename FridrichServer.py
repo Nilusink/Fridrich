@@ -198,7 +198,7 @@ class ClientFuncs:  # class for the Switch
         global  Vote, ClientKeys
         votes = Vote.get()    # update votes
         resp = checkif(message['vote'], votes)
-        name = ClientKeys[message['AuthKey'][1]]
+        name = ClientKeys[message['AuthKey']][1]
         votes[name] = resp    # set <hostname of client> to clients vote
         debug.debug(f'got vote: {message["vote"]}                     .')   # print that it recievd vote (debugging)
         Vote.write(votes)  # write to file
@@ -208,7 +208,7 @@ class ClientFuncs:  # class for the Switch
     def unvote(message, client, *args):
         global nowFile, Vote
         votes = Vote.get()    # update votes
-        name = ClientKeys[message['AuthKey'][1]]
+        name = ClientKeys[message['AuthKey']][1]
         with suppress(KeyError): 
             del votes[name]  # try to remove vote from client, if client hasn't voted yet, ignore it
         Vote.write(votes) # update file
@@ -262,7 +262,7 @@ class ClientFuncs:  # class for the Switch
     def changePwd(message, client,  *args):
         global ClientKeys
         validUsers = json.loads(low.decrypt(open(Const.crypFile, 'r').read()))
-        name = ClientKeys[message['AuthKey'][1]]
+        name = ClientKeys[message['AuthKey']][1]
         for element in validUsers:
             if element['Name'] == name:
                 element['pwd'] = message['newPwd']
@@ -300,7 +300,7 @@ class ClientFuncs:  # class for the Switch
 
     def DoubVote(message, client, *args):
         global DV, Vote
-        name = ClientKeys[message['AuthKey'][1]]
+        name = ClientKeys[message['AuthKey']][1]
         resp = checkif(message['vote'], Vote.get())     
         resp = DV.vote(resp, name)
         if resp:
@@ -310,13 +310,13 @@ class ClientFuncs:  # class for the Switch
     
     def DoubUnVote(message, client, *args):
         global DV
-        name = ClientKeys[message['AuthKey']]
+        name = ClientKeys[message['AuthKey']][1]
         DV.unVote(name)
         client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
     
     def getFreeVotes(message, client, *args):
         global DV
-        name = ClientKeys[message['AuthKey'][1]]
+        name = ClientKeys[message['AuthKey']][1]
         frees = DV.getFrees(name)
 
         if frees == False and frees != 0:
