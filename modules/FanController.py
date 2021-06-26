@@ -40,7 +40,6 @@ class CPUHeatHandler():
             with open(self.const.errFile, 'a') as out:
                 out.write(format_exc())
             return format_exc()
-    
 
 if __name__=='__main__':
     c = CPUHeatHandler()

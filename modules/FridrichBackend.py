@@ -1,6 +1,8 @@
+from contextlib import suppress
 import socket, json
 
 # local imports
+from modules.cryption_tools import tryDecrypt, NotEncryptedError, MesCryp
 import modules.err_classes as err
 from modules.useful import Dict
 
@@ -55,6 +57,9 @@ class Connection:
         elif error == 'SecurityNotSet':
             raise err.SecutiryClearanceNotSet('Security clearance not set! Contact administrator')
         
+        elif error == 'NotEncryptedError':
+            raise NotEncryptedError('You just send a not encrypted message. WTF?')
+        
         elif error == 'NameError':
             raise NameError('Username Already exits')
         
@@ -69,13 +74,18 @@ class Connection:
         self.reconnect() # reconnect to the server
 
         dictionary['AuthKey'] = self.AuthKey    # add AuthKey to the dictionary
-        msg = json.dumps(dictionary).encode('utf-8')    # convert to bytes
-        self.Server.send(msg)   # send request
+        stringMes = json.dumps(dictionary)
+        if self.AuthKey:
+            mes = MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
+            self.Server.send(mes if type(mes) == bytes else mes.encode('utf-8'))
+            return
+        self.Server.send(stringMes.encode('utf-8'))
 
-    def recieve(self, length=1024):
+    def recieve(self, length=2048):
         msg = ''
         while msg=='':
-            msg = jsonRepair(self.Server.recv(length).decode('utf-8'))  # recieve message
+            msg = tryDecrypt(self.Server.recv(length), errors=False)
+            msg = jsonRepair(msg)  # recieve message
         try:    # test if message is valid json message
             msg = json.loads(msg)
         except json.JSONDecodeError:    # if not raise error

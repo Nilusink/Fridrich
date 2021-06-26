@@ -1,6 +1,23 @@
+from json.decoder import JSONDecodeError
 from contextlib import suppress
+from random import sample
+from json import loads
 from math import sqrt
 import base64
+
+# cryptography
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.backends import default_backend
+from cryptography.fernet import Fernet, InvalidToken
+from cryptography.hazmat.primitives import hashes
+from os import urandom
+import base64
+
+class DecryptionError(Exception):
+    pass
+
+class NotEncryptedError(Exception):
+    pass
 
 class extra:
     def median(string:str, medians:int):
@@ -34,7 +51,7 @@ class low:
                     out += chr(int(round(part**2+20, 0)))
             return out
         except ValueError:
-            raise ValueError('Not a valid encrypted string!')
+            raise DecryptionError('Not a valid encrypted string!')
 
 class high:
     def encrypt(string:str) -> str:
@@ -63,14 +80,91 @@ class high:
             temp2 += extra.median(low.decrypt(part), 3)
         return temp2.replace('   ', '|tempspace|').replace(' ', '').replace('|tempspace|', ' ')
 
+with open('KeyFile.enc', 'r') as inp:
+    defKey = high.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
+
+class MesCryp:
+    def encrypt(self, string:str, key):
+        if not key:
+            key = defKey
+        f = Fernet(key)
+        encrypted = f.encrypt(string.encode())
+        return encrypted    # returns bytes
+    
+    def decrypt(self, byte:bytes, key:bytes):
+        f = Fernet(key)
+        decrypted = str(f.decrypt(byte)).lstrip("b'").rstrip("'")
+        return decrypted    # returns string
+
+def tryDecrypt(message:bytes, ClientKeys, errors=True):
+    with suppress(JSONDecodeError):
+        mes = loads(message)
+        if errors==True:
+            raise NotEncryptedError('Message not encrypted')
+        return mes
+        
+    encMes = None
+    for key in ClientKeys:
+        with suppress(InvalidToken):
+            encMes = MesCryp.decrypt(message, key.encode())
+            break
+    
+    if not encMes:
+        with suppress(DecryptionError):
+            encMes = MesCryp.decrypt(message, defKey)
+    
+    if not encMes:
+        return None
+
+    try:
+        jsonMes = loads(encMes)
+
+    except JSONDecodeError:
+        try:
+            jsonMes = loads(message)
+
+        except JSONDecodeError:
+            return None
+    return jsonMes
+
+def KeyFunc(ClientKeys, length=10): # generate random key
+    String = 'abcdefghijklmnopqrstuvwxyz'                               # string for creating auth Keys
+    String += String.upper()+'1234567890ß´^°!"§$%&/()=?`+*#.:,;µ@€<>|'
+
+    s = ''.join(sample(String, length)) # try #1
+    while s in ClientKeys: 
+        s = ''.join(sample(String), length) # if try #1 is already in ClientKeys, try again
+
+    password_provided = s  # This is input in the form of a string
+    password = password_provided.encode()  # Convert to type bytes
+    salt = urandom(16)  
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+        backend=default_backend()
+    )
+    key = base64.urlsafe_b64encode(kdf.derive(password))  # Can only use kdf once
+    return str(key).lstrip("b'").rstrip("'")
+
 if __name__=='__main__':
     from time import time
+    m = MesCryp()
     try:
         while True:
             st = input('\n\nSentence? ')
             start = time()
             c = extra.median(low.encrypt(extra.median(st, 12)), 6)
             e = extra.median(low.decrypt(extra.median(c, 6)), 12)
+            end = time()
+            print('Low encryption:')
+            print(c)
+            print(e)
+            print('\nencrypting and decrypting took:', round(end-start, 2))
+            start = time()
+            c = m.encrypt(st)
+            e = m.decrypt(c)
             end = time()
             print('Low encryption:')
             print(c)

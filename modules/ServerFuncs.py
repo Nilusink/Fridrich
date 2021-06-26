@@ -1,8 +1,6 @@
-from json import load, dump
+from modules.cryption_tools import tryDecrypt
+from json import load, dump, dumps
 from contextlib import suppress
-
-# local imports
-from modules.cryption_tools import low
 
 # TemperatureReader import
 import RPi.GPIO as GPIO
@@ -103,6 +101,37 @@ def getNewones(flag, VoteInstance, lastFile):   # get all attendants wich are no
     
     return newones
 
+class Communication:
+    def send(client, message:dict, encryption=None, Key=None):
+        stringMes = dumps(message)
+        if encryption:
+            mes = encryption(stringMes, key=Key)
+            client.send(mes if type(mes) == bytes else mes.encode('utf-8'))
+            return
+        client.send(stringMes.encode('utf-8'))
+
+    def recieve(server, debugingMethod, Keys):
+        # Accept Connection
+            try:
+                client, address = server.accept()
+                del address
+                #debug.debug(f'Connected to {address}')
+            except OSError:
+                return False
+            # try to load the message, else ignore it and restart
+            mes = client.recv(2048)
+            mes = tryDecrypt(mes, Keys)
+
+            if not mes:
+                debugingMethod('Message Error')
+                client.close()
+                return None, None
+            return client, mes
+
+ # if message is invalid or an other error occured, ignore the message and jump to start
+            
+            return mes
+            #debug.debug(f'Got message: {mes}')
 class Constants:
     def __init__(self):
         self.port = 12345
@@ -133,9 +162,6 @@ class Constants:
         self.logFile = direc+'temp.log'
         self.errFile = direc+'temp.err.log'
         self.tempFile = direc+'tempData.json'
-
-        self.String = 'abcdefghijklmnopqrstuvwxyz'                               # string for creating auth Keys
-        self.String += self.String.upper()+'1234567890ß´^°!"§$%&/()=?`+*#.:,;µ@€<>|'
 
         self.defUser = {
             'Name':'Hurensohn', 

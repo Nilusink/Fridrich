@@ -8,10 +8,11 @@ from random import sample
 import sys
 
 # local imports
+from modules.cryption_tools import low, KeyFunc, MesCryp, NotEncryptedError
 from modules.FanController import CPUHeatHandler
-from modules.cryption_tools import low
 from modules.Accounts import manager
 from modules.ServerFuncs import *
+
 
 class DoubleVote:
     globals()
@@ -77,22 +78,15 @@ class DoubleVote:
 
         return False
 
-def KeyFunc(length=10): # generate random key
-    global  ClientKeys
-    s = ''.join(sample(Const.String, length)) # try #1
-    while s in ClientKeys: 
-        s = ''.join(sample(Const.String), length) # if try #1 is already in ClientKeys, try again
-    return s
-
 def sendSuccess(client):
-    client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
+    Communication.send(client, {'Success':'Done'}, encryption = MesCryp.encrypt)
 
 def verify(username, password, client):
     resp = AccManager.verify(username, password)
     IsValid = False
     key = None
     if resp == None:
-        client.send(json.dumps({'Error':'SecurityNotSet'}).encode('utf-8'))
+        Communication.send(client, {'Error':'SecurityNotSet'}, encryption = MesCryp.encrypt)
         return
 
     elif resp:
@@ -101,7 +95,7 @@ def verify(username, password, client):
         ClientKeys[key] = resp
         
     debug.debug(f'Username : {username}, Auth: {IsValid}')
-    client.send(json.dumps({'Auth':IsValid, 'AuthKey':key}).encode('utf-8'))    # send result to client
+    Communication.send(client, {'Auth':IsValid, 'AuthKey':key}, encryption = MesCryp.encrypt)    # send result to client
 
 class FunctionManager:
     def __init__(self):
@@ -166,7 +160,7 @@ class FunctionManager:
 class AdminFuncs:
     def getAccounts(message, client, *args):
         acclist = AccManager.getAccs() # getting and decrypting accounts list
-        client.send(json.dumps(acclist).encode('utf-8')) # sending list to client
+        Communication.send(client, acclist, encryption=MesCryp.encrypt) # sending list to client
     
     def setPassword(message, client, *args):
         AccManager.setPwd(message['User'], message['newPwd'])   # set new password
@@ -203,7 +197,7 @@ class ClientFuncs:  # class for the Switch
         debug.debug(f'got vote: {message["vote"]}                     .')   # print that it recievd vote (debugging)
         Vote.write(votes)  # write to file
 
-        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
+        sendSuccess(client)
     
     def unvote(message, client, *args):
         global nowFile, Vote
@@ -213,7 +207,7 @@ class ClientFuncs:  # class for the Switch
             del votes[name]  # try to remove vote from client, if client hasn't voted yet, ignore it
         Vote.write(votes) # update file
 
-        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
+        sendSuccess(client)
     
     def CalendarHandler(message, client, *args):
         global CalFile
@@ -227,34 +221,34 @@ class ClientFuncs:  # class for the Switch
             json.dump(cal, open(Const.CalFile, 'w'))  # update fil
             debug.debug(f'got Calender: {message["date"]} - "{message["event"]}"')    # notify that threr has been a calendar entry
         
-        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
+        sendSuccess(client)
 
     def reqHandler(message, client, *args):
         global reqCounter, nowFile, Vote, lastFile
         reqCounter+=1
         if message['reqType']=='now':   # now is for the current "votes" dictionary
             with open(Const.nowFile, 'r') as inp:
-                client.send(inp.read().encode('utf-8'))
+                Communication.send(client, json.load(inp), encryption=MesCryp.encrypt, key=message['AuthKey'])
 
         elif message['reqType'] == 'last':  # last is for the "votes" dictionary of the last day
             with open(Const.lastFile, 'r') as inp:
-                client.send(inp.read().encode('utf-8'))
+                Communication.send(client, json.load(inp), encryption=MesCryp.encrypt, key=message['AuthKey'])
                 
         elif message['reqType'] == 'log':   # returns the log of the GayKings
             with open(Const.KingFile, 'r') as inp:
-                client.send(inp.read().encode('utf-8'))
+                Communication.send(client, json.load(inp), encryption=MesCryp.encrypt, key=message['AuthKey'])
                 
         elif message['reqType'] == 'attds': # returns All attendants (also non standart users)
             newones = getNewones(message['atype'], Vote, Const.lastFile)  
-
-            client.send(json.dumps({'Names':['Lukas', 'Niclas', 'Melvin']+newones}).encode('utf-8'))    # return stardart users + new ones
+            Communication.send(client, {'Names':['Lukas', 'Niclas', 'Melvin']+newones}, encryption=MesCryp.encrypt, key=message['AuthKey'])    # return stardart users + new ones
                 
         elif message['reqType'] == 'temps': # returns the temperatures
             rtemp, rhum = readTemp()
-            client.send(json.dumps({'Room':rtemp, 'CPU':currTemp, 'Hum':rhum}).encode('utf-8'))
+            Communication.send(client, {'Room':rtemp, 'CPU':currTemp, 'Hum':rhum}, encryption=MesCryp.encrypt, key=message['AuthKey'])
                 
         elif message['reqType'] == 'cal':   # returns the calendar dictionary
-            client.send(open(Const.CalFile, 'r').read().encode('utf-8'))
+            with open(Const.CalFile, 'r') as inp:
+                Communication.send(client, json.load(inp), encryption=MesCryp.encrypt, key=message['AuthKey'])
                 
         else:   # notify if an invalid request has been sent
             debug.debug(f'Invalid Request {message["reqType"]}')
@@ -272,7 +266,7 @@ class ClientFuncs:  # class for the Switch
             cstring = low.encrypt(fstring)
             out.write(cstring)
         
-        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
+        sendSuccess(client)
 
     def getVote(message, client, *args):
         votes = Vote.get()
@@ -283,20 +277,20 @@ class ClientFuncs:  # class for the Switch
 
         name = ClientKeys[message['AuthKey']][1] + x
         if not name in Vote.get():
-            client.send(json.dumps({'Error':'NotVoted'}).encode('utf-8'))
+            Communication.send(client, {'Error':'NotVoted'}, encryption=MesCryp.encrypt, key=message['AuthKey'])
             return
         cVote = votes[name]
-        client.send(json.dumps({'Vote':cVote}).encode('utf-8'))
+        Communication.send(client, {'Vote':cVote}, encryption=MesCryp.encrypt, key=message['AuthKey'])
 
-    def getVersion(mesage, client, *args):
+    def getVersion(message, client, *args):
         vers = open(Const.versFile, 'r').read()
-        client.send(json.dumps({'Version':vers}).encode('utf-8'))
+        Communication.send(client, {'Version':vers}, encryption=MesCryp.encrypt, key=message['AuthKey'])
 
     def setVersion(message, client, *args):
         with open(Const.versFile, 'w') as out:
             out.write(message['version'])
 
-        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
+        sendSuccess(client)
 
     def DoubVote(message, client, *args):
         global DV, Vote
@@ -304,15 +298,15 @@ class ClientFuncs:  # class for the Switch
         resp = checkif(message['vote'], Vote.get())     
         resp = DV.vote(resp, name)
         if resp:
-            client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
+            sendSuccess(client)
         else:
-            client.send(json.dumps({'Error':'NoVotes'}).encode('utf-8'))
+            Communication.send(client, {'Error':'NoVotes'}, encryption=MesCryp.encrypt, key=message['AuthKey'])
     
     def DoubUnVote(message, client, *args):
         global DV
         name = ClientKeys[message['AuthKey']][1]
         DV.unVote(name)
-        client.send(json.dumps({'Success':'Done'}).encode('utf-8'))
+        sendSuccess(client)
     
     def getFreeVotes(message, client, *args):
         global DV
@@ -320,9 +314,9 @@ class ClientFuncs:  # class for the Switch
         frees = DV.getFrees(name)
 
         if frees == False and frees != 0:
-            client.send(json.dumps({'Error':'RegistryError'}).encode('utf-8'))
+            Communication.send(client, {'Error':'RegistryError'}, encryption=MesCryp.encrypt, key=message['AuthKey'])
             return
-        client.send(json.dumps({'Value':frees}).encode('utf-8'))
+        Communication.send(client, {'Value':frees}, encryption=MesCryp.encrypt, key=message['AuthKey'])
 
     def end(message, *args):
         global ClientKeys
@@ -333,32 +327,20 @@ def recieve():  # Basicly the whole server
     global server, reqCounter, ClientKeys
     while not Const.Terminate:
         try:
-            # Accept Connection
             try:
-                client, address = server.accept()
-                del address
-                #debug.debug(f'Connected to {address}')
-            except OSError:
-                break
-            # try to load the message, else ignore it and restart
-            try:
-                mes = json.loads(client.recv(1024).decode('utf-8'))
-            except:
-                debug.debug('json error')
-                client.close()
-                continue    # if message is invalid or an other error occured, ignore the message and jump to start
-            #debug.debug(f'Got message: {mes}')
-
+                client, mes = Communication.recieve(server, debug.debug, list(ClientKeys))
+            except NotEncryptedError:
+                Communication.send(client, {'Error':'NotEncryptedError'})
             if mes['type'] == 'auth':   # authorization function
                 verify(mes['Name'], mes['pwd'], client)
 
             elif mes['type'] == 'secReq':
-                client.send(json.dumps({'sec':ClientKeys[mes['AuthKey']][0]}).encode('utf-8'))
+                Communication.send(client, {'sec':ClientKeys[mes['AuthKey']][0]}, encryption=MesCryp.encrypt, key=mes['AuthKey'])
 
             else:
                 if not 'AuthKey' in mes:    # if no AuthKey in message
                     debug.debug('auth error, Key not in message')
-                    client.send(json.dumps({'Error':'AuthError'}).encode('utf-8'))
+                    Communication.send(client, {'Error':'AuthError'}, encryption=MesCryp.encrypt, key=mes['AuthKey'])
                     client.close()
                     continue
 
@@ -375,7 +357,7 @@ def recieve():  # Basicly the whole server
                     if error:
                         if fullTraceback:
                             print(fullTraceback)
-                        client.send(json.dumps({'Error':error, 'info':info, 'full':fullTraceback}).encode('utf-8'))
+                        Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback}, encryption=MesCryp.encrypt, key=mes['AuthKey'])
                 
             client.close()  # close so it can be reused
 
@@ -384,7 +366,7 @@ def recieve():  # Basicly the whole server
                 error = str(type(e)).split("'")[1]
                 info  = str(e)
                 fullTraceback = format_exc()
-                client.send(json.dumps({'Error':error, 'info':info, 'full':fullTraceback}).encode('utf-8'))
+                Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback}, encryption=MesCryp.encrypt, key=mes['AuthKey'])
                 client.close()
 
             debug.debug('Thread 1 error:')
@@ -522,14 +504,11 @@ if __name__=='__main__':
         server.listen()
         debug.debug(Const.ip)
 
-        #ServerRecv = Thread(target=recieve, daemon=True)
-        Updater    = Thread(target=update, daemon=True)
+        Updater = Thread(target=update, daemon=True)
 
-        #ServerRecv.start()
         Updater.start()
         
-        recieve()	
-        #ServerRecv.join()
+        recieve()
 
     except:
         server.shutdown(socket.SHUT_RDWR)
