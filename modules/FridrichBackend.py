@@ -86,12 +86,6 @@ class Connection:
         msg = ''
         while msg=='':
             msg = tryDecrypt(self.Server.recv(length), [self.AuthKey], errors=False)
-            msg = jsonRepair(msg)  # recieve message
-        try:    # test if message is valid json message
-            msg = json.loads(msg)
-        except json.JSONDecodeError:    # if not raise error
-            print(f'Message: "{msg}"')
-            self.errorHandler(msg)
 
         if 'Error' in msg:  # if error was send by server
             success = False

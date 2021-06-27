@@ -82,7 +82,7 @@ class high:
 
 with open('/home/pi/Server/data/KeyFile.enc', 'r') as inp:
     defKey = high.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
-
+#/home/pi/Server/
 class MesCryp:
     def encrypt(string:str, key=None):
         if not key:
@@ -105,8 +105,8 @@ def tryDecrypt(message:bytes, ClientKeys, errors=True):
 
     encMes = None
     for key in ClientKeys:
-        with suppress(InvalidToken):
-            encMes = MesCryp.decrypt(message, key.encode())
+        with suppress((InvalidToken, ValueError)):
+            encMes = MesCryp.decrypt(message, key.encode() if type(key)==str else b'')
             break
     
     if not encMes:
