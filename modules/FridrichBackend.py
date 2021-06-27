@@ -85,7 +85,7 @@ class Connection:
     def recieve(self, length=2048):
         msg = ''
         while msg=='':
-            msg = tryDecrypt(self.Server.recv(length), errors=False)
+            msg = tryDecrypt(self.Server.recv(length), ClientKey=[self.AuthKey], errors=False)
             msg = jsonRepair(msg)  # recieve message
         try:    # test if message is valid json message
             msg = json.loads(msg)

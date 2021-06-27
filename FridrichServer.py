@@ -357,7 +357,7 @@ def recieve():  # Basicly the whole server
                     if error:
                         if fullTraceback:
                             print(fullTraceback)
-                        Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback}, encryption=MesCryp.encrypt, key=mes['AuthKey'])
+                        Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback}, encryption=MesCryp.encrypt)
                 
             client.close()  # close so it can be reused
 
@@ -366,7 +366,7 @@ def recieve():  # Basicly the whole server
                 error = str(type(e)).split("'")[1]
                 info  = str(e)
                 fullTraceback = format_exc()
-                Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback}, encryption=MesCryp.encrypt, key=mes['AuthKey'])
+                Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback}, encryption=MesCryp.encrypt)
                 client.close()
 
             debug.debug('Thread 1 error:')
