@@ -82,20 +82,21 @@ class high:
 
 try:
     with open('/home/pi/Server/data/KeyFile.enc', 'r') as inp:
-        defKey = high.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
-    with open('/home/pi/Server/data/KeyFile.enc', 'w') as out:
-        out.write(low.encrypt(defKey))
+        defKey = low.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
+
 except FileNotFoundError:
     with open('data/KeyFile.enc', 'r') as inp:
-        defKey = high.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
-    with open('data/KeyFile.enc', 'w') as out:
-        out.write(low.encrypt(defKey))
+        defKey = low.decrypt(inp.read())
+
+#defKey = b'fBAXqbIYs0Mvslqzc2eVcpi3mFfXOJdOTsQLNAjU_RQ='
 
 #/home/pi/Server/
 class MesCryp:
     def encrypt(string:str, key=None):
         if not key:
             key = defKey
+        print(type(key))
+        print(key)
         f = Fernet(key)
         encrypted = f.encrypt(string.encode())
         return encrypted    # returns bytes
@@ -159,7 +160,6 @@ def KeyFunc(ClientKeys, length=10): # generate random key
 
 if __name__=='__main__':
     from time import time
-    m = MesCryp()
     try:
         while True:
             st = input('\n\nSentence? ')
@@ -172,8 +172,8 @@ if __name__=='__main__':
             print(e)
             print('\nencrypting and decrypting took:', round(end-start, 2))
             start = time()
-            c = m.encrypt(st)
-            e = m.decrypt(c)
+            c = MesCryp.encrypt(string=st)
+            e = MesCryp.decrypt(c, defKey.encode())
             end = time()
             print('Low encryption:')
             print(c)
