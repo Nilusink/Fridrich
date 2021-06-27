@@ -82,6 +82,7 @@ def sendSuccess(client):
     Communication.send(client, {'Success':'Done'}, encryption = MesCryp.encrypt)
 
 def verify(username, password, client):
+    global ClientKeys
     resp = AccManager.verify(username, password)
     IsValid = False
     key = None
@@ -91,7 +92,7 @@ def verify(username, password, client):
 
     elif resp:
         IsValid = True
-        key = KeyFunc(length=30)
+        key = KeyFunc(ClientKeys, length=30)
         ClientKeys[key] = resp
         
     debug.debug(f'Username : {username}, Auth: {IsValid}')
