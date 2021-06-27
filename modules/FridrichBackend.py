@@ -1,4 +1,3 @@
-from contextlib import suppress
 import socket, json
 
 # local imports
@@ -9,8 +8,8 @@ from modules.useful import Dict
 ############################################################################
 #                             other functions                              #
 ############################################################################
-def jsonRepair(string:str):
-    parts = string.split('}{')
+def jsonRepair(string:str): # if two messages are scrambled together, split them and use the first one
+    parts = string.split('}{')  # happens sometimes, probably because python is to slow
     if len(parts)>1:
         return parts[0]+'}'
     return string
@@ -58,7 +57,7 @@ class Connection:
             raise err.SecutiryClearanceNotSet('Security clearance not set! Contact administrator')
         
         elif error == 'NotEncryptedError':
-            raise NotEncryptedError('You just send a not encrypted message. WTF?')
+            raise NotEncryptedError('You just send a not encrypted message. How tf did you do that??')
         
         elif error == 'NameError':
             raise NameError('Username Already exits')
@@ -73,13 +72,15 @@ class Connection:
     def send(self, dictionary:dict):
         self.reconnect() # reconnect to the server
 
-        dictionary['AuthKey'] = self.AuthKey    # add AuthKey to the dictionary
+        # add AuthKey to the dictionary
         stringMes = json.dumps(dictionary)
         if self.AuthKey:
+            dictionary['AuthKey'] = self.AuthKey
             mes = MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
             self.Server.send(mes if type(mes) == bytes else mes.encode('utf-8'))
             return
-        self.Server.send(stringMes.encode('utf-8'))
+
+        self.Server.send(MesCryp.encrypt(stringMes))
 
     def recieve(self, length=2048):
         msg = ''
@@ -108,6 +109,7 @@ class Connection:
             self.Server.connect((self.ServerIp, self.port)) # connect to server
         except socket.error:
             raise ValueError
+
 
     def auth(self, username:str, password:str):
         msg = {  # message
@@ -214,7 +216,7 @@ class Connection:
         self.send(mes)  # send message
         self.recieve()  # get response (success, error)
 
-    def getVote(self, flag='normal'):   # flag can be normal or double
+    def getVote(self, flag = 'normal'):   # flag can be normal or double
         mes = {'type':'getVote', 'flag':flag}    # set message
         self.send(mes)  # send request
 
@@ -247,30 +249,31 @@ class Connection:
         resp = self.recieve()
         return resp
     
-    def AdminSetPassword(self, User, Password):
+    def AdminSetPassword(self, User:str, Password:str):
         msg = {'type':'setPwd', 'User':User, 'newPwd':Password}
         self.send(msg)
         self.recieve()
     
-    def AdminSetUsername(self, OldUsername, NewUsername):
+    def AdminSetUsername(self, OldUsername:str, NewUsername:str):
         msg = {'type':'setName', 'OldUser':OldUsername, 'NewUser':NewUsername}
         self.send(msg)
         self.recieve()
 
-    def AdminSetSecurity(self, username, password):
+    def AdminSetSecurity(self, username:str, password:str):
         msg = {'type':'setSec', 'Name':username, 'sec':password}
         self.send(msg)
         self.recieve()
 
-    def AdminAddUser(self, username, password, clearance):
+    def AdminAddUser(self, username:str, password:str, clearance:str):
         msg = {'type':'newUser', 'Name':username, 'pwd':password, 'sec':clearance}
         self.send(msg)
         self.recieve()
 
-    def AdminRemoveUser(self, username):
+    def AdminRemoveUser(self, username:str):
         msg = {'type':'rmUser', 'Name':username}
         self.send(msg)
         self.recieve()
+
 
     def end(self):
         msg = {'type':'end'}    # set message

@@ -80,18 +80,18 @@ class high:
             temp2 += extra.median(low.decrypt(part), 3)
         return temp2.replace('   ', '|tempspace|').replace(' ', '').replace('|tempspace|', ' ')
 
-with open('KeyFile.enc', 'r') as inp:
+with open('data/KeyFile.enc', 'r') as inp:
     defKey = high.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
 
 class MesCryp:
-    def encrypt(self, string:str, key):
+    def encrypt(string:str, key=None):
         if not key:
             key = defKey
         f = Fernet(key)
         encrypted = f.encrypt(string.encode())
         return encrypted    # returns bytes
     
-    def decrypt(self, byte:bytes, key:bytes):
+    def decrypt(byte:bytes, key:bytes):
         f = Fernet(key)
         decrypted = str(f.decrypt(byte)).lstrip("b'").rstrip("'")
         return decrypted    # returns string
@@ -102,7 +102,7 @@ def tryDecrypt(message:bytes, ClientKeys, errors=True):
         if errors==True:
             raise NotEncryptedError('Message not encrypted')
         return mes
-        
+
     encMes = None
     for key in ClientKeys:
         with suppress(InvalidToken):

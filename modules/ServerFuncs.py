@@ -69,7 +69,7 @@ class Debug:
         print(*args)
         with open(self.file, 'a') as out:
             for element in args:
-                print(f'Wrote to file {self.file}: ', element)
+                #print(f'Wrote to file {self.file}: ', element)
                 out.write(str(element)+'\n')  
 
 def checkif(s:str, d:dict): # if s is already voted, return False, else True
