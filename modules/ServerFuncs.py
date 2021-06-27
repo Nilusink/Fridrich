@@ -64,6 +64,8 @@ class VOTES:    # class for votes "variable"
 class Debug:
     def __init__(self, debFile):
         self.file = debFile
+        with open(self.file, 'w') as out:
+            out.write('')
     
     def debug(self, *args):
         print(*args)
