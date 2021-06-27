@@ -105,7 +105,7 @@ class Communication:
     def send(client, message:dict, encryption=None, key=None):
         stringMes = dumps(message)
         if encryption:
-            mes = encryption(stringMes, key=Key)
+            mes = encryption(stringMes, key=key)
             client.send(mes if type(mes) == bytes else mes.encode('utf-8'))
             return
         client.send(stringMes.encode('utf-8'))
