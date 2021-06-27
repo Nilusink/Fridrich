@@ -80,8 +80,13 @@ class high:
             temp2 += extra.median(low.decrypt(part), 3)
         return temp2.replace('   ', '|tempspace|').replace(' ', '').replace('|tempspace|', ' ')
 
-with open('/home/pi/Server/data/KeyFile.enc', 'r') as inp:
-    defKey = high.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
+try:
+    with open('/home/pi/Server/data/KeyFile.enc', 'r') as inp:
+        defKey = high.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
+except FileNotFoundError:
+    with open('data/KeyFile.enc', 'r') as inp:
+        defKey = high.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
+
 #/home/pi/Server/
 class MesCryp:
     def encrypt(string:str, key=None):

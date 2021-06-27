@@ -71,15 +71,16 @@ class Connection:
 
     def send(self, dictionary:dict):
         self.reconnect() # reconnect to the server
-
-        # add AuthKey to the dictionary
-        stringMes = json.dumps(dictionary)
+        
         if self.AuthKey:
+            # add AuthKey to the dictionary
             dictionary['AuthKey'] = self.AuthKey
+            stringMes = json.dumps(dictionary)
             mes = MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
             self.Server.send(mes if type(mes) == bytes else mes.encode('utf-8'))
             return
 
+        stringMes = json.dumps(dictionary)
         self.Server.send(MesCryp.encrypt(stringMes))
 
     def recieve(self, length=2048):

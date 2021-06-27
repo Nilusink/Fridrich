@@ -102,7 +102,7 @@ def getNewones(flag, VoteInstance, lastFile):   # get all attendants wich are no
     return newones
 
 class Communication:
-    def send(client, message:dict, encryption=None, Key=None):
+    def send(client, message:dict, encryption=None, key=None):
         stringMes = dumps(message)
         if encryption:
             mes = encryption(stringMes, key=Key)

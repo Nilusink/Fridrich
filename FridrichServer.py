@@ -13,7 +13,6 @@ from modules.FanController import CPUHeatHandler
 from modules.Accounts import manager
 from modules.ServerFuncs import *
 
-
 class DoubleVote:
     globals()
     def __init__(self, filePath):
