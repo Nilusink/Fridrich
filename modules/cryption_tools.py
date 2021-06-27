@@ -80,7 +80,7 @@ class high:
             temp2 += extra.median(low.decrypt(part), 3)
         return temp2.replace('   ', '|tempspace|').replace(' ', '').replace('|tempspace|', ' ')
 
-with open('data/KeyFile.enc', 'r') as inp:
+with open('/home/pi/Server/data/KeyFile.enc', 'r') as inp:
     defKey = high.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
 
 class MesCryp:
