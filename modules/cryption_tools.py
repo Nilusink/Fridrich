@@ -95,8 +95,6 @@ class MesCryp:
     def encrypt(string:str, key=None):
         if not key:
             key = defKey
-        print(type(key))
-        print(key)
         f = Fernet(key)
         encrypted = f.encrypt(string.encode())
         return encrypted    # returns bytes
