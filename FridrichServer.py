@@ -366,7 +366,8 @@ def recieve():  # Basicly the whole server
                 error = str(type(e)).split("'")[1]
                 info  = str(e)
                 fullTraceback = format_exc()
-                Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback}, encryption=MesCryp.encrypt)
+                with suppress(UnboundLocalError):
+                    Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback}, encryption=MesCryp.encrypt)
                 with suppress(UnboundLocalError):
                     client.close()
 
