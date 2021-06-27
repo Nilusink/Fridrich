@@ -83,9 +83,13 @@ class high:
 try:
     with open('/home/pi/Server/data/KeyFile.enc', 'r') as inp:
         defKey = high.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
+    with open('/home/pi/Server/data/KeyFile.enc', 'w') as out:
+        out.write(low.encrypt(defKey))
 except FileNotFoundError:
     with open('data/KeyFile.enc', 'r') as inp:
         defKey = high.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
+    with open('data/KeyFile.enc', 'w') as out:
+        out.write(low.encrypt(defKey))
 
 #/home/pi/Server/
 class MesCryp:
