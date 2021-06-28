@@ -10,7 +10,15 @@ The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It
 <pre>
 |  
 |---♦ data  
+|   |---♦ Calendar.json
+|   |---♦ dVotes.json
 |   |---♦ KeyFile.enc  
+|   |---♦ KingLog.json
+|   |---♦ now.json
+|   |---♦ tempData.json
+|   |---♦ users.enc
+|   |---♦ Version
+|   |---♦ yes.json
 |  
 |---♦ modules  
 |   |---♦ __init__.py  
@@ -23,7 +31,9 @@ The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It
 |  
 |---♦ FridrichServer.py  
 </pre>
-The **KeyFile.enc** is the default key if the client hasen't yet authentificated or to send errors. It is encrypted with the cryption_tools.low class. All the files in the **moduels** folder are all just modules for the Server to run.
+The **Calendar.json** file saves the configurations of the calendar in a dict (```Python {'10.10.2005':['stuff happened', 'some other things happened aswell']}```)
+The **KeyFile.enc** is the default key if the client hasen't yet authentificated or to send errors. It is encrypted with the cryption_tools.low class.
+All the files in the **moduels** folder are all just modules for the Server to run.
 
 ## Fridrich Backend
 The Backend File is actually ment to be imported by another programm (**Fridrich Dashboard**). It is generally used to communicate with the server, get informations and send votes.
