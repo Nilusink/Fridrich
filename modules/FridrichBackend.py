@@ -73,7 +73,7 @@ class Connection:
         self.reconnect() # reconnect to the server
         
         if self.AuthKey:
-            # add AuthKey to the dictionary
+            # add AuthKey to the dictionary+
             dictionary['AuthKey'] = self.AuthKey
             stringMes = json.dumps(dictionary)
             mes = MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
