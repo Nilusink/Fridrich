@@ -35,9 +35,9 @@ The File Layout is pretty straight forward:
 |   |---♦ cryption_tools.py  
 |   |---♦ err_classes.py  
 |   |---♦ FridrichBackend.py  
-|   |---♦ ServerFuncs.py  
 |  
 |---♦ YourProgramm.py  
 </pre>  
+
 ## Fridrich Dashboard
 As you may have noticed, this program is not acutally included in this repository. The Programer of it has made his own repository, but the code is not open-source and he only publishes .exe files of his program (I really don't know why). So sadly, you either have to use the .exe or create your own program.
