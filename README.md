@@ -9,16 +9,16 @@ It mainly consits of three parts:
 The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It saves alle the data in files and accepts requests, handels events like the 0 o'clock vote and some other "cool" stuff. The basic File Layout for the Server should look like this:  
 |  
 |---♦ data  
-|   |---♦ KeyFile.enc  
+|$~~~$|---♦ KeyFile.enc  
 |  
 |---♦ modules  
-|   |---♦ __init__.py  
-|   |---♦ Accounts.py  
-|   |---♦ cryption_tools.py  
-|   |---♦ err_classes.py  
-|   |---♦ FanController.py  
-|   |---♦ ServerFuncs.py  
-|   |---♦ useful.py  
+|$~~~$|---♦ __init__.py  
+|$~~~$|---♦ Accounts.py  
+|$~~~$|---♦ cryption_tools.py  
+|$~~~$|---♦ err_classes.py  
+|$~~~$|---♦ FanController.py  
+|$~~~$|---♦ ServerFuncs.py  
+|$~~~$|---♦ useful.py  
 |  
 |---♦ FridrichServer.py  
   
@@ -29,11 +29,11 @@ The Backend File is actually ment to be imported by another programm (**Fridrich
 The File Layout is pretty straight forward:  
 |  
 |---♦ modules  
-|   |---♦ __init__.py  
-|   |---♦ cryption_tools.py  
-|   |---♦ err_classes.py  
-|   |---♦ FridrichBackend.py  
-|   |---♦ ServerFuncs.py  
+|$~~~$|---♦ __init__.py  
+|$~~~$|---♦ cryption_tools.py  
+|$~~~$|---♦ err_classes.py  
+|$~~~$|---♦ FridrichBackend.py  
+|$~~~$|---♦ ServerFuncs.py  
 |  
 |---♦ YourProgramm.py  
   
