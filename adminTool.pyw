@@ -4,7 +4,7 @@ import tkinter as tk
 # local imports
 from modules.FridrichBackend import Connection
 
-secEquals = {'admin':0, 'user':1, 'guest':2}
+secEquals = {'admin':0, 'user':1, 'guest':2}    # for sorting the users
 
 def sortUserList(lst:list, flag='sec'):
     values = sorted(lst, key=lambda element: secEquals[element[flag]] if element[flag] in secEquals else 3)

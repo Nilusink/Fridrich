@@ -130,6 +130,7 @@ dmypy.json
 
 # custom
 .vscode
+data/
 lsd.pyw
 tempCodeRunnerFile.pyw
 tempCodeRunnerFile.py
