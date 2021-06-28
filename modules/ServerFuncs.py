@@ -111,7 +111,8 @@ class Communication:
             with suppress(OSError):
                 client.send(mes if type(mes) == bytes else mes.encode('utf-8'))
             return
-        client.send(stringMes.encode('utf-8'))
+        with suppress(OSError):
+            client.send(stringMes.encode('utf-8'))
 
     def recieve(server, debugingMethod, Keys):
         # Accept Connection

@@ -30,6 +30,9 @@ The Backend File is actually ment to be imported by another programm (**Fridrich
 The File Layout is pretty straight forward:  
 <pre>
 |  
+|---♦ data  
+|   |---♦ KeyFile.enc  
+|  
 |---♦ modules  
 |   |---♦ __init__.py  
 |   |---♦ cryption_tools.py  
