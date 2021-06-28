@@ -166,7 +166,5 @@ class Constants:
         self.errFile = direc+'temp.err.log'
         self.tempFile = direc+'tempData.json'
 
-        self.defUser = {
-            'Name':'Hurensohn', 
-            'pwd':'Hurensohn'
-        }
+        # how many double votes per week
+        self.DoubleVotes = 1

@@ -400,8 +400,7 @@ def update():   # updates every few seconds
                 with open(Const.nowFile, 'r') as inp:
                     last = inp.read()
                     out.write(last)
-            
-            votes = dict()  # reset votes in file and the variable
+
             Vote.write({})
             
             last = json.loads(last) # get last ones
@@ -442,6 +441,12 @@ def update():   # updates every few seconds
             
             else:
                 debug.debug('no votes recieved')
+            if time.strftime('%a')=='Mon':  # if Monday, reset double votes
+                dVotes = DV.read()
+                for element in dVotes:
+                    dVotes[element] = Const.DoubleVotes
+                DV.write(dVotes)
+
             time.sleep(61)
 
         # -------- Fan Controller --------

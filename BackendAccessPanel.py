@@ -12,7 +12,7 @@ if __name__ == '__main__':
     for element in funcs:
         if not element.startswith('__'):
             print('  - '+element)
-    
+
     # print('\nfunctions of wiki: ')
     # funcs = dir(wiki)
     # for element in funcs:
