@@ -78,6 +78,7 @@ The File Layout is pretty straight forward:
 |   |---♦ cryption_tools.py  
 |   |---♦ err_classes.py  
 |   |---♦ FridrichBackend.py  
+|   |---♦ useful.py
 |  
 |---♦ YourProgramm.py  
 </pre>  
