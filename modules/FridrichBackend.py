@@ -92,7 +92,8 @@ class Connection:
             msg = tryDecrypt(self.Server.recv(length), [self.AuthKey], errors=False)
             if msg == None:
                 msg = {'Error':'MessageError', 'info':'Message receved is not valid'}
-            print(msg)
+            if self.mode == 'debug':
+                print(msg)
 
         if 'Error' in msg:  # if error was send by server
             success = False
@@ -284,7 +285,7 @@ class Connection:
     def AdminResetLogins(self):
         msg = {'type':'rsLogins'}
         self.send(msg)
-        self.recieve()['users']
+        self.recieve()
 
     def end(self):
         msg = {'type':'end'}    # set message
