@@ -106,8 +106,10 @@ def getNewones(flag, VoteInstance, lastFile):   # get all attendants wich are no
 class Communication:
     def send(client, message:dict, encryption=None, key=None):
         stringMes = dumps(message)
+        print(stringMes)
         if encryption:
             mes = encryption(stringMes, key=key)
+            print(mes)
             with suppress(OSError):
                 client.send(mes if type(mes) == bytes else mes.encode('utf-8'))
             return

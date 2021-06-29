@@ -87,6 +87,7 @@ class Connection:
         msg = ''
         while msg=='':
             msg = tryDecrypt(self.Server.recv(length), [self.AuthKey], errors=False)
+            print(msg)
 
         if 'Error' in msg:  # if error was send by server
             success = False
