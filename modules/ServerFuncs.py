@@ -130,8 +130,9 @@ class Communication:
 
             if not mes:
                 debugingMethod('Message Error')
-                Communication.send(client, {'Error':'MessageError', 'info':'Invalid Message/AuhtKey'})
-                client.close()
+                with suppress(AttributeError):
+                    Communication.send(client, {'Error':'MessageError', 'info':'Invalid Message/AuthKey'})
+                    client.close()
                 return None, None
             return client, mes
 
