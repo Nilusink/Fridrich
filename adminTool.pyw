@@ -1,3 +1,4 @@
+from contextlib import suppress
 from tkinter import messagebox
 import tkinter as tk
 
@@ -73,6 +74,13 @@ class window:
                                         relief=tk.FLAT, 
                                         font = "Helvetica 15"
                                         )
+        
+        self.delButton = tk.Button(self.mainFrame, text='ResetLogins',   # button for setting new usernames/passwords
+                                        command=self.resetLogins, background='red', 
+                                        fg='white', width=10, 
+                                        relief=tk.FLAT, 
+                                        font = "Helvetica 15"
+                                        )
 
     def run(self):
         self.root.mainloop()
@@ -102,10 +110,11 @@ class window:
         self.onlineUsers = c.getOnlineUsers()
 
         for element in self.userEs:
-            element[0].place_forget()
-            element[1].place_forget()
-            element[2].place_forget()
-            element[3].place_forget()
+            with suppress(IndexError):
+                element[0].place_forget()
+                element[1].place_forget()
+                element[2].place_forget()
+                element[3].place_forget()
         
         self.userEs = list()
         
@@ -135,20 +144,23 @@ class window:
         
         for j, element in enumerate(self.onlineUsers):
             self.userEs.append((
-                tk.Label(self.mainFrame, width=20, font = "Helvetica 15 bold", name='Name:'), 
-                tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold", name=element)
+                tk.Label(self.mainFrame, width=18, font = "Helvetica 15 bold", text='Name:', bg='grey', fg='white'),
+                tk.Label(self.mainFrame, width=18, font = "Helvetica 15 bold", text=element, bg='grey', fg='white')
             ))
 
-            self.userEs[-1][0].place(x=50, y=(i+j)*50+10)
-            self.userEs[-1][1].place(x=300, y=(i+j)*50+10)
+            self.userEs[-1][0].place(x=50, y=(i+j+1)*50+10)
+            self.userEs[-1][1].place(x=300, y=(i+j+1)*50+10)
                 
             
 
 
-        newWindowHeight = (i+j)*50+100
+        newWindowHeight = (i+j+2)*50+100
+        newWindowHeight = newWindowHeight if newWindowHeight<1000 else 1000
         self.root.maxsize(width=800, height=newWindowHeight)
         self.root.minsize(width=800, height=newWindowHeight)
         self.mainFrame.config(height=newWindowHeight)
+
+        self.delButton.place(x=50, y=(i+j+2)*50+10)
 
         self.refreshButton.place(x=50, y=newWindowHeight-50)
         self.addButton.place(x=350, y=newWindowHeight-50)
@@ -158,25 +170,28 @@ class window:
     
     def update(self):
         for i in range(len(self.userEs)):
-            name = self.userEs[i][0].get()
-            pwd = self.userEs[i][1].get()
-            sec = self.userEs[i][2].get()
-
-            oname = self.users[i]['Name']
-            opwd = self.users[i]['pwd']
-            osec = self.users[i]['sec'] if 'sec' in self.users[i] else ''
-    
             try:
-                if name!=oname:
-                    self.c.AdminSetUsername(oname, name)
-                
-                if pwd!=opwd:
-                    self.c.AdminSetPassword(name, pwd)
-                
-                if sec!=osec:
-                    self.c.AdminSetSecurity(name, sec)
-            except NameError:
-                messagebox.showerror('Error', 'Name already exists')
+                name = self.userEs[i][0].get()
+                pwd = self.userEs[i][1].get()
+                sec = self.userEs[i][2].get()
+
+                oname = self.users[i]['Name']
+                opwd = self.users[i]['pwd']
+                osec = self.users[i]['sec'] if 'sec' in self.users[i] else ''
+        
+                try:
+                    if name!=oname:
+                        self.c.AdminSetUsername(oname, name)
+                    
+                    if pwd!=opwd:
+                        self.c.AdminSetPassword(name, pwd)
+                    
+                    if sec!=osec:
+                        self.c.AdminSetSecurity(name, sec)
+                except NameError:
+                    messagebox.showerror('Error', 'Name already exists')
+            except AttributeError:
+                break
         self.refresh()
 
     def remUser(self, user):
@@ -191,6 +206,16 @@ class window:
 
         except Exception:
             messagebox.showerror('Error', f'User with name "{""}" already exists')
+
+    def resetLogins(self, event=None):
+        global w, c
+        ans = messagebox.askyesno('Confirm', 'Clear all users (logout)')
+        if ans:
+            c.AdminResetLogins()
+            c.AuthKey = None
+            w.root.destroy()
+            w = window(c)
+
 
     def end(self, *args):
         self.c.end()
