@@ -237,6 +237,11 @@ class Connection:
         resp = self.recieve()
         return resp['Value']
 
+    def getOnlineUsers(self):
+        msg = {'type':'gOuser'}
+        self.send(msg)
+        self.recieve()
+
 
     def AdminGetUsers(self):
         msg = {'type':'getUsers'}
@@ -269,6 +274,11 @@ class Connection:
         self.send(msg)
         self.recieve()
 
+    def AdminResetLogins(self):
+        msg = {'type':'rsLogins'}
+        self.send(msg)
+        users = self.recieve()['users']
+        return users
 
     def end(self):
         msg = {'type':'end'}    # set message

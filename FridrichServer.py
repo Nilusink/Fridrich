@@ -108,6 +108,7 @@ class FunctionManager:
                 'newUser':AdminFuncs.addUser,
                 'rmUser':AdminFuncs.rmUser,
                 'end':AdminFuncs.end,
+                'rsLogins':AdminFuncs.resetUserLogins,
 
                 'setVersion':ClientFuncs.setVersion,
                 'getVersion':ClientFuncs.setVersion
@@ -124,7 +125,8 @@ class FunctionManager:
                 'setVersion':ClientFuncs.setVersion,
                 'dvote':ClientFuncs.DoubVote,
                 'dUvote':ClientFuncs.DoubUnVote,
-                'getFrees':ClientFuncs.getFreeVotes
+                'getFrees':ClientFuncs.getFreeVotes,
+                'gOuser':ClientFuncs.getOUser
             },
             'guest' : {                                  # instead of 5 billion if'S
                 'CalEntry':ClientFuncs.CalendarHandler, 
@@ -182,9 +184,15 @@ class AdminFuncs:
         AccManager.rmUser(message['Name'])
         sendSuccess(client)
 
+    def resetUserLogins(message, client, *args):
+        global ClientKeys
+        ClientKeys = dict()
+        sendSuccess(client)
+
     def end(message, *args):
         with suppress(Exception):
             ClientKeys.pop(message['AuthKey'])
+
 
 class ClientFuncs:  # class for the Switch
     globals()
@@ -317,6 +325,14 @@ class ClientFuncs:  # class for the Switch
             Communication.send(client, {'Error':'RegistryError'}, encryption=MesCryp.encrypt, key=message['AuthKey'])
             return
         Communication.send(client, {'Value':frees}, encryption=MesCryp.encrypt, key=message['AuthKey'])
+
+    def getOUser(message, client, *args):
+        global ClientKeys
+        names = list()
+        for element in ClientKeys:
+            names.append(element[1])
+        
+        Communication.send(client, {'users':names}, encryption=MesCryp.encrypt, key=message['AuthKey'])
 
     def end(message, *args):
         global ClientKeys
