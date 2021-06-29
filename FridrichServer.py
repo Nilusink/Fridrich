@@ -330,7 +330,7 @@ class ClientFuncs:  # class for the Switch
         global ClientKeys
         names = list()
         for element in ClientKeys:
-            names.append(element[1])
+            names.append(ClientKeys[element[1]])
         
         Communication.send(client, {'users':names}, encryption=MesCryp.encrypt, key=message['AuthKey'])
 

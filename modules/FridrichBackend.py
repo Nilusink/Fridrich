@@ -240,7 +240,8 @@ class Connection:
     def getOnlineUsers(self):
         msg = {'type':'gOuser'}
         self.send(msg)
-        self.recieve()
+        users = self.recieve()['users']
+        return users
 
 
     def AdminGetUsers(self):
@@ -277,8 +278,7 @@ class Connection:
     def AdminResetLogins(self):
         msg = {'type':'rsLogins'}
         self.send(msg)
-        users = self.recieve()['users']
-        return users
+        self.recieve()['users']
 
     def end(self):
         msg = {'type':'end'}    # set message
