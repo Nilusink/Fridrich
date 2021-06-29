@@ -384,7 +384,7 @@ def recieve():  # Basicly the whole server
                 fullTraceback = format_exc()
                 with suppress(UnboundLocalError):
                     Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback}, encryption=MesCryp.encrypt)
-                with suppress(UnboundLocalError):
+                with suppress((OSError, AttributeError, UnboundLocalError)):
                     client.close()
 
             debug.debug('Thread 1 error:')
