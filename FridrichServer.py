@@ -111,7 +111,8 @@ class FunctionManager:
                 'rsLogins':AdminFuncs.resetUserLogins,
 
                 'setVersion':ClientFuncs.setVersion,
-                'getVersion':ClientFuncs.setVersion
+                'getVersion':ClientFuncs.setVersion,
+                'gOuser':ClientFuncs.getOUser
             },
             'user' : {                                  # instead of 5 billion if'S
                 'vote':ClientFuncs.vote, 

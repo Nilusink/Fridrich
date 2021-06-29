@@ -99,6 +99,7 @@ class window:
     
     def refresh(self):
         self.users = sortUserList(c.AdminGetUsers())
+        self.onlineUsers = c.getOnlineUsers()
 
         for element in self.userEs:
             element[0].place_forget()
@@ -115,7 +116,7 @@ class window:
                 tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold"),
                 tk.Button(self.mainFrame, width=1, font = "Helvetica 10 bold", text = '-', 
                     bg = 'red', command = lambda e=None, name=user['Name']: self.remUser(name))
-                ))
+            ))
 
             self.userEs[-1][0].delete(0, 'end')
             self.userEs[-1][1].delete(0, 'end')
@@ -132,7 +133,19 @@ class window:
             else:
                 self.userEs[-1][0].config(state=tk.DISABLED)
         
-        newWindowHeight = i*50+100
+        for j, element in enumerate(self.onlineUsers):
+            self.userEs.append((
+                tk.Label(self.mainFrame, width=20, font = "Helvetica 15 bold", name='Name:'), 
+                tk.Entry(self.mainFrame, width=20, font = "Helvetica 15 bold", name=element)
+            ))
+
+            self.userEs[-1][0].place(x=50, y=(i+j)*50+10)
+            self.userEs[-1][1].place(x=300, y=(i+j)*50+10)
+                
+            
+
+
+        newWindowHeight = (i+j)*50+100
         self.root.maxsize(width=800, height=newWindowHeight)
         self.root.minsize(width=800, height=newWindowHeight)
         self.mainFrame.config(height=newWindowHeight)
