@@ -62,6 +62,9 @@ class Connection:
         elif error == 'NameError':
             raise NameError('Username Already exits')
         
+        elif error == 'MessageError':
+            raise err.MessageError(args[0]['info'])
+
         else:
             if self.mode == 'debug':
                 st = f'Error: {error}\nInfo: {args[0]["info"] if "info" in args[0] else "None"}\nFullBug: {args[0]["full"] if "full" in args[0] else "None"}'
@@ -87,6 +90,8 @@ class Connection:
         msg = ''
         while msg=='':
             msg = tryDecrypt(self.Server.recv(length), [self.AuthKey], errors=False)
+            if msg == None:
+                msg = {'Error':'MessageError', 'info':'Message receved is not valid'}
             print(msg)
 
         if 'Error' in msg:  # if error was send by server

@@ -118,7 +118,7 @@ def tryDecrypt(message:bytes, ClientKeys, errors=True):
             break
     
     if not encMes:
-        with suppress(DecryptionError):
+        with suppress(InvalidToken):
             encMes = MesCryp.decrypt(message, defKey)
     
     if not encMes:

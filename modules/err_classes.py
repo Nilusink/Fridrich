@@ -24,3 +24,6 @@ class InvalidRequest(Exception):
 
 class SecutiryClearanceNotSet(Exception):
     pass
+
+class MessageError(Exception):
+    pass
