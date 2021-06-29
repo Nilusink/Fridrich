@@ -110,10 +110,10 @@ class Communication:
         if encryption:
             mes = encryption(stringMes, key=key)
             #print(mes)
-            with suppress(OSError):
+            with suppress((OSError, AttributeError)):
                 client.send(mes if type(mes) == bytes else mes.encode('utf-8'))
             return
-        with suppress(OSError):
+        with suppress((OSError, AttributeError)):
             client.send(stringMes.encode('utf-8'))
 
     def recieve(server, debugingMethod, Keys):
