@@ -25,6 +25,7 @@ class window:
         self.root.maxsize(width=600, height=500)
 
         self.root.bind('<Escape>', self.end)    # bin esc to exit
+        self.root.bind('<F5>', self.update)
 
         #   login Frame
         self.loginFrame = tk.Frame(self.root, bg='black', width=600, height=700)
@@ -78,7 +79,7 @@ class window:
         self.delButton = tk.Button(self.mainFrame, text='ResetLogins',   # button for setting new usernames/passwords
                                         command=self.resetLogins, background='red', 
                                         fg='white', width=10, 
-                                        relief=tk.FLAT, 
+                                        relief=tk.RAISED, 
                                         font = "Helvetica 15"
                                         )
 
@@ -141,6 +142,7 @@ class window:
                 self.userEs[-1][3].place(x=10,  y=i*50+10)
             else:
                 self.userEs[-1][0].config(state=tk.DISABLED)
+                self.userEs[-1][2].config(state=tk.DISABLED)
         
         for j, element in enumerate(self.onlineUsers):
             self.userEs.append((
@@ -148,8 +150,8 @@ class window:
                 tk.Label(self.mainFrame, width=18, font = "Helvetica 15 bold", text=element, bg='grey', fg='white')
             ))
 
-            self.userEs[-1][0].place(x=50, y=(i+j+1)*50+10)
-            self.userEs[-1][1].place(x=300, y=(i+j+1)*50+10)
+            self.userEs[-1][0].place(x=50, y=(i+j+2)*50+10)
+            self.userEs[-1][1].place(x=300, y=(i+j+2)*50+10)
                 
             
 
@@ -160,15 +162,15 @@ class window:
         self.root.minsize(width=800, height=newWindowHeight)
         self.mainFrame.config(height=newWindowHeight)
 
-        self.delButton.place(x=50, y=(i+j+2)*50+10)
+        self.delButton.place(x=350, y=(i+j+1)*50+100)
 
-        self.refreshButton.place(x=50, y=newWindowHeight-50)
-        self.addButton.place(x=350, y=newWindowHeight-50)
-        self.updateButton.place(x=650, y=newWindowHeight-50)
+        self.refreshButton.place(x=50, y=(i+1)*50)
+        self.addButton.place(x=350, y=(i+1)*50)
+        self.updateButton.place(x=650, y=(i+1)*50)
 
         self.root.update()
     
-    def update(self):
+    def update(self, *args):
         for i in range(len(self.userEs)):
             try:
                 name = self.userEs[i][0].get()
