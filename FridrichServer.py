@@ -345,6 +345,9 @@ def recieve():  # Basicly the whole server
         try:
             try:
                 client, mes = Communication.recieve(server, debug.debug, list(ClientKeys))
+                if mes == None:
+                    Communication.send(client, {'Error':'MessageError', 'info':'Invalid Message/AuthKey'})
+                    
             except NotEncryptedError:
                 Communication.send(client, {'Error':'NotEncryptedError'})
             if mes['type'] == 'auth':   # authorization function
