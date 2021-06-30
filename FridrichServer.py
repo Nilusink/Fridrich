@@ -54,10 +54,10 @@ class DoubleVote:
         Vote.write(value)
         return False
 
-    def unVote(self, User):
+    def unVote(self, User, voting):
         global Vote
 
-        votes = Vote.get()
+        votes = Vote.get()[voting]
         with suppress(KeyError):
             votes.pop(User+'2')
         
@@ -312,7 +312,7 @@ class ClientFuncs:  # class for the Switch
     def DoubUnVote(message, client, *args):
         global DV
         name = ClientKeys[message['AuthKey']][1]
-        DV.unVote(name)
+        DV.unVote(name, message['voting'])
         sendSuccess(client)
     
     def getFreeVotes(message, client, *args):
