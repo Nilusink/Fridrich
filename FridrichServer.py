@@ -67,8 +67,8 @@ class DoubleVote:
         
             value = self.read()
             value[User]+=1
+            self.write(value)
             
-        self.write(value)
         Vote.write(votes)
     
     def getFrees(self, User):

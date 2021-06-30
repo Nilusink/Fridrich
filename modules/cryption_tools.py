@@ -109,6 +109,7 @@ def tryDecrypt(message:bytes, ClientKeys, errors=True):
         mes = loads(message)
         if errors==True:
             raise NotEncryptedError('Message not encrypted')
+        print(mes)
         return mes
 
     encMes = None
@@ -122,6 +123,8 @@ def tryDecrypt(message:bytes, ClientKeys, errors=True):
             encMes = MesCryp.decrypt(message, defKey)
     
     if not encMes:
+        print(encMes)
+        print(message)
         return None
 
     try:
