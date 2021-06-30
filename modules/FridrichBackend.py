@@ -89,10 +89,10 @@ class Connection:
     def recieve(self, length=2048):
         msg = ''
         while msg=='':
-            msg = tryDecrypt(self.Server.recv(length), [self.AuthKey], errors=False)
-            print(msg)
+            mes = self.Server.recv(length)
+            msg = tryDecrypt(mes, [self.AuthKey], errors=False)
             if msg == None:
-                msg = {'Error':'MessageError', 'info':'Server Message receved is not valid'}
+                msg = {'Error':'MessageError', 'info':'Server message receved is not valid'}
             if self.mode == 'debug':
                 print(msg)
 
@@ -158,7 +158,7 @@ class Connection:
         for voting in res:
             attds = dict()  # create dictionary with all attendants:votes
             for element in [res[element] for element in res]+['Lukas', 'Niclas', 'Melvin']:
-                attds[element] = int()
+                attds[element] = 0
 
             votes = int()
             for element in res: # assign votes to attendant
