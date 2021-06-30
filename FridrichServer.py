@@ -68,7 +68,7 @@ class DoubleVote:
             value = self.read()
             value[User]+=1
             self.write(value)
-            
+
         Vote.write(votes)
     
     def getFrees(self, User):
@@ -381,7 +381,7 @@ def recieve():  # Basicly the whole server
                     if error:
                         if fullTraceback:
                             print(fullTraceback)
-                        Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback}, encryption=MesCryp.encrypt)
+                        Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback})
                 
             client.close()  # close so it can be reused
 
@@ -391,7 +391,7 @@ def recieve():  # Basicly the whole server
                 info  = str(e)
                 fullTraceback = format_exc()
                 with suppress(UnboundLocalError):
-                    Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback}, encryption=MesCryp.encrypt)
+                    Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback})
                 with suppress((OSError, AttributeError, UnboundLocalError)):
                     client.close()
 
