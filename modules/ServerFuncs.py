@@ -108,7 +108,7 @@ def getNewones(flag, VoteInstance, lastFile, voting):   # get all attendants wic
 class Communication:
     def send(client, message:dict, encryption=None, key=None):
         stringMes = dumps(message)
-        # print(stringMes)
+        print(stringMes)
         if encryption:
             mes = encryption(stringMes, key=key)
             #print(mes)
