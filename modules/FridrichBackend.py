@@ -301,7 +301,6 @@ class Connection:
 ############################################################################
 # class wiki:
 #     def __init__(self):
-#         # App id obtained by the above steps
 #         app_id = 'U3ETL7-RL45EG5R6Y'
 #         # Instance of wolf ram alpha 
 #         # client class
