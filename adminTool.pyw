@@ -1,8 +1,8 @@
 from contextlib import suppress
 from tkinter import messagebox
+from os import popen, system
 from socket import gaierror
 import tkinter as tk
-from os import popen, system
 
 # local imports
 from modules.FridrichBackend import Connection
@@ -175,25 +175,32 @@ class window:
                 self.userEs[-1][0].config(state=tk.DISABLED)
                 self.userEs[-1][2].config(state=tk.DISABLED)
         
+        UserNum = {user:self.onlineUsers.count(user) for user in self.onlineUsers}
+        isIn = list()
+        notIn = int()
         for j, element in enumerate(self.onlineUsers):
-            self.userEs.append((
-                tk.Label(self.mainFrame, width=18, font = "Helvetica 15 bold", text='Name:', bg='grey', fg='white'),
-                tk.Label(self.mainFrame, width=18, font = "Helvetica 15 bold", text=element, bg='grey', fg='white')
-            ))
+            if not element in isIn:
+                self.userEs.append((
+                    tk.Label(self.mainFrame, width=18, font = "Helvetica 15 bold", text='Name:', bg='grey', fg='white'),
+                    tk.Label(self.mainFrame, width=18, font = "Helvetica 15 bold", text=element, bg='grey', fg='white'),
+                    tk.Label(self.mainFrame, width=18, font = "Helvetica 15 bold", text='Count: '+str(UserNum[element]), bg='grey', fg='white')
+                ))
 
-            self.userEs[-1][0].place(x=50, y=(i+j+2)*50+10)
-            self.userEs[-1][1].place(x=300, y=(i+j+2)*50+10)
+                isIn.append(element)
+
+                self.userEs[-1][0].place(x=50, y=(i+j+3-notIn)*50+10)
+                self.userEs[-1][1].place(x=300, y=(i+j+3-notIn)*50+10)
+                self.userEs[-1][2].place(x=550, y=(i+j+3-notIn)*50+10)
+            else:
+                notIn += 1
                 
-            
-
-
-        newWindowHeight = (i+j+2)*50+100
+        newWindowHeight = (i+j+2-notIn)*50+100
         newWindowHeight = newWindowHeight if newWindowHeight<1000 else 1000
         self.root.maxsize(width=800, height=newWindowHeight)
         self.root.minsize(width=800, height=newWindowHeight)
         self.mainFrame.config(height=newWindowHeight)
 
-        self.delButton.place(x=350, y=(i+j+1)*50+100)
+        self.delButton.place(x=350, y=(i+2)*50+10)
 
         self.refreshButton.place(x=50, y=(i+1)*50)
         self.addButton.place(x=350, y=(i+1)*50)
@@ -248,6 +255,8 @@ class window:
             c.AuthKey = None
             w.root.destroy()
             w = window(c)
+
+            self.update()
 
 
     def end(self, *args):
