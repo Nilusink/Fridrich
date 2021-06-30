@@ -346,7 +346,7 @@ def recieve():  # Basicly the whole server
         try:
             try:
                 client, mes = Communication.recieve(server, debug.debug, list(ClientKeys))
-                print(mes)
+                debug.debug(mes)
                 if mes == None:
                     Communication.send(client, {'Error':'MessageError', 'info':'Invalid Message/AuthKey'})
                     continue
