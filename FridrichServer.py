@@ -3,9 +3,8 @@ from gpiozero import CPUTemperature
 import datetime, socket, time, json
 from traceback import format_exc
 from contextlib import suppress
+from sys import exit as sExit
 from threading import Thread
-from random import sample
-import sys
 
 # local imports
 from modules.cryption_tools import low, KeyFunc, MesCryp, NotEncryptedError
@@ -194,7 +193,6 @@ class AdminFuncs:
         with suppress(Exception):
             ClientKeys.pop(message['AuthKey'])
 
-
 class ClientFuncs:  # class for the Switch
     globals()
     def vote(message, client, *args):
@@ -361,7 +359,7 @@ def recieve():  # Basicly the whole server
             else:
                 if not 'AuthKey' in mes:    # if no AuthKey in message
                     debug.debug('auth error, Key not in message')
-                    Communication.send(client, {'Error':'AuthError'}, encryption=MesCryp.encrypt, key=mes['AuthKey'])
+                    Communication.send(client, {'Error':'AuthError'}, encryption=MesCryp.encrypt)
                     client.close()
                     continue
 
@@ -544,4 +542,4 @@ if __name__=='__main__':
         server.shutdown(socket.SHUT_RDWR)
         debug.debug(format_exc())
         Terminate=True
-        sys.exit(0)
+        sExit(0)
