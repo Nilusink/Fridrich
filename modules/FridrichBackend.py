@@ -157,7 +157,9 @@ class Connection:
         out = dict()
         for voting in res:
             attds = dict()  # create dictionary with all attendants:votes
-            for element in [res[voting][element] for element in res[voting]]+['Lukas', 'Niclas', 'Melvin']:
+            nowVoting = res[voting]
+            print(nowVoting)
+            for element in [nowVoting[element] for element in nowVoting]+['Lukas', 'Niclas', 'Melvin']:
                 attds[element] = 0
 
             votes = int()

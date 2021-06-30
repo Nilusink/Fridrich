@@ -61,15 +61,15 @@ class DoubleVote:
     def unVote(self, User, voting):
         global Vote
 
-        votes = Vote.get()[voting]
+        votes = Vote.get()
         with suppress(KeyError):
-            votes.pop(User+'2')
+            votes[voting].pop(User+'2')
         
             value = self.read()
             value[User]+=1
             
-            self.write(value)
-            Vote.write(votes)
+        self.write(value)
+        Vote.write(votes)
     
     def getFrees(self, User):
         value = self.read()
