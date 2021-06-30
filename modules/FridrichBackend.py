@@ -90,8 +90,9 @@ class Connection:
         msg = ''
         while msg=='':
             msg = tryDecrypt(self.Server.recv(length), [self.AuthKey], errors=False)
+            print(msg)
             if msg == None:
-                msg = {'Error':'MessageError', 'info':'Message receved is not valid'}
+                msg = {'Error':'MessageError', 'info':'Server Message receved is not valid'}
             if self.mode == 'debug':
                 print(msg)
 
