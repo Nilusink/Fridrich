@@ -304,7 +304,7 @@ class ClientFuncs:  # class for the Switch
     def DoubVote(message, client, *args):
         global DV, Vote
         name = ClientKeys[message['AuthKey']][1]
-        resp = checkif(message['vote'], Vote.get())     
+        resp = checkif(message['vote'], Vote.get()['voting'])     
         resp = DV.vote(resp, name)
         if resp:
             sendSuccess(client)

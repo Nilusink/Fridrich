@@ -157,14 +157,14 @@ class Connection:
         out = dict()
         for voting in res:
             attds = dict()  # create dictionary with all attendants:votes
-            for element in [res[element] for element in res]+['Lukas', 'Niclas', 'Melvin']:
+            for element in [res[voting][element] for element in res[voting]]+['Lukas', 'Niclas', 'Melvin']:
                 attds[element] = 0
 
             votes = int()
-            for element in res: # assign votes to attendant
+            for element in res[voting]: # assign votes to attendant
                 votes+=1
-                attds[res[element]]+=1
-            
+                attds[res[voting][element]]+=1
+            out[voting] = dict()
             out[voting]['totalVotes'] = votes
             out[voting]['results'] = attds
         
