@@ -161,6 +161,7 @@ class Constants:
         self.tempLog = direc+'tempData.json'
         self.doubFile = direc+'dVotes.json'
         self.SerlogFile = direc+'Server.log'
+        self.SerUpLogFile = direc+'Server.up.log'
 
         # web serveer files
         self.varTempLog = vardirec+'json/tempData.json'

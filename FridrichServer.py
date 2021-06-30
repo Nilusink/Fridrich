@@ -405,76 +405,78 @@ def update():   # updates every few seconds
     start = t()
     start1 = start
     while not Const.Terminate:
-        # -------- Requests Counter ---------
-        if t()-start>=1:    # every 2 seconds
-            start+=1
-            #s = str(reqCounter)
-            #debug.debug(' Requests in last 2 seconds: '+'0'*(3-len(s))+s, end='\r')
-            reqCounter = 0
-            currTemp = cpu.temperature
-            roomTemp, roomHum = readTemp()
-            for element in (Const.tempLog, Const.varTempLog):
-                with open(element, 'w') as out:
-                    json.dump({"temp":roomTemp, "cptemp":currTemp, "hum":roomHum}, out)
-            time.sleep(.8)
-        
-        # --------  00:00 switch ---------
-        if time.strftime('%H:%M') == '00:00':
-            with open(Const.lastFile, 'w') as out:    # get newest version of the "votes" dict and write it to the lastFile
-                with open(Const.nowFile, 'r') as inp:
-                    last = inp.read()
-                    out.write(last)
-
-            Vote.write({'GayKing':dict()})
+        try:
+            # -------- Requests Counter ---------
+            if t()-start>=1:    # every 2 seconds
+                start+=1
+                #s = str(reqCounter)
+                #debug.debug(' Requests in last 2 seconds: '+'0'*(3-len(s))+s, end='\r')
+                reqCounter = 0
+                currTemp = cpu.temperature
+                roomTemp, roomHum = readTemp()
+                for element in (Const.tempLog, Const.varTempLog):
+                    with open(element, 'w') as out:
+                        json.dump({"temp":roomTemp, "cptemp":currTemp, "hum":roomHum}, out)
+                time.sleep(.8)
             
+            # --------  00:00 switch ---------
+            if time.strftime('%H:%M') == '00:00':
+                with open(Const.lastFile, 'w') as out:    # get newest version of the "votes" dict and write it to the lastFile
+                    with open(Const.nowFile, 'r') as inp:
+                        last = inp.read()
+                        out.write(last)
 
-            # ---- Log File (only for GayKing Voting)
-            last = json.loads(last)['GayVoting'] # get last ones
-
-            votes1 = int()
-            attds = dict()
-            for element in last:    # create a dict with all names and a corresponding value of 0
-                attds[last[element]] = 0
-
-            for element in last:    # if name has been voted, add a 1 to its sum
-                votes1+=1
-                attds[last[element]]+=1
-
-            
-            Highest = str()
-            HighestInt = int()
-            for element in attds:   # gets the highest of the recently created dict
-                if attds[element]>HighestInt:
-                    HighestInt = attds[element]
-                    Highest = element
-
-                elif attds[element]==HighestInt:
-                    Highest += '|'+element
-            
-            if HighestInt!=0:
-                kIn = json.loads(open(Const.KingFile, 'r').read())    # write everything to logs
-                kIn[time.strftime('%d.%m.%Y')] = Highest
-                with open(Const.KingFile, 'w') as out:
-                    json.dump(kIn, out, indent=4)
+                Vote.write({'GayKing':dict()})
                 
-                with open(Const.varLogFile, 'w') as out:
-                    json.dump(kIn, out, indent=4)
-                
-                with open(Const.varKingLogFile, 'w') as out:
-                    out.write(Highest)
-                
-                debug.debug(f"backed up files and logged the GayKing ({time.strftime('%H:%M')})\nGaymaster: {Highest}")
-            
-            else:
-                debug.debug('no votes recieved')
-            if time.strftime('%a')=='Mon':  # if Monday, reset double votes
-                dVotes = DV.read()
-                for element in dVotes:
-                    dVotes[element] = Const.DoubleVotes
-                DV.write(dVotes)
 
-            time.sleep(61)
+                # ---- Log File (only for GayKing Voting)
+                last = json.loads(last)['GayVoting'] # get last ones
 
+                votes1 = int()
+                attds = dict()
+                for element in last:    # create a dict with all names and a corresponding value of 0
+                    attds[last[element]] = 0
+
+                for element in last:    # if name has been voted, add a 1 to its sum
+                    votes1+=1
+                    attds[last[element]]+=1
+
+                
+                Highest = str()
+                HighestInt = int()
+                for element in attds:   # gets the highest of the recently created dict
+                    if attds[element]>HighestInt:
+                        HighestInt = attds[element]
+                        Highest = element
+
+                    elif attds[element]==HighestInt:
+                        Highest += '|'+element
+                
+                if HighestInt!=0:
+                    kIn = json.loads(open(Const.KingFile, 'r').read())    # write everything to logs
+                    kIn[time.strftime('%d.%m.%Y')] = Highest
+                    with open(Const.KingFile, 'w') as out:
+                        json.dump(kIn, out, indent=4)
+                    
+                    with open(Const.varLogFile, 'w') as out:
+                        json.dump(kIn, out, indent=4)
+                    
+                    with open(Const.varKingLogFile, 'w') as out:
+                        out.write(Highest)
+                    
+                    debug.debug(f"backed up files and logged the GayKing ({time.strftime('%H:%M')})\nGaymaster: {Highest}")
+                
+                else:
+                    debug.debug('no votes recieved')
+                if time.strftime('%a')=='Mon':  # if Monday, reset double votes
+                    dVotes = DV.read()
+                    for element in dVotes:
+                        dVotes[element] = Const.DoubleVotes
+                    DV.write(dVotes)
+
+                time.sleep(61)
+        except:
+            UpDebug.debug('\n\n\n'+time.strftime('%H:%M:%S')+'\n'+format_exc)
         # -------- Fan Controller --------
         if t()-start1>=10:
             start1+=10
@@ -499,6 +501,7 @@ if __name__=='__main__':
     FunManager = FunctionManager()
 
     debug = Debug(Const.SerlogFile)
+    UpDebug = Debug(Const.SerUpLogFile)
 
     Vote = VOTES(Const.nowFile, Const.varNowFile)
     DV   = DoubleVote(Const.doubFile)
