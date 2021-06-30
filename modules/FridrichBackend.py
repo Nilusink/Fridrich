@@ -119,6 +119,7 @@ class Connection:
             'Name':username,
             'pwd':password
         }
+        self.AuthKey = None # reset AuthKey
         self.send(msg)  # send message
         resp = self.recieve()   # recieve authKey (or error)
 
