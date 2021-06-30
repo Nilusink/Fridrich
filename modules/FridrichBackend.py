@@ -132,37 +132,41 @@ class Connection:
         resp = self.recieve()
         return resp['sec']
 
-    def getAttendants(self, flag = 'now'): # flag can be 'now' or 'last'
-        self.send({'type':'req', 'reqType':'attds', 'atype':flag})  # send message
+    def getAttendants(self, flag = 'now', voting = 'GayKing'): # flag can be 'now' or 'last'
+        self.send({'type':'req', 'reqType':'attds', 'atype':flag, 'voting':voting})  # send message
         resp = self.recieve()   # get response
 
         return resp['Names']    # return names
 
-    def sendVote(self, *args, flag = 'vote'): # flag can be 'vote', 'unvote', 'dvote' or 'dUvote'
-        if flag in ('vote', 'dvote'):
-            msg = {'type':flag, 'vote':args[0]} # if vote send vote
-        else:
-            msg = {'type':flag} # if no vote send no vote
+    def sendVote(self, *args, flag = 'vote', voting = 'GayKing'):   # flag can be 'vote', 'unvote', 'dvote' or 'dUvote', voting is custom
+        msg = {'type':flag, 'voting':voting}                        # DoubleVotes are only available for GayKing voting and other voting 
+        if flag in ('vote', 'dvote'):                               # types will be ignored if flag is 'dvote'
+            msg['vote'] = args[0] # if vote send vote
         
         self.send(msg)  # send vote
         self.recieve()  # recieve success or error
     
-    def getResults(self, flag = 'now'): # flag can be 'now', 'last'
-        msg = {'type':'req', 'reqType':flag}    # set message
+    def getResults(self, flag = 'now'): # flag can be 'now', 'last', will return Voting:'results':VoteDict and
+        msg = {'type':'req', 'reqType':flag}    # set message                    Voting:'totalVotes':TotalVotes
         self.send(msg)  # send message
 
         res = self.recieve()    # get response
 
-        attds = dict()  # create dictionary with all attendants:votes
-        for element in [res[element] for element in res]+['Lukas', 'Niclas', 'Melvin']:
-            attds[element] = int()
+        out = dict()
+        for voting in res:
+            attds = dict()  # create dictionary with all attendants:votes
+            for element in [res[element] for element in res]+['Lukas', 'Niclas', 'Melvin']:
+                attds[element] = int()
 
-        votes = int()
-        for element in res: # assign votes to attendant
-            votes+=1
-            attds[res[element]]+=1
+            votes = int()
+            for element in res: # assign votes to attendant
+                votes+=1
+                attds[res[element]]+=1
+            
+            out[voting]['totalVotes'] = votes
+            out[voting]['results'] = attds
         
-        return votes, attds # retur total votes and dict
+        return out # retur total votes and dict
     
     def getLog(self):
         msg = {'type':'req', 'reqType':'log'}   # set message
@@ -218,8 +222,8 @@ class Connection:
         self.send(mes)  # send message
         self.recieve()  # get response (success, error)
 
-    def getVote(self, flag = 'normal'):   # flag can be normal or double
-        mes = {'type':'getVote', 'flag':flag}    # set message
+    def getVote(self, flag = 'normal', voting = 'GayKing'):   # flag can be normal or double
+        mes = {'type':'getVote', 'flag':flag, 'voting':voting}    # set message
         self.send(mes)  # send request
 
         resp = self.recieve()   # get response

@@ -44,7 +44,7 @@ class DoubleVote:
             if value[User] < 1:
                 return False
         
-            votes[User+'2'] = vote
+            votes['GayKing'][User+'2'] = vote
             Vote.write(votes)
 
             value[User] -= 1
@@ -202,7 +202,7 @@ class ClientFuncs:  # class for the Switch
         votes = Vote.get()    # update votes
         resp = checkif(message['vote'], votes)
         name = ClientKeys[message['AuthKey']][1]
-        votes[name] = resp    # set <hostname of client> to clients vote
+        votes[message['voting']][name] = resp    # set <hostname of client> to clients vote
         debug.debug(f'got vote: {message["vote"]}                     .')   # print that it recievd vote (debugging)
         Vote.write(votes)  # write to file
 
@@ -213,7 +213,7 @@ class ClientFuncs:  # class for the Switch
         votes = Vote.get()    # update votes
         name = ClientKeys[message['AuthKey']][1] # WHY U NOT WORKING
         with suppress(KeyError): 
-            del votes[name]  # try to remove vote from client, if client hasn't voted yet, ignore it
+            del votes[message['voting']][name]  # try to remove vote from client, if client hasn't voted yet, ignore it
         Vote.write(votes) # update file
 
         sendSuccess(client)
@@ -248,7 +248,7 @@ class ClientFuncs:  # class for the Switch
                 Communication.send(client, json.load(inp), encryption=MesCryp.encrypt, key=message['AuthKey'])
                 
         elif message['reqType'] == 'attds': # returns All attendants (also non standart users)
-            newones = getNewones(message['atype'], Vote, Const.lastFile)  
+            newones = getNewones(message['atype'], Vote, Const.lastFile, message['voting'])  
             Communication.send(client, {'Names':['Lukas', 'Niclas', 'Melvin']+newones}, encryption=MesCryp.encrypt, key=message['AuthKey'])    # return stardart users + new ones
                 
         elif message['reqType'] == 'temps': # returns the temperatures
@@ -285,10 +285,10 @@ class ClientFuncs:  # class for the Switch
             x = ''
 
         name = ClientKeys[message['AuthKey']][1] + x
-        if not name in Vote.get():
+        if not name in votes[message['voting']]:
             Communication.send(client, {'Error':'NotVoted'}, encryption=MesCryp.encrypt, key=message['AuthKey'])
             return
-        cVote = votes[name]
+        cVote = votes[message['voting']][name]
         Communication.send(client, {'Vote':cVote}, encryption=MesCryp.encrypt, key=message['AuthKey'])
 
     def getVersion(message, client, *args):
@@ -422,9 +422,11 @@ def update():   # updates every few seconds
                     last = inp.read()
                     out.write(last)
 
-            Vote.write({})
+            Vote.write({'GayKing':dict()})
             
-            last = json.loads(last) # get last ones
+
+            # ---- Log File (only for GayKing Voting)
+            last = json.loads(last)['GayVoting'] # get last ones
 
             votes1 = int()
             attds = dict()

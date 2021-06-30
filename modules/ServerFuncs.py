@@ -90,14 +90,14 @@ def inverseDict(dictionary:dict):
         x[dictionary[element]] = element
     return x
 
-def getNewones(flag, VoteInstance, lastFile):   # get all attendants wich are not in the default name list
+def getNewones(flag, VoteInstance, lastFile, voting):   # get all attendants wich are not in the default name list
     newones = list()
     if flag=='now':
         tmp = VoteInstance.get()
     elif flag=='last':
         tmp = load(open(lastFile, 'r'))
     
-    for element in tmp:
+    for element in tmp[voting]:
         if not tmp[element] in ['Lukas', 'Niclas', 'Melvin']+newones:
             newones.append(tmp[element])
     

@@ -1,15 +1,38 @@
 from contextlib import suppress
 from tkinter import messagebox
+from socket import gaierror
 import tkinter as tk
+from os import popen, system
 
 # local imports
 from modules.FridrichBackend import Connection
 
-secEquals = {'admin':0, 'user':1, 'guest':2}    # for sorting the users
+secEquals = {'admin':0, 'user':1, 'guest':2, 'other':3}    # for sorting the users
 
 def sortUserList(lst:list, flag='sec'):
-    values = sorted(lst, key=lambda element: secEquals[element[flag]] if element[flag] in secEquals else 3)
+    values = sorted(lst, key=lambda element: secEquals[element[flag]] if element[flag] in secEquals else secEquals['other'])
     return list(values)
+
+def getWifiName():
+    ret = popen('Netsh WLAN show interfaces').readlines()
+    wifiDict = dict()
+    for element in ret:
+        tmp = element.split(':')
+        if len(tmp)>1:
+            wifiDict[tmp[0].lstrip().rstrip()] = ':'.join(tmp[1::]).lstrip().rstrip().replace('\n', '')
+    
+    # if not wifiDict['SSID'] == 'Fridrich':
+    #     print('Not Connected to Fridrich')
+    #     print(f'Current Wifi: "{wifiDict["SSID"]}"')
+    
+    return wifiDict['SSID']
+
+def tryConnectWifi(wifiName):
+    ret = system(f'netsh wlan connect {wifiName}')
+
+    if ret==1:
+        return False
+    return True
 
 class window:
     def __init__(self, ConnectionInstance):
@@ -82,6 +105,14 @@ class window:
                                         relief=tk.RAISED, 
                                         font = "Helvetica 15"
                                         )
+        
+        if ConnectionInstance == 'CantConnect':
+            messagebox.showerror('Fatal Error', 'Not Connected to Fridrich Wifi! (attempt to connect failed)')
+            exit()
+
+        elif ConnectionInstance == 'ServerNotReachable':
+            messagebox.showerror('Fatal Error', 'Cant reach Fridrich Server!')
+            exit()
 
     def run(self):
         self.root.mainloop()
@@ -224,7 +255,21 @@ class window:
         exit()
 
 if __name__ == '__main__':
-    c = Connection()
+    try:
+        c = Connection()
+    except gaierror:    # if connection issue
+        WifiName = getWifiName()    # get wifi name
+        if not WifiName == 'Fridrich':  # if not connected to "Fridich" wifi
+            resp = tryConnectWifi('Fridrich')   # try to connect
+            if resp:    # if connected Sucessfully
+                try:
+                    c = Connection()
+                except gaierror:    # if can't reach again
+                    c = 'ServerNotReachable'
+            else:   # if cant connect to Fridrich
+                c = 'CantConnect'
+        else:   # if Wifi is "Fridrich" but Still Can't Connect
+            c = 'ServerNotReachable'
 
     w = window(c)
     w.run()
