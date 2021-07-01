@@ -420,7 +420,7 @@ def update():   # updates every few seconds
                 time.sleep(.8)
             
             # --------  00:00 switch ---------
-            if time.strftime('%H:%M') == '00:05':
+            if time.strftime('%H:%M') == '00:00':
                 with open(Const.lastFile, 'w') as out:    # get newest version of the "votes" dict and write it to the lastFile
                     with open(Const.nowFile, 'r') as inp:
                         last = inp.read()
@@ -430,7 +430,7 @@ def update():   # updates every few seconds
                 
 
                 # ---- Log File (only for GayKing Voting)
-                last = json.loads(last)['GayVoting'] # get last ones
+                last = json.loads(last)['GayKing'] # get last ones
 
                 votes1 = int()
                 attds = dict()

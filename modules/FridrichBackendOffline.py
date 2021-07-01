@@ -51,6 +51,8 @@ class Connection:
             'Lukas'
         }
 
+        self.dVotes = {user:1 for user in self.users}
+
         self.CurrUser = None
         self.log = {
             '20.06.2021':'Melvin',
@@ -73,7 +75,7 @@ class Connection:
 
     def auth(self, username:str, password:str):
         if username in self.users:
-            self.CurrUser = False
+            self.CurrUser = username
             return True
         return False
 
@@ -86,6 +88,8 @@ class Connection:
         return attds    # return names
 
     def sendVote(self, *args, flag = 'vote', voting = 'GayKing'):   # flag can be 'vote', 'unvote', 'dvote' or 'dUvote', voting is custom
+        if not self.CurrUser:
+            raise err.AuthError
         if flag in ('vote', 'dvote'):
             if not voting in self.now:
                 self.now[voting] = dict()
@@ -176,62 +180,17 @@ class Connection:
         return self.version
 
     def setVersion(self, version:str):
-        mes = {'type':'setVersion', 'version':version}  # set message
-        self.send(mes)  # send message
-        self.recieve()  # get response (success, error)
+        self.version = version
 
     def getFrees(self):
-        msg = {'type':'getFrees'}
-        self.send(msg)
-        resp = self.recieve()
-        return resp['Value']
+        name = self.CurrUser
+        return self.dVotes[name]
 
     def getOnlineUsers(self):
-        msg = {'type':'gOuser'}
-        self.send(msg)
-        users = self.recieve()['users']
-        return users
-
-
-    def AdminGetUsers(self):
-        msg = {'type':'getUsers'}
-        self.send(msg)
-        resp = self.recieve()
-        return resp
-    
-    def AdminSetPassword(self, User:str, Password:str):
-        msg = {'type':'setPwd', 'User':User, 'newPwd':Password}
-        self.send(msg)
-        self.recieve()
-    
-    def AdminSetUsername(self, OldUsername:str, NewUsername:str):
-        msg = {'type':'setName', 'OldUser':OldUsername, 'NewUser':NewUsername}
-        self.send(msg)
-        self.recieve()
-
-    def AdminSetSecurity(self, username:str, password:str):
-        msg = {'type':'setSec', 'Name':username, 'sec':password}
-        self.send(msg)
-        self.recieve()
-
-    def AdminAddUser(self, username:str, password:str, clearance:str):
-        msg = {'type':'newUser', 'Name':username, 'pwd':password, 'sec':clearance}
-        self.send(msg)
-        self.recieve()
-
-    def AdminRemoveUser(self, username:str):
-        msg = {'type':'rmUser', 'Name':username}
-        self.send(msg)
-        self.recieve()
-
-    def AdminResetLogins(self):
-        msg = {'type':'rsLogins'}
-        self.send(msg)
-        self.recieve()
+        return self.CurrUser
 
     def end(self):
-        msg = {'type':'end'}    # set message
-        self.send(msg)  # send message
+        self.CurrUser = None
 ############################################################################
 #                   Class for Searching Wolfram Alpha                      #
 ############################################################################
