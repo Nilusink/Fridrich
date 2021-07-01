@@ -66,7 +66,8 @@ class Connection:
             '28.06.2021':'busfahrer',
             '29.06.2021':'Busfahrer',
             '30.06.2021':'Busfahrer',
-            '01.07.2021':'Busfahrer|SockenTyp|jesus'
+            '01.07.2021':'Busfahrer|SockenTyp|jesus',
+            '02.07.2021':'Busfahrer|Melvin'
         }
 
         self.Calendar = dict()
@@ -89,7 +90,7 @@ class Connection:
 
     def sendVote(self, *args, flag = 'vote', voting = 'GayKing'):   # flag can be 'vote', 'unvote', 'dvote' or 'dUvote', voting is custom
         if not self.CurrUser:
-            raise err.AuthError
+            raise err.AuthError('Not signed in')
         if flag in ('vote', 'dvote'):
             if not voting in self.now:
                 self.now[voting] = dict()
@@ -172,6 +173,8 @@ class Connection:
         0
 
     def getVote(self, flag = 'normal', voting = 'GayKing'):   # flag can be normal or double
+        if not self.CurrUser:
+            raise err.AuthError('Not signed in')
         user = self.CurrUser + '2' if flag=='double' else ''
         vote = self.now[user]
         return vote # return vote
@@ -183,32 +186,15 @@ class Connection:
         self.version = version
 
     def getFrees(self):
+        if not self.CurrUser:
+            raise err.AuthError('Not signed in')
         name = self.CurrUser
         return self.dVotes[name]
 
     def getOnlineUsers(self):
+        if not self.CurrUser:
+            raise err.AuthError('Not sigend in')
         return self.CurrUser
 
     def end(self):
         self.CurrUser = None
-############################################################################
-#                   Class for Searching Wolfram Alpha                      #
-############################################################################
-# class wiki:
-#     def __init__(self):
-#         app_id = 'U3ETL7-RL45EG5R6Y'
-#         # Instance of wolf ram alpha 
-#         # client class
-#         self.client = Client(app_id)
-    
-#     def getInfos(self, keyword):
-#         # Stores the response from 
-#         # wolf ram alpha
-#         res = self.client.query(keyword)
-#         resDict = dict()
-#         if res['@success']:
-#             for element in res['pod']:
-#                 t = element['@title']
-#                 with suppress(TypeError):
-#                     resDict[t] = element['subpod']['plaintext']
-#         return resDict
