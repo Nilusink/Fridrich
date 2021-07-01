@@ -1,10 +1,7 @@
 # to test some functions without the need to be connected to Fridrich
-
-from FridrichServer import Vote
 from contextlib import suppress
 
 # local imports
-from modules.cryption_tools import tryDecrypt, NotEncryptedError, MesCryp
 import modules.err_classes as err
 from modules.useful import Dict
 
@@ -84,7 +81,7 @@ class Connection:
         return 'user'
 
     def getAttendants(self, flag = 'now', voting = 'GayKing'): # flag can be 'now' or 'last'
-        attds = self.users + [element for element in Dict.Values(self.now)]
+        attds = self.users + [element for element in Dict.Values(self.now[voting])]
 
         return attds    # return names
 
@@ -94,11 +91,11 @@ class Connection:
         if flag in ('vote', 'dvote'):
             if not voting in self.now:
                 self.now[voting] = dict()
-            name = self.CurrUser + '2' if flag=='dvote' else ''
+            name = self.CurrUser + ('2' if flag=='dvote' else '')
             self.now[voting][name] = args[0]
         
         elif flag in ('unvote', 'dUvote'):
-            name = self.CurrUser + '2' if flag=='dUvote' else ''
+            name = self.CurrUser + ('2' if flag=='dUvote' else '')
             with suppress(KeyError):
                 del self.now[voting][name]
         
@@ -175,8 +172,11 @@ class Connection:
     def getVote(self, flag = 'normal', voting = 'GayKing'):   # flag can be normal or double
         if not self.CurrUser:
             raise err.AuthError('Not signed in')
-        user = self.CurrUser + '2' if flag=='double' else ''
-        vote = self.now[user]
+        user = self.CurrUser + ('2' if flag=='double' else '')
+        try:
+            vote = self.now[voting][user]
+        except KeyError:
+            raise NameError('NotVoted')
         return vote # return vote
 
     def getVersion(self):
