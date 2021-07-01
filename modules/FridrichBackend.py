@@ -1,3 +1,4 @@
+from os import popen
 import socket, json
 
 # local imports
@@ -13,6 +14,20 @@ def jsonRepair(string:str): # if two messages are scrambled together, split them
     if len(parts)>1:
         return parts[0]+'}'
     return string
+
+def getWifiName():
+    ret = popen('Netsh WLAN show interfaces').readlines()
+    wifiDict = dict()
+    for element in ret:
+        tmp = element.split(':')
+        if len(tmp)>1:
+            wifiDict[tmp[0].lstrip().rstrip()] = ':'.join(tmp[1::]).lstrip().rstrip().replace('\n', '')
+    
+    # if not wifiDict['SSID'] == 'Fridrich':
+    #     print('Not Connected to Fridrich')
+    #     print(f'Current Wifi: "{wifiDict["SSID"]}"')
+    
+    return wifiDict['SSID']
 
 ############################################################################
 #                      Server Communication Class                          #
