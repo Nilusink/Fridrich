@@ -399,7 +399,7 @@ def recieve():  # Basicly the whole server
             debug.debug(format_exc())
 
 def update():   # updates every few seconds
-    global currTemp, reqCounter, Vote, FanC
+    global currTemp, reqCounter, Vote, FanC, UpDebug
 
     t = time.time   # time instance (for comfort)
     start = t()
@@ -420,7 +420,7 @@ def update():   # updates every few seconds
                 time.sleep(.8)
             
             # --------  00:00 switch ---------
-            if time.strftime('%H:%M') == '00:00':
+            if time.strftime('%H:%M') == '00:05':
                 with open(Const.lastFile, 'w') as out:    # get newest version of the "votes" dict and write it to the lastFile
                     with open(Const.nowFile, 'r') as inp:
                         last = inp.read()
