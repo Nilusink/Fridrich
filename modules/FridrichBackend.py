@@ -42,7 +42,9 @@ class Connection:
         self.port = 12345   # set communication port with server
 
         self.AuthKey = None 
+        self.userN = None
 
+    # "local" functions
     def errorHandler(self, error:str, *args):
         if error == 'AccessError':
             raise err.AccessError('Access denied')
@@ -130,13 +132,14 @@ class Connection:
         except socket.error:
             raise ValueError
 
-
+    # user functions
     def auth(self, username:str, password:str):
         msg = {  # message
             'type':'auth',
             'Name':username,
             'pwd':password
         }
+        self.userN = username
         self.AuthKey = None # reset AuthKey
         self.send(msg)  # send message
         resp = self.recieve()   # recieve authKey (or error)
@@ -275,7 +278,7 @@ class Connection:
         users = self.recieve()['users']
         return users
 
-
+    # Admin Functions
     def AdminGetUsers(self):
         msg = {'type':'getUsers'}
         self.send(msg)
@@ -312,6 +315,27 @@ class Connection:
         self.send(msg)
         self.recieve()
 
+    # some other functions
+    def __repr__(self):
+        return f'Bakend instance (mode: {self.mode}, user: {self.userN}, authkey: {self.AuthKey})'
+    
+    def __str__(self):  # return string of information when str() is called
+        return f'Bakend instance (mode: {self.mode}, user: {self.userN}, authkey: {self.AuthKey})'
+
+    def __iter__(self): # return dict of information when dict() is called
+        return {'mode':self.mode, 'user':self.userN, 'authkey':self.AuthKey}
+
+    def __del__(self):  # end connection if class instance is deleted
+        self.end()
+
+    def __nonzero__(self):  # return True if AuthKey
+        return bool(self.AuthKey)
+
+    def __bool__(self): # return False if not AuthKey
+        return self.__nonzero__()
+
+
+    # the end
     def end(self):
         msg = {'type':'end'}    # set message
         self.send(msg)  # send message
