@@ -323,7 +323,9 @@ class Connection:
         return f'Bakend instance (mode: {self.mode}, user: {self.userN}, authkey: {self.AuthKey})'
 
     def __iter__(self): # return dict of information when dict() is called
-        return {'mode':self.mode, 'user':self.userN, 'authkey':self.AuthKey}
+        d = {'mode':self.mode, 'user':self.userN, 'authkey':self.AuthKey}
+        for element in d:
+            yield (element, d[element])
 
     def __del__(self):  # end connection if class instance is deleted
         self.end()
@@ -333,7 +335,6 @@ class Connection:
 
     def __bool__(self): # return False if not AuthKey
         return self.__nonzero__()
-
 
     # the end
     def end(self):
