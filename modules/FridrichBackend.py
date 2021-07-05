@@ -317,10 +317,10 @@ class Connection:
 
     # some other functions
     def __repr__(self):
-        return f'Bakend instance (mode: {self.mode}, user: {self.userN}, authkey: {self.AuthKey})'
+        return f'Backend instance (mode: {self.mode}, user: {self.userN}, authkey: {self.AuthKey})'
     
     def __str__(self):  # return string of information when str() is called
-        return f'Bakend instance (mode: {self.mode}, user: {self.userN}, authkey: {self.AuthKey})'
+        return self.__repr__()
 
     def __iter__(self): # return dict of information when dict() is called
         d = {'mode':self.mode, 'user':self.userN, 'authkey':self.AuthKey}
