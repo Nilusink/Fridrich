@@ -49,11 +49,18 @@ The **KeyFile.enc** is the default key if the client hasen't yet authentificated
     "01.06.2021": "Jack",
 }
 ```
-The file **now.json** is used to save all current Votes (in case of a server restart/poweroff) and in newer versions generally used as the *Votes* Variable:
+The file **now.json** is used to save all current Votes (in case of a server restart/poweroff) and in newer versions generally used as the *Votes* Variable. It stores informations like this:
 ```Python
 {
-    "Will": "Trains",
-    "John": "Will"
+    "GayKing":
+    {
+        "Will": "Trains",
+        "John": "Will"
+    },
+    "BestBusDriver":
+    {
+        "Tobi"
+    }
 }
 ```
 **tempData.json** is used to transrer temperature data between the main program and the CPUHeatHandler:
@@ -77,11 +84,12 @@ The File Layout is pretty straight forward:
 |   |---♦ __init__.py  
 |   |---♦ cryption_tools.py  
 |   |---♦ err_classes.py  
-|   |---♦ FridrichBackend.py  
+|   |---♦ FridrichBackend.py
 |   |---♦ useful.py
 |  
 |---♦ YourProgramm.py  
 </pre>  
+Optionally there also is the file **FridrichBackendOffline.py** wich is for testing in case you can't connect to a Fridrich Server.
 <br><br>
 ## Fridrich Dashboard
 As you may have noticed, this program is not acutally included in this repository. The Programer of it has made his own repository, but the code is not open-source and he only publishes .exe files of his program (I really don't know why). So sadly, you either have to use the .exe or create your own program.
