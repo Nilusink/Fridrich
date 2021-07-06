@@ -1,6 +1,6 @@
 # Fridrich
-Fridrich is a project by 3 stupid guys who were bored so they created a Programm on wich they can vote whom of them is the gayest.
-It mainly consits of three parts:
+Fridrich is a project by 3 stupid guys who were bored so they created a programm on wich they can vote whom of them is the gayest.
+It mainly consist of three parts:
 * Fridrich Server
 * Fridrich Backend
 * Fridrich Dashboard
@@ -33,7 +33,7 @@ The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It
 </pre>
 The **Calendar.json** file saves the configurations of the calendar in a dict:
 ```Python 
-{'10.10.2005':['stuff happened', 'some other things happened aswell'], '11.10.2005':[]}
+{'10.10.2005' : ['stuff happened', 'some other things happened as well'], '11.10.2005' : []}
 ```
 **dVotes.json** stores all the data about how many double votes each user has left in this week:
 ```Python
@@ -73,8 +73,8 @@ The **Version** file stores information about the current version: *Version:0.3.
 All the files in the **moduels** folder are all just modules for the Server to run.<br><br><br>
 
 ## Fridrich Backend
-The Backend File is actually ment to be imported by another programm (**Fridrich Dashboard**). It is generally used to communicate with the server, get informations and send votes.
-The File Layout is pretty straight forward:  
+The Backend File is meant to be imported by another programm (**Fridrich Dashboard**). It is generally used to communicate with the server, get informations and send votes.
+The File Layout is straight forward:  
 <pre>
 |  
 |---♦ data  
