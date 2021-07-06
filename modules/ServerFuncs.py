@@ -1,7 +1,7 @@
 from modules.cryption_tools import tryDecrypt
+from datetime import datetime as dd
 from json import load, dump, dumps
 from contextlib import suppress
-from datetime import datetime
 from time import strftime
 
 # TemperatureReader import
@@ -114,7 +114,7 @@ class Chat:
     def add(message, fromUser):
         mes = Chat.get()    	# get message list from file
 
-        curr_time = datetime.now()
+        curr_time = dd.now()
         formatted_time = curr_time.strftime('%H:%M:%S.%f')+strftime(' - %d.%m.%Y')
         mes.append({'time':formatted_time, 'content':message, 'user':fromUser})  # append message
         dump(mes, open(con.ChatFile, 'w'), indent=4)  # write message
