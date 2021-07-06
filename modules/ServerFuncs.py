@@ -74,13 +74,16 @@ class Debug:
                 #print(f'Wrote to file {self.file}: ', element)
                 out.write(str(element)+'\n')  
 
-def checkif(s:str, d:dict): # if s is already voted, return False, else True
-    keys = [d[key] for key in d]+['Lukas', 'Melvin', 'Niclas']  # keys is (ex.) ['Fridrich', 'Lukas', 'Melvin', 'Niclas]
-    print(keys)
-    for element in keys:
-        print(element)
-        if s.lower().replace(' ', '') == element.lower().replace(' ', ''):
-            return element
+def checkif(s:str, d:dict, voting:str): # if s is already voted, return False, else True
+    if voting in d:
+        d = d[voting]
+        keys = [d[key] for key in d]+['Lukas', 'Melvin', 'Niclas']  # keys is (ex.) ['Fridrich', 'Lukas', 'Melvin', 'Niclas]
+        print(keys)
+        for element in keys:
+            print(element)
+            if s.lower().replace(' ', '') == element.lower().replace(' ', ''):
+                return element
+        return s
     return s
 
 def KeyValue(dictionary:dict):   # funktion to return a list from the Values (funktion becuz of changes)
