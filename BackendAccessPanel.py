@@ -1,17 +1,20 @@
 from modules.FridrichBackend import Connection
+from modules import bcolors
+from os import system
+system('color')
 
 if __name__ == '__main__':
     from traceback import format_exc    # imports for shell
 
     c = Connection(mode='debug')    # create connection instance
     #w = wiki()  # create wiki instance
-    print('initialised Connections')
+    print(bcolors.OKGREEN+'initialised Connections')
 
-    print('\n\nfunctions of Connection: ')  #return all functions of the two classes
+    print('\n\nfunctions of Connection: '+bcolors.ENDC)  #return all functions of the two classes
     funcs = dir(Connection)
     for element in funcs:
         if not element.startswith('__'):
-            print('  - '+element)
+            print('  - '+bcolors.HEADER+element+bcolors.ENDC)
 
     # print('\nfunctions of wiki: ')
     # funcs = dir(wiki)
@@ -25,7 +28,7 @@ if __name__ == '__main__':
             cmd = input('>> ')  # take input command as string
             x = eval(cmd)   # execute the code
             if True:   # if vlue is returned
-                print(x)    # print it
+                print(bcolors.OKGREEN+str(x)+bcolors.ENDC)    # print it
 
         except Exception:   # if error occures, return it
-            print(format_exc())
+            print(bcolors.FAIL+format_exc()+bcolors.ENDC)

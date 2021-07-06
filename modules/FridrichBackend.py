@@ -5,6 +5,7 @@ import socket, json
 from modules.cryption_tools import tryDecrypt, NotEncryptedError, MesCryp
 import modules.err_classes as err
 from modules.useful import Dict
+from modules import bcolors
 
 ############################################################################
 #                             other functions                              #
@@ -23,10 +24,6 @@ def getWifiName():
         if len(tmp)>1:  # if element is seperated with ":" then make it dict
             wifiDict[tmp[0].lstrip().rstrip()] = ':'.join(tmp[1::]).lstrip().rstrip().replace('\n', '')
     
-    # if not wifiDict['SSID'] == 'Fridrich':
-    #     print('Not Connected to Fridrich')
-    #     print(f'Current Wifi: "{wifiDict["SSID"]}"')
-    
     return wifiDict['SSID']
 
 def dateforsort(message):   # go from format "hour:minute - day.month.year" to "year.month.day - hour:minute"
@@ -42,7 +39,7 @@ class Connection:
 
         self.ServerIp = socket.gethostbyname('fridrich')    # get ip of fridrich
         if self.mode == 'debug':
-            print('Server IP: '+self.ServerIp)
+            print(bcolors.OKGREEN+'Server IP: '+self.ServerIp+bcolors.ENDC)
         self.port = 12345   # set communication port with server
 
         self.AuthKey = None 
@@ -112,12 +109,12 @@ class Connection:
         while msg=='':
             mes = self.Server.recv(length)
             if self.mode == 'debug':
-                print(mes)
+                print(bcolors.OKCYAN+str(mes)+bcolors.ENDC)
             msg = tryDecrypt(mes, [self.AuthKey], errors=False)
             if msg == None:
                 msg = {'Error':'MessageError', 'info':'Server message receved is not valid'}
             if self.mode == 'debug':
-                print(msg)
+                print(bcolors.OKBLUE+str(msg)+bcolors.ENDC)
 
         if 'Error' in msg:  # if error was send by server
             success = False
@@ -342,8 +339,8 @@ class Connection:
         for element in d:
             yield (element, d[element])
 
-    def __del__(self):  # end connection if class instance is deleted
-        self.end()
+    # def __del__(self):  # end connection if class instance is deleted # caused some issues where it got called without actually calling it
+    #     self.end()
 
     def __nonzero__(self):  # return True if AuthKey
         return bool(self.AuthKey)

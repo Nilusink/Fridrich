@@ -292,6 +292,10 @@ class ClientFuncs:  # class for the Switch
             x = ''
 
         name = ClientKeys[message['AuthKey']][1] + x
+        if not message['voting'] in votes:
+            Communication.send(client, {'Error':'NotVoted'}, encryption=MesCryp.encrypt, key=message['AuthKey'])
+            return
+            
         if not name in votes[message['voting']]:
             Communication.send(client, {'Error':'NotVoted'}, encryption=MesCryp.encrypt, key=message['AuthKey'])
             return
