@@ -115,7 +115,7 @@ class Chat:
 
         t = strftime("%H:%M - %d.%m.%Y")    # get time
         mes.append({'time':t, 'content':message, 'user':fromUser})  # append message
-        dump(mes, open(con.ChatFile, 'w'))  # write message
+        dump(mes, open(con.ChatFile, 'w'), indent=4)  # write message
     
     def get():
         try:
