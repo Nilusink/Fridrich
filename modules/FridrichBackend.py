@@ -29,6 +29,10 @@ def getWifiName():
     
     return wifiDict['SSID']
 
+def dateforsort(message):   # go from format "hour:minute - day.month.year" to "year.month.day - hour:minute"
+    y = message['time'].split(' - ')    # split date and time
+    return '.'.join(reversed(y[1].split('.')))+' - '+y[0]   # reverse date and place time at end
+
 ############################################################################
 #                      Server Communication Class                          #
 ############################################################################
@@ -285,7 +289,9 @@ class Connection:
     def getChat(self):
         msg = {'type':'gChat'}
         self.send(msg)
-        return self.recieve()
+        raw = self.recieve()
+        out = sorted(raw, key = dateforsort)
+        return out
 
     # Admin Functions
     def AdminGetUsers(self):
