@@ -5,6 +5,7 @@ from traceback import format_exc
 from contextlib import suppress
 from sys import exit as sExit
 from threading import Thread
+from os import system
 
 # local imports
 from modules.cryption_tools import low, KeyFunc, MesCryp, NotEncryptedError
@@ -295,7 +296,7 @@ class ClientFuncs:  # class for the Switch
         if not message['voting'] in votes:
             Communication.send(client, {'Error':'NotVoted'}, encryption=MesCryp.encrypt, key=message['AuthKey'])
             return
-            
+
         if not name in votes[message['voting']]:
             Communication.send(client, {'Error':'NotVoted'}, encryption=MesCryp.encrypt, key=message['AuthKey'])
             return
@@ -419,13 +420,13 @@ def recieve():  # Basicly the whole server
 
 def update():   # updates every few seconds
     global currTemp, reqCounter, Vote, FanC, UpDebug
-
+    time.sleep(50)
     t = time.time   # time instance (for comfort)
     start = t()
     start1 = start
     while not Const.Terminate:
         try:
-            # -------- Requests Counter ---------
+            # ----- Temperature updater ------
             if t()-start>=1:    # every 2 seconds
                 start+=1
                 #s = str(reqCounter)
@@ -494,6 +495,10 @@ def update():   # updates every few seconds
                     DV.write(dVotes)
 
                 time.sleep(61)
+
+            if time.strftime('$H:$M') == '03:00':
+                system('sudo reboot')
+
         except:
             UpDebug.debug('\n\n\n'+time.strftime('%H:%M:%S')+'\n'+format_exc)
         # -------- Fan Controller --------
