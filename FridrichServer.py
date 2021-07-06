@@ -204,7 +204,9 @@ class ClientFuncs:  # class for the Switch
         votes = Vote.get()    # update votes
         resp = checkif(message['vote'], votes, message['voting'])
         name = ClientKeys[message['AuthKey']][1]
-        votes[message['voting']][name] = resp    # set <hostname of client> to clients vote
+        if not message['voting'] in votes:
+            votes[message['voting']] = dict()
+        votes[message['voting']][name] = resp    # set vote
         print(votes)
         debug.debug(f'got vote: {message["vote"]}                     .')   # print that it recievd vote (debugging)
         Vote.write(votes)  # write to file
