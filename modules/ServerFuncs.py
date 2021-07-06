@@ -2,6 +2,7 @@ from modules.cryption_tools import tryDecrypt
 from json import load, dump, dumps
 from contextlib import suppress
 from time import strftime
+import datetime
 
 # TemperatureReader import
 import RPi.GPIO as GPIO
@@ -113,8 +114,9 @@ class Chat:
     def add(message, fromUser):
         mes = Chat.get()    	# get message list from file
 
-        t = strftime("%H:%M - %d.%m.%Y")    # get time
-        mes.append({'time':t, 'content':message, 'user':fromUser})  # append message
+        curr_time = datetime.now()
+        formatted_time = curr_time.strftime('%H:%M:%S.%f')+strftime(' - %d.%m.%Y')
+        mes.append({'time':formatted_time, 'content':message, 'user':fromUser})  # append message
         dump(mes, open(con.ChatFile, 'w'), indent=4)  # write message
     
     def get():

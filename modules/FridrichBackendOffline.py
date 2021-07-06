@@ -1,6 +1,7 @@
 # to test some functions without the need to be connected to Fridrich
 from contextlib import suppress
 from datetime import datetime
+import time
 
 # local imports
 import modules.err_classes as err
@@ -199,7 +200,7 @@ class Connection:
 
     def sendChat(self, message):
         curr_time = datetime.now()
-        formatted_time = curr_time.strftime('%H:%M:%S.%f')
+        formatted_time = curr_time.strftime('%H:%M:%S.%f')+time.strftime(' - %d.%m.%Y')
         self.chat.append({'time':formatted_time, 'name':self.CurrUser, 'content':message})
     
     def getChat(self):
