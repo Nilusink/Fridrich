@@ -15,7 +15,7 @@ class CPUHeatHandler():
     def iter(self):
         try:
             file = json.load(open(self.const.tempFile, 'r'))
-            maxtemp = file['temp']+25 if file['temp'] else 100
+            maxtemp = file['temp']+25 if file['temp'] else 60
             currTemp = self.cpu.temperature
             if currTemp>maxtemp:
                 with open(self.const.errFile, 'w') as out:
