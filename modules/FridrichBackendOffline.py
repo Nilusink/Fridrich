@@ -1,5 +1,6 @@
 # to test some functions without the need to be connected to Fridrich
 from contextlib import suppress
+from datetime import datetime
 
 # local imports
 import modules.err_classes as err
@@ -8,14 +9,12 @@ from modules.useful import Dict
 ############################################################################
 #                             other functions                              #
 ############################################################################
-def jsonRepair(string:str): # if two messages are scrambled together, split them and use the first one
-    parts = string.split('}{')  # happens sometimes, probably because python is to slow
-    if len(parts)>1:
-        return parts[0]+'}'
-    return string
-
 def getWifiName():
     return 'Fridrich'
+
+def dateforsort(message):   # go from format "hour:minute - day.month.year" to "year.month.day - hour:minute"
+    y = message['time'].split(' - ')    # split date and time
+    return '.'.join(reversed(y[1].split('.')))+' - '+y[0]   # reverse date and place time at end
 
 ############################################################################
 #                      Server Communication Class                          #
@@ -69,8 +68,10 @@ class Connection:
 
         self.Calendar = dict()
 
-        self.version = '0.3.test'
+        self.version = '11.11.11'
+        self.chat = list()
 
+    # user functions
     def auth(self, username:str, password:str):
         if username in self.users:
             self.CurrUser = username
@@ -196,5 +197,36 @@ class Connection:
             raise err.AuthError('Not sigend in')
         return self.CurrUser
 
+    def sendChat(self, message):
+        curr_time = datetime.now()
+        formatted_time = curr_time.strftime('%H:%M:%S.%f')
+        self.chat.append({'time':formatted_time, 'name':self.CurrUser, 'content':message})
+    
+    def getChat(self):
+        out = sorted(self.chat, key = dateforsort)
+        return out
+
+    # some other functions
+    def __repr__(self):
+        return f'Backend instance (mode: {self.mode}, user: {self.CurrUser}, authkey: {self.AuthKey})'
+    
+    def __str__(self):  # return string of information when str() is called
+        return self.__repr__()
+
+    def __iter__(self): # return dict of information when dict() is called
+        d = {'mode':self.mode, 'user':self.userN, 'authkey':self.AuthKey}
+        for element in d:
+            yield (element, d[element])
+
+    # def __del__(self):  # end connection if class instance is deleted # caused some issues where it got called without actually calling it
+    #     self.end()
+
+    def __nonzero__(self):  # return True if AuthKey
+        return bool(self.AuthKey)
+
+    def __bool__(self): # return False if not AuthKey
+        return self.__nonzero__()
+
+    # the end
     def end(self):
         self.CurrUser = None
