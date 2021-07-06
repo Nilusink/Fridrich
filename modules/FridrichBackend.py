@@ -286,7 +286,7 @@ class Connection:
     def getChat(self):
         msg = {'type':'gChat'}
         self.send(msg)
-        raw = self.recieve()
+        raw = self.recieve(length=1048576)
         out = sorted(raw, key = dateforsort)
         return out
 
