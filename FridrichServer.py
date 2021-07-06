@@ -130,7 +130,9 @@ class FunctionManager:
                 'dvote':ClientFuncs.DoubVote,
                 'dUvote':ClientFuncs.DoubUnVote,
                 'getFrees':ClientFuncs.getFreeVotes,
-                'gOuser':ClientFuncs.getOUser
+                'gOuser':ClientFuncs.getOUser,
+                'aChat':ClientFuncs.aChat,
+                'gChat':ClientFuncs.gChat
             },
             'guest' : {                                  # instead of 5 billion if'S
                 'CalEntry':ClientFuncs.CalendarHandler, 
@@ -339,6 +341,17 @@ class ClientFuncs:  # class for the Switch
             names.append(ClientKeys[element][1])
         
         Communication.send(client, {'users':names}, encryption=MesCryp.encrypt, key=message['AuthKey'])
+
+
+    def aChat(message, client, *args):
+        name = ClientKeys[message['AuthKey']][1]
+        Chat.add(message['message'], name)
+        sendSuccess(client)
+    
+    def gChat(message, client, *args):
+        resp = Chat.get()
+        Communication.send(client, resp, encryption=MesCryp.encrypt, key=message['AuthKey'])
+
 
     def end(message, *args):
         global ClientKeys

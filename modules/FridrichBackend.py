@@ -277,6 +277,16 @@ class Connection:
         users = self.recieve()['users']
         return users
 
+    def sendChat(self, message):
+        msg = {'type':'aChat', 'message':message}
+        self.send(msg)
+        self.recieve()
+    
+    def getChat(self):
+        msg = {'type':'gChat'}
+        self.send(msg)
+        return self.recieve()
+
     # Admin Functions
     def AdminGetUsers(self):
         msg = {'type':'getUsers'}

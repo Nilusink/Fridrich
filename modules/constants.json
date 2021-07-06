@@ -1,0 +1,31 @@
+{
+    "port" : 12345,
+    "ip" : "0.0.0.0",
+    "Terminate" : null,
+
+    "direc" : "/home/pi/Server/data/",
+    "vardirec" : "/var/www/html/",
+
+    "lastFile" : "/home/pi/Server/data/yes.json",
+    "nowFile" : "/home/pi/Server/data/now.json",
+    "KingFile" : "/home/pi/Server/data/KingLog.json",
+    "CalFile" : "/home/pi/Server/data/Calendar.json",
+    "crypFile" : "/home/pi/Server/data/users.enc",
+    "versFile" : "/home/pi/Server/data/Version",
+    "tempLog" : "/home/pi/Server/data/tempData.json",
+    "doubFile" : "/home/pi/Server/data/dVotes.json",
+    "SerlogFile" : "/home/pi/Server/data/Server.log",
+    "SerUpLogFile" : "/home/pi/Server/data/Server.up.log",
+    "ChatFile" : "/home/pi/Server/data/chat.json",
+
+    "varTempLog" : "/var/www/html/json/tempData.json",
+    "varKingLogFile" : "/var/www/html/KingLog.log",
+    "varLogFile" : "/var/www/html/json/KingLog.json",
+    "varNowFile" : "/var/www/html/json/now.json",
+
+    "logFile" : "/home/pi/Server/data/temp.log",
+    "errFile" : "/home/pi/Server/data/temp.err.log",
+    "tempFile" : "/home/pi/Server/data/tempData.json",
+
+    "DoubleVotes" : 1
+}

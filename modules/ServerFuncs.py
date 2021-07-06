@@ -1,6 +1,7 @@
 from modules.cryption_tools import tryDecrypt
 from json import load, dump, dumps
 from contextlib import suppress
+from time import strftime
 
 # TemperatureReader import
 import RPi.GPIO as GPIO
@@ -46,34 +47,6 @@ def readTemp():
 
     return temp, hum
 
-class VOTES:    # class for votes "variable"
-    def __init__(self, getFile, *args): # spciefie main file and other files to update
-        self.getFile = getFile
-        self.FilesToWrite = args
-    
-    def get(self):  # get variable from main file
-        odict = load(open(self.getFile, 'r'))
-        return odict
-    
-    def write(self, newValue:dict): # write variable to all files
-        dump(newValue, open(self.getFile, 'w'), indent=4)
-
-        for element in self.FilesToWrite:
-            dump(newValue, open(element, 'w'), indent=4)
- 
-class Debug:
-    def __init__(self, debFile):
-        self.file = debFile
-        with open(self.file, 'w') as out:
-            out.write('')
-    
-    def debug(self, *args):
-        print(*args)
-        with open(self.file, 'a') as out:
-            for element in args:
-                #print(f'Wrote to file {self.file}: ', element)
-                out.write(str(element)+'\n')  
-
 def checkif(s:str, d:dict, voting:str): # if s is already voted, return False, else True
     if voting in d:
         d = d[voting]
@@ -107,6 +80,49 @@ def getNewones(flag, VoteInstance, lastFile, voting):   # get all attendants wic
             newones.append(tmp[element])
     
     return newones
+
+class VOTES:    # class for votes "variable"
+    def __init__(self, getFile, *args): # spciefie main file and other files to update
+        self.getFile = getFile
+        self.FilesToWrite = args
+    
+    def get(self):  # get variable from main file
+        odict = load(open(self.getFile, 'r'))
+        return odict
+    
+    def write(self, newValue:dict): # write variable to all files
+        dump(newValue, open(self.getFile, 'w'), indent=4)
+
+        for element in self.FilesToWrite:
+            dump(newValue, open(element, 'w'), indent=4)
+ 
+class Debug:
+    def __init__(self, debFile):
+        self.file = debFile
+        with open(self.file, 'w') as out:
+            out.write('')
+    
+    def debug(self, *args):
+        print(*args)
+        with open(self.file, 'a') as out:
+            for element in args:
+                #print(f'Wrote to file {self.file}: ', element)
+                out.write(str(element)+'\n')  
+
+class Chat:
+    def add(message, fromUser):
+        mes = Chat.get()    	# get message list from file
+
+        t = strftime("%H:%M - %d.%m.%Y")    # get time
+        mes.append({'time':t, 'content':message, 'user':fromUser})  # append message
+        dump(mes, open(con.ChatFile, 'w'))  # write message
+    
+    def get():
+        try:
+            mes = load(open(con.ChatFile, 'r')) # try to read file
+        except FileNotFoundError:
+            mes = list()    # if file doesn't exist, create new list
+        return mes
 
 class Communication:
     def send(client, message:dict, encryption=None, key=None):
@@ -147,35 +163,12 @@ class Communication:
             #debug.debug(f'Got message: {mes}')
 class Constants:
     def __init__(self):
-        self.port = 12345
-        self.ip = '0.0.0.0'
-        self.Terminate = False
+        try:
+            dic = load(open('modules/constants.json', 'r'))
+        except FileNotFoundError:
+            dic = load(open('/home/pi/Server/modules/constants.json', 'r'))
+        
+        for Index, Value in dic.items():
+            setattr(self, Index, Value)
 
-        direc = '/home/pi/Server/data/'
-        vardirec = '/var/www/html/'
-
-        # server files
-        self.lastFile = direc+'yes.json'
-        self.nowFile = direc+'now.json'
-        self.KingFile = direc+'KingLog.json'
-        self.CalFile = direc+'Calendar.json'
-        self.crypFile = direc+'users.enc'
-        self.versFile = direc+'Version'
-        self.tempLog = direc+'tempData.json'
-        self.doubFile = direc+'dVotes.json'
-        self.SerlogFile = direc+'Server.log'
-        self.SerUpLogFile = direc+'Server.up.log'
-
-        # web serveer files
-        self.varTempLog = vardirec+'json/tempData.json'
-        self.varKingLogFile = vardirec+'KingLog.log'
-        self.varLogFile = vardirec+'json/KingLog.json'
-        self.varNowFile = vardirec+'json/now.json'
-
-        # fan controller files
-        self.logFile = direc+'temp.log'
-        self.errFile = direc+'temp.err.log'
-        self.tempFile = direc+'tempData.json'
-
-        # how many double votes per week
-        self.DoubleVotes = 1
+con = Constants()
