@@ -16,11 +16,11 @@ def jsonRepair(string:str): # if two messages are scrambled together, split them
     return string
 
 def getWifiName():
-    ret = popen('Netsh WLAN show interfaces').readlines()
+    ret = popen('Netsh WLAN show interfaces').readlines()   # read interface infos
     wifiDict = dict()
     for element in ret:
         tmp = element.split(':')
-        if len(tmp)>1:
+        if len(tmp)>1:  # if element is seperated with ":" then make it dict
             wifiDict[tmp[0].lstrip().rstrip()] = ':'.join(tmp[1::]).lstrip().rstrip().replace('\n', '')
     
     # if not wifiDict['SSID'] == 'Fridrich':
