@@ -98,7 +98,7 @@ class Connection:
             dictionary['AuthKey'] = self.AuthKey
             stringMes = json.dumps(dictionary)
             mes = MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
-            self.Server.send(mes if type(mes) == bytes else mes.encode('utf-8'))
+            self.Server.send(mes)
             return
 
         stringMes = json.dumps(dictionary)
