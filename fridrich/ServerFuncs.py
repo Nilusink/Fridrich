@@ -168,7 +168,7 @@ class Constants:
         try:
             dic = load(open('modules/constants.json', 'r'))
         except FileNotFoundError:
-            dic = load(open('/home/pi/Server/modules/constants.json', 'r'))
+            dic = load(open('/home/pi/Server/fridrich/constants.json', 'r'))
         
         for Index, Value in dic.items():
             setattr(self, Index, Value)
