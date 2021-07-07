@@ -4,8 +4,8 @@ from datetime import datetime
 import time
 
 # local imports
-import modules.err_classes as err
-from modules.useful import Dict
+import fridrich.err_classes as err
+from fridrich.useful import Dict
 
 ############################################################################
 #                             other functions                              #

@@ -13,7 +13,7 @@ from cryptography.hazmat.primitives import hashes
 from os import urandom
 import base64
 
-import modules.uniReplace as ur
+import fridrich.uniReplace as ur
 
 class DecryptionError(Exception):
     pass

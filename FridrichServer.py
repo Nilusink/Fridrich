@@ -8,10 +8,10 @@ from threading import Thread
 from os import system
 
 # local imports
-from modules.cryption_tools import low, KeyFunc, MesCryp, NotEncryptedError
-from modules.FanController import CPUHeatHandler
-from modules.Accounts import manager
-from modules.ServerFuncs import *
+from fridrich.cryption_tools import low, KeyFunc, MesCryp, NotEncryptedError
+from fridrich.FanController import CPUHeatHandler
+from fridrich.Accounts import manager
+from fridrich.ServerFuncs import *
 
 class DoubleVote:
     globals()

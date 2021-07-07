@@ -69,7 +69,7 @@ The file **now.json** is used to save all current Votes (in case of a server res
 ```Python
 {"temp": 29.0, "cptemp": 38.628, "hum": 39.0}
 ```
-In **users.enc** is a modules.cryption_tools.low encrypted dictionary with all users and passwords (low encryption because of speed)<br><br>
+In **users.enc** is a fridrichcryption_tools.low encrypted dictionary with all users and passwords (low encryption because of speed)<br><br>
 The **Version** file stores information about the current version: *Version:0.3.7,MaxLen:20* (Managed by the GUI developer).<br><br>
 **yes.json** is basically the same file as *now.json* but from yesterday.<br><br>
 All the files in the **moduels** folder are all just modules for the Server to run.<br><br><br>

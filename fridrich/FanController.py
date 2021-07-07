@@ -2,7 +2,7 @@ from gpiozero import CPUTemperature, LED
 from traceback import format_exc
 import time, json
 
-from modules.ServerFuncs import Constants
+from fridrich.ServerFuncs import Constants
 
 class CPUHeatHandler():
     def __init__(self):

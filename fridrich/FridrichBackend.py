@@ -2,10 +2,10 @@ from os import popen
 import socket, json
 
 # local imports
-from modules.cryption_tools import tryDecrypt, NotEncryptedError, MesCryp
-import modules.err_classes as err
-from modules.useful import Dict
-import modules.uniReplace as ur
+from fridrich.cryption_tools import tryDecrypt, NotEncryptedError, MesCryp
+import fridrich.err_classes as err
+from fridrich.useful import Dict
+import fridrich.uniReplace as ur
 from modules import bcolors
 
 ############################################################################
@@ -35,11 +35,11 @@ def dateforsort(message):   # go from format "hour:minute - day.month.year" to "
 #                      Server Communication Class                          #
 ############################################################################
 class Connection:
-    def __init__(self, mode='normal'):
-        self.mode = mode
+    def __init__(self, debugmode='off'):
+        self.debugmode = debugmode
 
         self.ServerIp = socket.gethostbyname('fridrich')    # get ip of fridrich
-        if self.mode == 'debug':
+        if self.debugmode in ('normal', 'debug'):
             print(bcolors.OKGREEN+'Server IP: '+self.ServerIp+bcolors.ENDC)
         self.port = 12345   # set communication port with server
 
@@ -85,11 +85,15 @@ class Connection:
             raise err.MessageError(args[0]['info'])
 
         else:
-            if self.mode == 'debug':
+            if self.debugmode == 'full':
                 st = f'Error: {error}\nInfo: {args[0]["info"] if "info" in args[0] else "None"}\nFullBug: {args[0]["full"] if "full" in args[0] else "None"}'
-                raise err.UnknownError('An Unknown Error Occured: \n'+st)
+            elif self.debugmode == 'normal':
+                st = f'Error: {error}\nInfo: {args[0]["info"] if "info" in args[0] else "None"}'
+
             else:
                 raise err.UnknownError(f'A Unknown Error Occured:\nError: {error}')
+
+        raise err.UnknownError('An Unknown Error Occured: \n'+st)
 
     def send(self, dictionary:dict):
         self.reconnect() # reconnect to the server
@@ -97,6 +101,8 @@ class Connection:
         if self.AuthKey:
             # add AuthKey to the dictionary+
             dictionary['AuthKey'] = self.AuthKey
+            if self.debugmode == 'full':
+                print(dictionary)
             stringMes = ur.encode(json.dumps(dictionary))
             mes = MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
             self.Server.send(mes)
@@ -109,13 +115,14 @@ class Connection:
         msg = ''
         while msg=='':
             mes = self.Server.recv(length)
-            if self.mode == 'debug':
-                print(bcolors.OKCYAN+str(mes)+bcolors.ENDC)
+            if self.debugmode == 'full':
+                print(bcolors.WARNING+str(mes)+bcolors.ENDC)
             msg = tryDecrypt(mes, [self.AuthKey], errors=False)
+
             if msg == None:
                 msg = {'Error':'MessageError', 'info':'Server message receved is not valid'}
-            if self.mode == 'debug':
-                print(bcolors.OKBLUE+str(msg)+bcolors.ENDC)
+            if self.debugmode in ('normal', 'full'):
+                print(bcolors.OKCYAN+str(msg)+bcolors.ENDC)
 
         if 'Error' in msg:  # if error was send by server
             success = False
@@ -330,13 +337,13 @@ class Connection:
 
     # some other functions
     def __repr__(self):
-        return f'Backend instance (mode: {self.mode}, user: {self.userN}, authkey: {self.AuthKey})'
+        return f'Backend instance (debugmode: {self.debugmode}, user: {self.userN}, authkey: {self.AuthKey})'
     
     def __str__(self):  # return string of information when str() is called
         return self.__repr__()
 
     def __iter__(self): # return dict of information when dict() is called
-        d = {'mode':self.mode, 'user':self.userN, 'authkey':self.AuthKey}
+        d = {'debugmode':self.debugmode, 'user':self.userN, 'authkey':self.AuthKey}
         for element in d:
             yield (element, d[element])
 

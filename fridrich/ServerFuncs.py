@@ -1,4 +1,4 @@
-from modules.cryption_tools import tryDecrypt
+from fridrich.cryption_tools import tryDecrypt
 from datetime import datetime as dd
 from json import load, dump, dumps
 from contextlib import suppress

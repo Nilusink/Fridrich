@@ -1,5 +1,5 @@
-from modules.cryption_tools import low
-from modules.useful import List
+from fridrich.cryption_tools import low
+from fridrich.useful import List
 from json import loads, dumps
 
 class manager:

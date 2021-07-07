@@ -1,6 +1,7 @@
-tReplace = [('ö', 'oe'), ('ä', 'ae'), ('ü', 'ue')]
-for element in tReplace:
+tReplace = list()
+for element in [('ö', 'oe'), ('ä', 'ae'), ('ü', 'ue')]:
     tReplace.append((element[0].upper(), element[1].upper()))
+tReplace += [('ö', 'oe'), ('ä', 'ae'), ('ü', 'ue')]
 
 def encode(string:str):
     for element in tReplace:
