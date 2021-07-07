@@ -5,8 +5,7 @@ import socket, json
 from fridrich.cryption_tools import tryDecrypt, NotEncryptedError, MesCryp
 import fridrich.err_classes as err
 from fridrich.useful import Dict
-import fridrich.uniReplace as ur
-from modules import bcolors
+import fridrich as fr
 
 ############################################################################
 #                             other functions                              #
@@ -27,7 +26,7 @@ def getWifiName():
     
     return wifiDict['SSID']
 
-def dateforsort(message):   # go from format "hour:minute - day.month.year" to "year.month.day - hour:minute"
+def dateforsort(message):   # go from format "hour:minute:second:millisecond - day.month.year" to "year.month.day - hour:minute:second:millisecond"
     y = message['time'].split(' - ')    # split date and time
     return '.'.join(reversed(y[1].split('.')))+' - '+y[0]   # reverse date and place time at end
 
@@ -35,12 +34,12 @@ def dateforsort(message):   # go from format "hour:minute - day.month.year" to "
 #                      Server Communication Class                          #
 ############################################################################
 class Connection:
-    def __init__(self, debugmode='off'):
+    def __init__(self, debugmode=fr.Off):
         self.debugmode = debugmode
 
         self.ServerIp = socket.gethostbyname('fridrich')    # get ip of fridrich
-        if self.debugmode in ('normal', 'debug'):
-            print(bcolors.OKGREEN+'Server IP: '+self.ServerIp+bcolors.ENDC)
+        if self.debugmode in ('normal', 'full'):
+            print(fr.bcolors.OKGREEN+'Server IP: '+self.ServerIp+fr.bcolors.ENDC)
         self.port = 12345   # set communication port with server
 
         self.AuthKey = None 
@@ -101,28 +100,33 @@ class Connection:
         if self.AuthKey:
             # add AuthKey to the dictionary+
             dictionary['AuthKey'] = self.AuthKey
-            if self.debugmode == 'full':
-                print(dictionary)
-            stringMes = ur.encode(json.dumps(dictionary))
+            stringMes = json.dumps(dictionary, ensure_ascii=False)
             mes = MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
             self.Server.send(mes)
+            if self.debugmode in ('normal', 'full'):
+                print(dictionary)
+                print(stringMes)
+            if self.debugmode == 'full':
+                print(mes)
             return
 
-        stringMes = ur.encode(json.dumps(dictionary))
+        stringMes = json.dumps(dictionary, ensure_ascii=False)
         self.Server.send(MesCryp.encrypt(stringMes))
+        if self.debugmode in ('normal', 'full'):
+            print(stringMes)
 
     def recieve(self, length=2048):
         msg = ''
         while msg=='':
             mes = self.Server.recv(length)
             if self.debugmode == 'full':
-                print(bcolors.WARNING+str(mes)+bcolors.ENDC)
+                print(fr.bcolors.WARNING+str(mes)+fr.bcolors.ENDC)
             msg = tryDecrypt(mes, [self.AuthKey], errors=False)
 
             if msg == None:
                 msg = {'Error':'MessageError', 'info':'Server message receved is not valid'}
             if self.debugmode in ('normal', 'full'):
-                print(bcolors.OKCYAN+str(msg)+bcolors.ENDC)
+                print(fr.bcolors.OKCYAN+str(msg)+fr.bcolors.ENDC)
 
         if 'Error' in msg:  # if error was send by server
             success = False

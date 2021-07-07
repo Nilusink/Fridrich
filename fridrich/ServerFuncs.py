@@ -128,7 +128,7 @@ class Chat:
 
 class Communication:
     def send(client, message:dict, encryption=None, key=None):
-        stringMes = dumps(message)
+        stringMes = dumps(message, ensure_ascii=False)
         print(stringMes)
         if encryption:
             mes = encryption(stringMes, key=key)

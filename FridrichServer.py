@@ -279,7 +279,7 @@ class ClientFuncs:  # class for the Switch
                 element['pwd'] = message['newPwd']
         
         with open(Const.crypFile, 'w') as out:
-            fstring = json.dumps(validUsers)
+            fstring = json.dumps(validUsers, ensure_ascii=False)
             cstring = low.encrypt(fstring)
             out.write(cstring)
         

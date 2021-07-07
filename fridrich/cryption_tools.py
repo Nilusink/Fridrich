@@ -13,8 +13,6 @@ from cryptography.hazmat.primitives import hashes
 from os import urandom
 import base64
 
-import fridrich.uniReplace as ur
-
 class DecryptionError(Exception):
     pass
 
@@ -108,7 +106,7 @@ class MesCryp:
 
 def tryDecrypt(message:bytes, ClientKeys, errors=True, repUni=False):
     with suppress(JSONDecodeError):
-        mes = loads(ur.decode(message) if repUni else message)
+        mes = loads(message)
         if errors==True:
             raise NotEncryptedError('Message not encrypted')
         print(mes)
@@ -130,11 +128,11 @@ def tryDecrypt(message:bytes, ClientKeys, errors=True, repUni=False):
         return None
 
     try:
-        jsonMes = loads(ur.decode(encMes) if repUni else encMes)
+        jsonMes = loads(encMes)
 
     except JSONDecodeError:
         try:
-            jsonMes = loads(ur.decode(message) if repUni else message)
+            jsonMes = loads(message)
 
         except JSONDecodeError:
             return None
