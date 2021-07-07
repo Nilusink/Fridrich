@@ -5,6 +5,7 @@ import socket, json
 from modules.cryption_tools import tryDecrypt, NotEncryptedError, MesCryp
 import modules.err_classes as err
 from modules.useful import Dict
+import modules.uniReplace as ur
 from modules import bcolors
 
 ############################################################################
@@ -96,12 +97,12 @@ class Connection:
         if self.AuthKey:
             # add AuthKey to the dictionary+
             dictionary['AuthKey'] = self.AuthKey
-            stringMes = json.dumps(dictionary)
+            stringMes = ur.encode(json.dumps(dictionary))
             mes = MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
             self.Server.send(mes)
             return
 
-        stringMes = json.dumps(dictionary)
+        stringMes = ur.encode(json.dumps(dictionary))
         self.Server.send(MesCryp.encrypt(stringMes))
 
     def recieve(self, length=2048):
