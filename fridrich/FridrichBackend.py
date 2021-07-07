@@ -108,7 +108,7 @@ class Connection:
             if self.debugmode in ('normal', 'full'):
                 print(fr.bcolors.OKCYAN+stringMes+fr.bcolors.ENDC)
             if self.debugmode == 'full':
-                print(fr.bcolors.WARNING+mes+fr.bcolors.ENDC)
+                print(fr.bcolors.WARNING+str(mes)+fr.bcolors.ENDC)
             return
 
         stringMes = json.dumps(dictionary, ensure_ascii=False)

@@ -10,7 +10,7 @@ if __name__ == '__main__':
     #w = wiki()  # create wiki instance
     print(bcolors.OKGREEN+'initialised Connections')
 
-    print('\n\nfunctions of Connection: '+bcolors.ENDC)  #return all functions of the two classes
+    print('\nfunctions of Connection: '+bcolors.ENDC)  #return all functions of the two classes
     funcs = dir(Connection)
     for element in funcs:
         if not element.startswith('__'):
