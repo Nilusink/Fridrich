@@ -101,7 +101,7 @@ class MesCryp:
     
     def decrypt(byte:bytes, key:bytes):
         f = Fernet(key)
-        decrypted = f.decrypt(byte).decode('utf-8')
+        decrypted = str(f.decrypt(byte)).lstrip("b'").rstrip("'")
         return decrypted    # returns string
 
 def tryDecrypt(message:bytes, ClientKeys, errors=True):
