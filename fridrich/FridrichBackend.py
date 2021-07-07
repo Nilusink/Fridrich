@@ -101,19 +101,20 @@ class Connection:
             # add AuthKey to the dictionary+
             dictionary['AuthKey'] = self.AuthKey
             stringMes = json.dumps(dictionary, ensure_ascii=False)
+            if any(c in stringMes.lower() for c in ('ö', 'ä', 'ü')):
+                raise err.InvalidRequest('non-ascii charters are not allowed')
             mes = MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
             self.Server.send(mes)
             if self.debugmode in ('normal', 'full'):
-                print(dictionary)
-                print(stringMes)
+                print(fr.bcolors.OKCYAN+stringMes+fr.bcolors.ENDC)
             if self.debugmode == 'full':
-                print(mes)
+                print(fr.bcolors.WARNING+mes+fr.bcolors.ENDC)
             return
 
         stringMes = json.dumps(dictionary, ensure_ascii=False)
         self.Server.send(MesCryp.encrypt(stringMes))
         if self.debugmode in ('normal', 'full'):
-            print(stringMes)
+            print(fr.bcolors.OKCYAN+stringMes+fr.bcolors.ENDC)
 
     def recieve(self, length=2048):
         msg = ''
@@ -143,7 +144,7 @@ class Connection:
             self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # create socket instance
             self.Server.connect((self.ServerIp, self.port)) # connect to server
         except socket.error:
-            raise ValueError
+            raise ConnectionError('Server not reachable')
 
     # user functions
     def auth(self, username:str, password:str):
