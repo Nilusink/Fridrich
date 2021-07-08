@@ -420,7 +420,6 @@ def recieve():  # Basicly the whole server
 
 def update():   # updates every few seconds
     global currTemp, reqCounter, Vote, FanC, UpDebug
-    time.sleep(50)
     t = time.time   # time instance (for comfort)
     start = t()
     start1 = start
@@ -496,7 +495,8 @@ def update():   # updates every few seconds
 
                 time.sleep(61)
 
-            if time.strftime('$H:$M') == '03:00':
+            if time.strftime('%H:%M') == '03:00':
+                time.sleep(55)
                 system('sudo reboot')
 
         except:
