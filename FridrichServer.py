@@ -13,6 +13,9 @@ from fridrich.FanController import CPUHeatHandler
 from fridrich.Accounts import manager
 from fridrich.ServerFuncs import *
 
+Const = Constants()
+debug = Debug(Const.SerlogFile)
+
 class DoubleVote:
     globals()
     def __init__(self, filePath):
@@ -418,91 +421,99 @@ def recieve():  # Basicly the whole server
             debug.debug('Thread 1 error:')
             debug.debug(format_exc())
 
+@debug.catchTraceback
+def temp_updater(starttime):
+    if time.time()-starttime>=1:    # every 2 seconds
+        starttime+=1
+        #s = str(reqCounter)
+        #debug.debug(' Requests in last 2 seconds: '+'0'*(3-len(s))+s, end='\r')
+        currTemp = cpu.temperature
+        roomTemp, roomHum = readTemp()
+        for element in (Const.tempLog, Const.varTempLog):
+            with open(element, 'w') as out:
+                json.dump({"temp":roomTemp, "cptemp":currTemp, "hum":roomHum}, out)
+        time.sleep(.8)
+
+@debug.catchTraceback
+def ZSwitch():
+    if time.strftime('%H:%M') == '00:00':
+        with open(Const.lastFile, 'w') as out:    # get newest version of the "votes" dict and write it to the lastFile
+            with open(Const.nowFile, 'r') as inp:
+                last = inp.read()
+                out.write(last)
+
+        Vote.write({'GayKing':dict()})
+        
+
+        # ---- Log File (only for GayKing Voting)
+        last = json.loads(last)['GayKing'] # get last ones
+
+        votes1 = int()
+        attds = dict()
+        for element in last:    # create a dict with all names and a corresponding value of 0
+            attds[last[element]] = 0
+
+        for element in last:    # if name has been voted, add a 1 to its sum
+            votes1+=1
+            attds[last[element]]+=1
+
+        
+        Highest = str()
+        HighestInt = int()
+        for element in attds:   # gets the highest of the recently created dict
+            if attds[element]>HighestInt:
+                HighestInt = attds[element]
+                Highest = element
+
+            elif attds[element]==HighestInt:
+                Highest += '|'+element
+        
+        if HighestInt!=0:
+            kIn = json.loads(open(Const.KingFile, 'r').read())    # write everything to logs
+            kIn[time.strftime('%d.%m.%Y')] = Highest
+            with open(Const.KingFile, 'w') as out:
+                json.dump(kIn, out, indent=4)
+            
+            with open(Const.varLogFile, 'w') as out:
+                json.dump(kIn, out, indent=4)
+            
+            with open(Const.varKingLogFile, 'w') as out:
+                out.write(Highest)
+            
+            debug.debug(f"backed up files and logged the GayKing ({time.strftime('%H:%M')})\nGaymaster: {Highest}")
+        
+        else:
+            debug.debug('no votes recieved')
+        if time.strftime('%a')=='Mon':  # if Monday, reset double votes
+            dVotes = DV.read()
+            for element in dVotes:
+                dVotes[element] = Const.DoubleVotes
+            DV.write(dVotes)
+
+        time.sleep(61)
+
+@debug.catchTraceback
+def AutoReboot():
+    if time.strftime('%H:%M') == '03:00':
+        time.sleep(55)
+        system('sudo reboot')
+
 def update():   # updates every few seconds
     global currTemp, reqCounter, Vote, FanC, UpDebug
-    t = time.time   # time instance (for comfort)
-    start = t()
+    start = time.time()
     start1 = start
     while not Const.Terminate:
-        try:
-            # ----- Temperature updater ------
-            if t()-start>=1:    # every 2 seconds
-                start+=1
-                #s = str(reqCounter)
-                #debug.debug(' Requests in last 2 seconds: '+'0'*(3-len(s))+s, end='\r')
-                reqCounter = 0
-                currTemp = cpu.temperature
-                roomTemp, roomHum = readTemp()
-                for element in (Const.tempLog, Const.varTempLog):
-                    with open(element, 'w') as out:
-                        json.dump({"temp":roomTemp, "cptemp":currTemp, "hum":roomHum}, out)
-                time.sleep(.8)
-            
-            # --------  00:00 switch ---------
-            if time.strftime('%H:%M') == '00:00':
-                with open(Const.lastFile, 'w') as out:    # get newest version of the "votes" dict and write it to the lastFile
-                    with open(Const.nowFile, 'r') as inp:
-                        last = inp.read()
-                        out.write(last)
+        # ----- Temperature updater ------
+        temp_updater(start)
+        
+        # --------  00:00 switch ---------
+        ZSwitch()
 
-                Vote.write({'GayKing':dict()})
-                
+        # --------- daily reboot ---------
+        AutoReboot()
 
-                # ---- Log File (only for GayKing Voting)
-                last = json.loads(last)['GayKing'] # get last ones
-
-                votes1 = int()
-                attds = dict()
-                for element in last:    # create a dict with all names and a corresponding value of 0
-                    attds[last[element]] = 0
-
-                for element in last:    # if name has been voted, add a 1 to its sum
-                    votes1+=1
-                    attds[last[element]]+=1
-
-                
-                Highest = str()
-                HighestInt = int()
-                for element in attds:   # gets the highest of the recently created dict
-                    if attds[element]>HighestInt:
-                        HighestInt = attds[element]
-                        Highest = element
-
-                    elif attds[element]==HighestInt:
-                        Highest += '|'+element
-                
-                if HighestInt!=0:
-                    kIn = json.loads(open(Const.KingFile, 'r').read())    # write everything to logs
-                    kIn[time.strftime('%d.%m.%Y')] = Highest
-                    with open(Const.KingFile, 'w') as out:
-                        json.dump(kIn, out, indent=4)
-                    
-                    with open(Const.varLogFile, 'w') as out:
-                        json.dump(kIn, out, indent=4)
-                    
-                    with open(Const.varKingLogFile, 'w') as out:
-                        out.write(Highest)
-                    
-                    debug.debug(f"backed up files and logged the GayKing ({time.strftime('%H:%M')})\nGaymaster: {Highest}")
-                
-                else:
-                    debug.debug('no votes recieved')
-                if time.strftime('%a')=='Mon':  # if Monday, reset double votes
-                    dVotes = DV.read()
-                    for element in dVotes:
-                        dVotes[element] = Const.DoubleVotes
-                    DV.write(dVotes)
-
-                time.sleep(61)
-
-            if time.strftime('%H:%M') == '03:00':
-                time.sleep(55)
-                system('sudo reboot')
-
-        except:
-            UpDebug.debug('\n\n\n'+time.strftime('%H:%M:%S')+'\n'+format_exc)
         # -------- Fan Controller --------
-        if t()-start1>=10:
+        if time.time()-start1>=10:
             start1+=10
             resp = FanC.iter()
             if resp != True:
@@ -520,11 +531,9 @@ if __name__=='__main__':
 
     ClientKeys = dict() # list for Client AuthKeys
     
-    Const = Constants()
     AccManager = manager(Const.crypFile)
     FunManager = FunctionManager()
 
-    debug = Debug(Const.SerlogFile)
     UpDebug = Debug(Const.SerUpLogFile)
 
     Vote = VOTES(Const.nowFile, Const.varNowFile)
@@ -544,11 +553,11 @@ if __name__=='__main__':
             dForm = f'{a.day}.{a.month}.{a.year}'
             try:
                 cal[dForm]
-            except:
+            except KeyError:
                 cal[dForm] = list()
         json.dump(cal, open(Const.CalFile, 'w'))
 
-    except:
+    except Exception:
         cal = dict()
         tod = datetime.datetime.now()
         for i in range(dayRange, 0, -1):

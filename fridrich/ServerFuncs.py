@@ -1,6 +1,7 @@
 from fridrich.cryption_tools import tryDecrypt
 from datetime import datetime as dd
 from json import load, dump, dumps
+from traceback import format_exc
 from contextlib import suppress
 from time import strftime
 
@@ -107,8 +108,18 @@ class Debug:
         print(*args)
         with open(self.file, 'a') as out:
             for element in args:
-                #print(f'Wrote to file {self.file}: ', element)
-                out.write(str(element)+'\n')  
+                out.write(str(element)+'\n')
+    
+    def catchTraceback(self, *args, **kw):
+        def wrapper(func):
+            try:
+                func(*args, **kw)
+            except:
+                err = '\n\n\n'+strftime('%H:%M:%S')+'\n'+format_exc()
+                print(err)
+                with open(self.file, 'a') as out:
+                    out.write(err)
+        return wrapper
 
 class Chat:
     def add(message, fromUser):

@@ -37,7 +37,7 @@ class Connection:
     def __init__(self, debugmode=fr.Off):
         self.debugmode = debugmode
 
-        self.ServerIp = socket.gethostbyname('fridrich')    # get ip of fridrich
+        self.ServerIp = '192.168.1.156'#socket.gethostbyname('fridrich')    # get ip of fridrich
         if self.debugmode in ('normal', 'full'):
             print(fr.bcolors.OKGREEN+'Server IP: '+self.ServerIp+fr.bcolors.ENDC)
         self.port = 12345   # set communication port with server
