@@ -34,10 +34,18 @@ def dateforsort(message):   # go from format "hour:minute:second:millisecond - d
 #                      Server Communication Class                          #
 ############################################################################
 class Connection:
-    def __init__(self, debugmode=fr.Off):
+    def __init__(self, debugmode=fr.Off, host='fridrich'):
         self.debugmode = debugmode
 
-        self.ServerIp = '192.168.1.156'#socket.gethostbyname('fridrich')    # get ip of fridrich
+        sl = host.split('.')
+        if len(sl)==4 and all([digit in '0123456789' for element in sl for digit in element]):
+            self.ServerIp = host
+        else:
+            self.ServerIp = socket.gethostbyname(host)    # get ip of fridrich
+        
+        if self.debugmode == 'full':
+            print(self.ServerIp)
+
         if self.debugmode in ('normal', 'full'):
             print(fr.bcolors.OKGREEN+'Server IP: '+self.ServerIp+fr.bcolors.ENDC)
         self.port = 12345   # set communication port with server
