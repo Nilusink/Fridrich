@@ -111,14 +111,14 @@ class Debug:
                 out.write(str(element)+'\n')
     
     def catchTraceback(self, func):
-        def wrapper(func, *args, **kw):
+        def wrapper(*args, **kw):
             try:
                 func(*args, **kw)
             except:
                 err = '\n\n\n'+strftime('%H:%M:%S')+'\n'+format_exc()
                 print(err)
-                with open(self.file, 'a') as out:
-                    out.write(err)
+                #with open(file, 'a') as out:
+                #    out.write(err)
         return wrapper
 
 class Chat:
