@@ -435,7 +435,7 @@ def temp_updater(starttime):
         time.sleep(.8)
 
 @debug.catchTraceback
-def ZSwitch():
+def ZSwitch(*args):
     if time.strftime('%H:%M') == '00:00':
         with open(Const.lastFile, 'w') as out:    # get newest version of the "votes" dict and write it to the lastFile
             with open(Const.nowFile, 'r') as inp:
@@ -493,7 +493,7 @@ def ZSwitch():
         time.sleep(61)
 
 @debug.catchTraceback
-def AutoReboot():
+def AutoReboot(*args):
     if time.strftime('%H:%M') == '03:00':
         time.sleep(55)
         system('sudo reboot')
@@ -507,7 +507,7 @@ def update():   # updates every few seconds
         temp_updater(start)
         
         # --------  00:00 switch ---------
-        ZSwitch()
+        ZSwitch(0)
 
         # --------- daily reboot ---------
         AutoReboot()
