@@ -110,8 +110,8 @@ class Debug:
             for element in args:
                 out.write(str(element)+'\n')
     
-    def catchTraceback(self, *args, **kw):
-        def wrapper(func):
+    def catchTraceback(self):
+        def wrapper(func, *args, **kw):
             try:
                 func(*args, **kw)
             except:
