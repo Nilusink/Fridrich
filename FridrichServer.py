@@ -16,6 +16,164 @@ from fridrich.ServerFuncs import *
 Const = Constants()
 debug = Debug(Const.SerlogFile)
 
+def sendSuccess(client):
+    Communication.send(client, {'Success':'Done'}, encryption = MesCryp.encrypt)
+
+def verify(username, password, client):
+    global ClientKeys
+    resp = AccManager.verify(username, password)
+    IsValid = False
+    key = None
+    if resp == None:
+        Communication.send(client, {'Error':'SecurityNotSet'}, encryption = MesCryp.encrypt)
+        return
+
+    elif resp:
+        IsValid = True
+        key = KeyFunc(ClientKeys, length=30)
+        ClientKeys[key] = resp
+        
+    debug.debug(f'Username : {username}, Auth: {IsValid}')
+    Communication.send(client, {'Auth':IsValid, 'AuthKey':key}, encryption = MesCryp.encrypt)    # send result to client
+
+def dSendTraceback(func):
+        def wrapper(*args, **kw):
+            global client
+            try:
+                func(*args, **kw)
+            except Exception as e:
+                with suppress(BrokenPipeError):
+                    error = str(type(e)).split("'")[1]
+                    info  = str(e)
+                    fullTraceback = format_exc()
+                    with suppress(UnboundLocalError):
+                        Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback})
+                    with suppress((OSError, AttributeError, UnboundLocalError)):
+                        client.close()
+
+                debug.debug('Thread 1 error:')
+                debug.debug(format_exc())
+        return wrapper
+
+@dSendTraceback
+def clientHandler():
+    global server, reqCounter, ClientKeys, client
+    try:
+        client, mes = Communication.recieve(server, debug.debug, list(ClientKeys))
+        if mes == None:
+            Communication.send(client, {'Error':'MessageError', 'info':'Invalid Message/AuthKey'})
+            return
+
+    except NotEncryptedError:
+        Communication.send(client, {'Error':'NotEncryptedError'})
+
+    if mes['type'] == 'auth':   # authorization function
+        verify(mes['Name'], mes['pwd'], client)
+
+    elif mes['type'] == 'secReq':
+        Communication.send(client, {'sec':ClientKeys[mes['AuthKey']][0]}, encryption=MesCryp.encrypt, key=mes['AuthKey'])
+
+    else:
+        if not 'AuthKey' in mes:    # if no AuthKey in message
+            debug.debug('auth error, Key not in message')
+            Communication.send(client, {'Error':'AuthError'}, encryption=MesCryp.encrypt)
+            client.close()
+            return
+
+        else:
+            try:
+                error, info = FunManager.exec(mes, client)
+                fullTraceback = None
+
+            except Exception as e:
+                error = str(type(e)).split("'")[1]
+                info  = str(e)
+                fullTraceback = format_exc()
+
+            if error:
+                if fullTraceback:
+                    print(fullTraceback)
+                Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback})
+        
+    client.close()  # close so it can be reused
+
+@debug.catchTraceback
+def temp_updater(starttime):
+    if time.time()-starttime>=1:    # every 2 seconds
+        starttime+=1
+        #s = str(reqCounter)
+        #debug.debug(' Requests in last 2 seconds: '+'0'*(3-len(s))+s, end='\r')
+        currTemp = cpu.temperature
+        roomTemp, roomHum = readTemp()
+        for element in (Const.tempLog, Const.varTempLog):
+            with open(element, 'w') as out:
+                json.dump({"temp":roomTemp, "cptemp":currTemp, "hum":roomHum}, out)
+        time.sleep(.8)
+
+@debug.catchTraceback
+def ZSwitch():
+    if time.strftime('%H:%M') == '00:00':
+        with open(Const.lastFile, 'w') as out:    # get newest version of the "votes" dict and write it to the lastFile
+            with open(Const.nowFile, 'r') as inp:
+                last = inp.read()
+                out.write(last)
+
+        Vote.write({'GayKing':dict()})
+        
+
+        # ---- Log File (only for GayKing Voting)
+        last = json.loads(last)['GayKing'] # get last ones
+
+        votes1 = int()
+        attds = dict()
+        for element in last:    # create a dict with all names and a corresponding value of 0
+            attds[last[element]] = 0
+
+        for element in last:    # if name has been voted, add a 1 to its sum
+            votes1+=1
+            attds[last[element]]+=1
+
+        
+        Highest = str()
+        HighestInt = int()
+        for element in attds:   # gets the highest of the recently created dict
+            if attds[element]>HighestInt:
+                HighestInt = attds[element]
+                Highest = element
+
+            elif attds[element]==HighestInt:
+                Highest += '|'+element
+        
+        if HighestInt!=0:
+            kIn = json.loads(open(Const.KingFile, 'r').read())    # write everything to logs
+            kIn[time.strftime('%d.%m.%Y')] = Highest
+            with open(Const.KingFile, 'w') as out:
+                json.dump(kIn, out, indent=4)
+            
+            with open(Const.varLogFile, 'w') as out:
+                json.dump(kIn, out, indent=4)
+            
+            with open(Const.varKingLogFile, 'w') as out:
+                out.write(Highest)
+            
+            debug.debug(f"backed up files and logged the GayKing ({time.strftime('%H:%M')})\nGaymaster: {Highest}")
+        
+        else:
+            debug.debug('no votes recieved')
+        if time.strftime('%a')=='Mon':  # if Monday, reset double votes
+            dVotes = DV.read()
+            for element in dVotes:
+                dVotes[element] = Const.DoubleVotes
+            DV.write(dVotes)
+
+        time.sleep(61)
+
+@debug.catchTraceback
+def AutoReboot():
+    if time.strftime('%H:%M') == '03:00':
+        time.sleep(55)
+        system('sudo reboot')
+
 class DoubleVote:
     globals()
     def __init__(self, filePath):
@@ -83,26 +241,6 @@ class DoubleVote:
             return value[User]
 
         return False
-
-def sendSuccess(client):
-    Communication.send(client, {'Success':'Done'}, encryption = MesCryp.encrypt)
-
-def verify(username, password, client):
-    global ClientKeys
-    resp = AccManager.verify(username, password)
-    IsValid = False
-    key = None
-    if resp == None:
-        Communication.send(client, {'Error':'SecurityNotSet'}, encryption = MesCryp.encrypt)
-        return
-
-    elif resp:
-        IsValid = True
-        key = KeyFunc(ClientKeys, length=30)
-        ClientKeys[key] = resp
-        
-    debug.debug(f'Username : {username}, Auth: {IsValid}')
-    Communication.send(client, {'Auth':IsValid, 'AuthKey':key}, encryption = MesCryp.encrypt)    # send result to client
 
 class FunctionManager:
     def __init__(self):
@@ -367,136 +505,8 @@ class ClientFuncs:  # class for the Switch
             ClientKeys.pop(message['AuthKey'])
 
 def recieve():  # Basicly the whole server
-    global server, reqCounter, ClientKeys
     while not Const.Terminate:
-        try:
-            try:
-                client, mes = Communication.recieve(server, debug.debug, list(ClientKeys))
-                if mes == None:
-                    Communication.send(client, {'Error':'MessageError', 'info':'Invalid Message/AuthKey'})
-                    continue
-
-            except NotEncryptedError:
-                Communication.send(client, {'Error':'NotEncryptedError'})
-            if mes['type'] == 'auth':   # authorization function
-                verify(mes['Name'], mes['pwd'], client)
-
-            elif mes['type'] == 'secReq':
-                Communication.send(client, {'sec':ClientKeys[mes['AuthKey']][0]}, encryption=MesCryp.encrypt, key=mes['AuthKey'])
-
-            else:
-                if not 'AuthKey' in mes:    # if no AuthKey in message
-                    debug.debug('auth error, Key not in message')
-                    Communication.send(client, {'Error':'AuthError'}, encryption=MesCryp.encrypt)
-                    client.close()
-                    continue
-
-                else:
-                    try:
-                        error, info = FunManager.exec(mes, client)
-                        fullTraceback = None
-
-                    except Exception as e:
-                        error = str(type(e)).split("'")[1]
-                        info  = str(e)
-                        fullTraceback = format_exc()
-
-                    if error:
-                        if fullTraceback:
-                            print(fullTraceback)
-                        Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback})
-                
-            client.close()  # close so it can be reused
-
-        except Exception as e:
-            with suppress(BrokenPipeError):
-                error = str(type(e)).split("'")[1]
-                info  = str(e)
-                fullTraceback = format_exc()
-                with suppress(UnboundLocalError):
-                    Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback})
-                with suppress((OSError, AttributeError, UnboundLocalError)):
-                    client.close()
-
-            debug.debug('Thread 1 error:')
-            debug.debug(format_exc())
-
-@debug.catchTraceback
-def temp_updater(starttime):
-    if time.time()-starttime>=1:    # every 2 seconds
-        starttime+=1
-        #s = str(reqCounter)
-        #debug.debug(' Requests in last 2 seconds: '+'0'*(3-len(s))+s, end='\r')
-        currTemp = cpu.temperature
-        roomTemp, roomHum = readTemp()
-        for element in (Const.tempLog, Const.varTempLog):
-            with open(element, 'w') as out:
-                json.dump({"temp":roomTemp, "cptemp":currTemp, "hum":roomHum}, out)
-        time.sleep(.8)
-
-@debug.catchTraceback
-def ZSwitch():
-    if time.strftime('%H:%M') == '00:00':
-        with open(Const.lastFile, 'w') as out:    # get newest version of the "votes" dict and write it to the lastFile
-            with open(Const.nowFile, 'r') as inp:
-                last = inp.read()
-                out.write(last)
-
-        Vote.write({'GayKing':dict()})
-        
-
-        # ---- Log File (only for GayKing Voting)
-        last = json.loads(last)['GayKing'] # get last ones
-
-        votes1 = int()
-        attds = dict()
-        for element in last:    # create a dict with all names and a corresponding value of 0
-            attds[last[element]] = 0
-
-        for element in last:    # if name has been voted, add a 1 to its sum
-            votes1+=1
-            attds[last[element]]+=1
-
-        
-        Highest = str()
-        HighestInt = int()
-        for element in attds:   # gets the highest of the recently created dict
-            if attds[element]>HighestInt:
-                HighestInt = attds[element]
-                Highest = element
-
-            elif attds[element]==HighestInt:
-                Highest += '|'+element
-        
-        if HighestInt!=0:
-            kIn = json.loads(open(Const.KingFile, 'r').read())    # write everything to logs
-            kIn[time.strftime('%d.%m.%Y')] = Highest
-            with open(Const.KingFile, 'w') as out:
-                json.dump(kIn, out, indent=4)
-            
-            with open(Const.varLogFile, 'w') as out:
-                json.dump(kIn, out, indent=4)
-            
-            with open(Const.varKingLogFile, 'w') as out:
-                out.write(Highest)
-            
-            debug.debug(f"backed up files and logged the GayKing ({time.strftime('%H:%M')})\nGaymaster: {Highest}")
-        
-        else:
-            debug.debug('no votes recieved')
-        if time.strftime('%a')=='Mon':  # if Monday, reset double votes
-            dVotes = DV.read()
-            for element in dVotes:
-                dVotes[element] = Const.DoubleVotes
-            DV.write(dVotes)
-
-        time.sleep(61)
-
-@debug.catchTraceback
-def AutoReboot():
-    if time.strftime('%H:%M') == '03:00':
-        time.sleep(55)
-        system('sudo reboot')
+        clientHandler()
 
 def update():   # updates every few seconds
     global currTemp, reqCounter, Vote, FanC, UpDebug
@@ -573,6 +583,8 @@ if __name__=='__main__':
         server.bind((Const.ip, Const.port))
         server.listen()
         debug.debug(Const.ip)
+
+        client = None
 
         Updater = Thread(target=update, daemon=True)
 

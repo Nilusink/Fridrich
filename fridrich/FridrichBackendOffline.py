@@ -21,7 +21,7 @@ def dateforsort(message):   # go from format "hour:minute - day.month.year" to "
 #                      Server Communication Class                          #
 ############################################################################
 class Connection:
-    def __init__(self, mode='normal'):
+    def __init__(self, mode='normal', host='fridrich'):
         self.mode = mode
 
         self.ServerIp = '127.0.0.1'#socket.gethostbyname('fridrich')    # get ip of fridrich
