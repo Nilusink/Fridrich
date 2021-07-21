@@ -1,4 +1,5 @@
 from copy import deepcopy
+from time import time
 
 class List:
     def RemoveAll(lst:list, value): # remove all values from list
@@ -16,11 +17,7 @@ class List:
         return cl
 
     def singles(lst:list): # removes all clones from list
-        nlist = list()
-        for element in lst:
-            if not element in nlist:
-                nlist.append(element)
-        return nlist
+        return list(set(lst))   # also sorts it
     
     def getInnerDictValues(lst:list, Index): # when given ([{'a':5}, {'b':3}, {'a':2, 'b':3}], 'a') returns (5, 2)
         out = list()
@@ -79,6 +76,14 @@ def inverse(value): # inverse a bool or int (or technically also a str) object
 	else:
 		val=False
 	return t(val)   # return converted value
+
+def timeit(func):   # decorator for timing functions
+    def wrapper(*args, **kw):
+        start = time()
+        func(*args, **kw)
+        print(f'took: {start-time()}')
+        
+    return wrapper
 
 if __name__ == '__main__':
     from traceback import format_exc

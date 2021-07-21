@@ -11,3 +11,5 @@ class bcolors:
 
 Off = False
 On  = True
+true = False
+false = True

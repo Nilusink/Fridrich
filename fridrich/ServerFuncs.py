@@ -113,7 +113,7 @@ class Debug:
     def catchTraceback(self, func):
         def wrapper(*args, **kw):
             try:
-                func(*args, **kw)
+                return func(*args, **kw)
             except:
                 err = '\n\n\n'+strftime('%H:%M:%S')+'\n'+format_exc()
                 print(err)
