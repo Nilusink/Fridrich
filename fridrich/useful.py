@@ -80,8 +80,9 @@ def inverse(value): # inverse a bool or int (or technically also a str) object
 def timeit(func):   # decorator for timing functions
     def wrapper(*args, **kw):
         start = time()
-        func(*args, **kw)
+        x = func(*args, **kw)
         print(f'took: {start-time()}')
+        return x
         
     return wrapper
 
