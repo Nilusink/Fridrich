@@ -1,61 +1,101 @@
+from types import GeneratorType
 from copy import deepcopy
+from typing import Any
 from time import time
 
 class List:
-    def RemoveAll(lst:list, value): # remove all values from list
+    "list functions"
+    def RemoveAll(lst:list, value) -> list:
+        "remove all values from list"
         return list(filter(lambda a: a!=value, lst))
 
-    def FromMatrix(lst:list, index:int):    # make list from matrix (just return all elements of the matrix (2D))
+    def FromMatrix(lst:list, index:int) -> GeneratorType:
+        "make list from matrix (just return all elements of the matrix (2D))"
         for element in lst:
             yield element[index]
     
-    def closest(number:float, lst:list):    # check wich element in list is closest to given number
+    def AllFromMatrix(lst:list) -> GeneratorType:
+        """
+        yield all elements of all lists in parent list
+        
+        works with lists and tuples ONLY - no dicts
+        """
+        tmp = str(lst).strip().replace('[', '').replace(']', '').replace('(', '').replace(')', '')
+        print(tmp)
+        while ',,' in tmp:
+            tmp = tmp.replace(',,', ',')
+        lst = tmp.split(',')
+        for element in lst:
+            yield (eval(element))
+    
+    def closest(number:float, lst:list) -> float:
+        "check wich element in list is closest to given number"
         cl = 0
         for element in lst:
             if abs(element-number)<abs(cl-number):
                 cl = element
         return cl
 
-    def singles(lst:list): # removes all clones from list
-        return list(set(lst))   # also sorts it
+    def singles(lst:list) -> list:
+        """
+        removes all clones from list
+        
+        also sorts it
+        """
+        return list(set(lst))
     
-    def getInnerDictValues(lst:list, Index): # when given ([{'a':5}, {'b':3}, {'a':2, 'b':3}], 'a') returns (5, 2)
+    def getInnerDictValues(lst:list, Index) -> list:
+        "when given ([{'a':5}, {'b':3}, {'a':2, 'b':3}], 'a') returns (5, 2)"
         out = list()
         for element in lst:
             if Index in element:
                 out.append(element[Index])
         return out
+
 class Dict:
-    def Indexes(dictionary:dict):   # returns the indexes of the dictionary
+    "dictionary functions"
+    def Indexes(dictionary:dict) -> list:
+        "returns the indexes of the dictionary"
         return list(dictionary)
 
-    def Values(dictionary:dict):    # returns the values of the dictionary
+    def Values(dictionary:dict) -> GeneratorType:
+        "returns the values of the dictionary"
         for element in dictionary:
             yield dictionary[element]
 
-    def inverse(dictionary:dict):   # inverses the dicitonary (so values become indexes and opposite)
+    def inverse(dictionary:dict) -> dict:
+        "inverses the dicitonary (so values become indexes and opposite)"
         x = dict()
         for element in dictionary:
             x[dictionary[element]] = element
         return x
     
-    def sort(dictionary:dict):
-        return {Index:dictionary[Index] for Index in sorted(list(dictionary))}
+    def sort(dictionary:dict, key=sorted) -> dict:
+        "sort dicitonarys by indexes"
+        return {Index:dictionary[Index] for Index in key(list(dictionary))}
 
 class const:
-    def __init__(self, val):
-        self.value = deepcopy(val) # create deepcopy of list (cause python is strange and source lists are dependent on it's cloned lists)
+    def __init__(self, val:Any) -> None:
+        """
+        create deepcopy of list (cause python is strange and source lists are dependent on it's cloned lists)
+        
+        also works with other variable types
+        """
+        self.value = deepcopy(val)
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self.value)
 
     def get(self):
-        return deepcopy(self.value)    # return value with an extra deep copy
+        "return value with an extra deep copy"
+        return deepcopy(self.value)
     
-    def len(self):
-        return len(self.value)  # return lenght of list (cause why not?)
+    def len(self) -> int:
+        "return lenght of list (cause why not?)"
+        return len(self.value)
 
-def arange(*args):  # basically like numpy.arange (range with float as steps) but with roundet output
+def arange(*args) -> GeneratorType:
+    "basically like numpy.arange (range with float as steps) but with roundet output"
     def_args = [0.0, None, 1.0]
     if len(args)==1:    # if only one argument is given, map it to element 1
         def_args[1] = args[0]
@@ -68,17 +108,19 @@ def arange(*args):  # basically like numpy.arange (range with float as steps) bu
         yield float(round(x, len(str(def_args[2]).split('.')[1]))) # return x (roundet based on how many decimals the step variable has)
         x+=def_args[2]  # add step to x
 
-def inverse(value): # inverse a bool or int (or technically also a str) object
-	t = type(value) # type for final convertion
-	val = bool(value)   # bool value so we don't need to handle every single variable type
-	if val==False:  # inverse
-		val=True
-	else:
-		val=False
+def inverse(value:bool|int|str) -> bool|int|str:
+    "inverse a bool or int (or technically also a str) object"
+    t = type(value) # type for final convertion
+    val = bool(value)   # bool value so we don't need to handle every single variable type
+    if val==False:  # inverse
+        val=True
+    else:
+        val=False
 	return t(val)   # return converted value
 
-def timeit(func):   # decorator for timing functions
-    def wrapper(*args, **kw):
+def timeit(func:function) -> function:
+    "decorator for timing functions"
+    def wrapper(*args, **kw) -> Any:
         start = time()
         x = func(*args, **kw)
         print(f'took: {start-time()}')

@@ -5,7 +5,7 @@ from socket import gaierror
 import tkinter as tk
 
 # local imports
-from fridrich.FridrichBackend import Connection
+from fridrich.backend import Connection
 
 secEquals = {'admin':0, 'user':1, 'guest':2, 'other':3}    # for sorting the users
 
