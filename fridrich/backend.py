@@ -503,7 +503,7 @@ class Connection:
 ############################################################################
 # class wiki:
 #     def __init__(self):
-#         app_id = 'U3ETL7-RL45EG5R6Y'
+#         app_id = ''
 #         # Instance of wolf ram alpha 
 #         # client class
 #         self.client = Client(app_id)
