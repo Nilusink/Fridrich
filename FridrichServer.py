@@ -46,7 +46,8 @@ def dSendTraceback(func:FunctionType) -> FunctionType:
     def wrapper(*args, **kw):
         global client
         try:
-            func(*args, **kw)
+            return func(*args, **kw)
+
         except Exception as e:
             with suppress(BrokenPipeError):
                 error = str(type(e)).split("'")[1]

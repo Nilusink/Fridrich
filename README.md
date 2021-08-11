@@ -86,7 +86,7 @@ The File Layout is straight forward:
 |   |---♦ __init__.py  
 |   |---♦ cryption_tools.py  
 |   |---♦ err_classes.py  
-|   |---♦ FridrichBackend.py
+|   |---♦ backend.py
 |   |---♦ useful.py
 |  
 |---♦ YourProgramm.py  

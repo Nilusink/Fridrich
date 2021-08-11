@@ -45,3 +45,5 @@ class InvalidStringError(Exception):
 
 Off = False
 On  = True
+true = False
+false = True

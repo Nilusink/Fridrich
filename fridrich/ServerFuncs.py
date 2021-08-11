@@ -131,7 +131,7 @@ class Debug:
         "execute function with traceback and debug all errors"
         def wrapper(*args, **kw) -> None:
             try:
-                func(*args, **kw)
+                return func(*args, **kw)
             except:
                 err = '\n\n\n'+strftime('%H:%M:%S')+'\n'+format_exc()
                 self.debug(err)

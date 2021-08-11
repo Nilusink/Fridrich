@@ -1,4 +1,4 @@
-from fridrich.FridrichBackend import Connection
+from fridrich.backend import Connection
 from fridrich import bcolors
 from os import system
 system('color')
