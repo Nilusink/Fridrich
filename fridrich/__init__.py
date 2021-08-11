@@ -9,5 +9,39 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+# error classes
+class AccessError(Exception):
+    pass
+class AuthError(Exception):
+    pass
+
+class JsonError(Exception):
+    pass
+
+class NoVotes(Exception):
+    pass
+
+class UnknownError(Exception):
+    pass
+
+class RegistryError(Exception):
+    pass
+
+class NotAUser(Exception):
+    pass
+
+class InvalidRequest(Exception):
+    pass
+
+class SecutiryClearanceNotSet(Exception):
+    pass
+
+class MessageError(Exception):
+    pass
+
+class InvalidStringError(Exception):
+    pass
+
+
 Off = False
 On  = True

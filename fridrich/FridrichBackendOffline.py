@@ -4,8 +4,8 @@ from datetime import datetime
 import time
 
 # local imports
-import fridrich.err_classes as err
 from fridrich.useful import Dict
+import fridrich as fr
 
 ############################################################################
 #                             other functions                              #
@@ -89,7 +89,7 @@ class Connection:
 
     def sendVote(self, *args, flag = 'vote', voting = 'GayKing'):   # flag can be 'vote', 'unvote', 'dvote' or 'dUvote', voting is custom
         if not self.CurrUser:
-            raise err.AuthError('Not signed in')
+            raise fr.AuthError('Not signed in')
         if flag in ('vote', 'dvote'):
             if not voting in self.now:
                 self.now[voting] = dict()
@@ -102,7 +102,7 @@ class Connection:
                 del self.now[voting][name]
         
         else:
-            raise err.InvalidRequest(f'Unknown flag "{flag}"')
+            raise fr.InvalidRequest(f'Unknown flag "{flag}"')
     
     def getResults(self, flag = 'now'): # flag can be 'now', 'last', will return Voting:'results':VoteDict and
         if flag == 'now':
@@ -111,7 +111,7 @@ class Connection:
             res = self.yes
         
         else: 
-            raise err.InvalidRequest(f'Unkown flag "{flag}"')
+            raise fr.InvalidRequest(f'Unkown flag "{flag}"')
 
         out = dict()
         for voting in res:
@@ -173,7 +173,7 @@ class Connection:
 
     def getVote(self, flag = 'normal', voting = 'GayKing'):   # flag can be normal or double
         if not self.CurrUser:
-            raise err.AuthError('Not signed in')
+            raise fr.AuthError('Not signed in')
         user = self.CurrUser + ('2' if flag=='double' else '')
         try:
             vote = self.now[voting][user]
@@ -189,13 +189,13 @@ class Connection:
 
     def getFrees(self):
         if not self.CurrUser:
-            raise err.AuthError('Not signed in')
+            raise fr.AuthError('Not signed in')
         name = self.CurrUser
         return self.dVotes[name]
 
     def getOnlineUsers(self):
         if not self.CurrUser:
-            raise err.AuthError('Not sigend in')
+            raise fr.AuthError('Not sigend in')
         return self.CurrUser
 
     def sendChat(self, message):

@@ -3,7 +3,6 @@ import socket, json
 
 # local imports
 from fridrich.cryption_tools import tryDecrypt, NotEncryptedError, MesCryp
-import fridrich.err_classes as err
 from fridrich.useful import Dict
 import fridrich as fr
 
@@ -56,31 +55,31 @@ class Connection:
     # "local" functions
     def errorHandler(self, error:str, *args):
         if error == 'AccessError':
-            raise err.AccessError('Access denied')
+            raise fr.AccessError('Access denied')
         
         elif error == 'AuthError':
-            raise err.AuthError('Authentification failed')
+            raise fr.AuthError('Authentification failed')
         
         elif error == 'NotVoted':
             raise NameError('Not Voted')
         
         elif error == 'json':
-            raise err.JsonError('Crypled message')
+            raise fr.JsonError('Crypled message')
         
         elif error == 'NoVotes':
-            raise err.NoVotes('No Votes left')
+            raise fr.NoVotes('No Votes left')
 
         elif error == 'RegistryError':
-            raise err.RegistryError('Not registered')
+            raise fr.RegistryError('Not registered')
         
         elif error == 'SwitchToUser':
-            raise err.NotAUser('Switch to user account to vote')
+            raise fr.NotAUser('Switch to user account to vote')
         
         elif error == 'InvalidRequest':
-            raise err.InvalidRequest('Invalid erquest: '+args[0]['info'])
+            raise fr.InvalidRequest('Invalid erquest: '+args[0]['info'])
         
         elif error == 'SecurityNotSet':
-            raise err.SecutiryClearanceNotSet('Security clearance not set! Contact administrator')
+            raise fr.SecutiryClearanceNotSet('Security clearance not set! Contact administrator')
         
         elif error == 'NotEncryptedError':
             raise NotEncryptedError('You just send a not encrypted message. How tf did you do that??')
@@ -89,7 +88,7 @@ class Connection:
             raise NameError('Username Already exits')
         
         elif error == 'MessageError':
-            raise err.MessageError(args[0]['info'])
+            raise fr.MessageError(args[0]['info'])
 
         else:
             if self.debugmode == 'full':
@@ -98,9 +97,9 @@ class Connection:
                 st = f'Error: {error}\nInfo: {args[0]["info"] if "info" in args[0] else "None"}'
 
             else:
-                raise err.UnknownError(f'A Unknown Error Occured:\nError: {error}')
+                raise fr.UnknownError(f'A Unknown Error Occured:\nError: {error}')
 
-        raise err.UnknownError('An Unknown Error Occured: \n'+st)
+        raise fr.UnknownError('An Unknown Error Occured: \n'+st)
 
     def send(self, dictionary:dict):
         self.reconnect() # reconnect to the server
@@ -110,7 +109,7 @@ class Connection:
             dictionary['AuthKey'] = self.AuthKey
             stringMes = json.dumps(dictionary, ensure_ascii=False)
             if any(c in stringMes.lower() for c in ('ö', 'ä', 'ü')):
-                raise err.InvalidRequest('non-ascii charters are not allowed')
+                raise fr.InvalidRequest('non-ascii charters are not allowed')
             mes = MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
             self.Server.send(mes)
             if self.debugmode in ('normal', 'full'):
@@ -373,6 +372,8 @@ class Connection:
     def end(self):
         msg = {'type':'end'}    # set message
         self.send(msg)  # send message
+        self.AuthKey = None
+        
 ############################################################################
 #                   Class for Searching Wolfram Alpha                      #
 ############################################################################

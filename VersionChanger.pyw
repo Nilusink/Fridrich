@@ -4,7 +4,8 @@ import tkinter as tk
 from fridrich.FridrichBackend import Connection
 
 class window:
-    def __init__(self, ConnectionInstance):
+    def __init__(self, ConnectionInstance:Connection) -> None:
+        "create a new window"
         # variable definitions
         self.userEs = list()
 
@@ -48,33 +49,35 @@ class window:
 
         self.login()
 
-    def run(self):
+    def run(self) -> None:
+        "start the tkinter.root.mainloop"
         self.root.mainloop()
 
-    def login(self, *args):
+    def login(self, *args) -> None:
+        "login"
         if not self.c.auth('Lukas', 'Hurenficker'):
             exit()
 
         self.refresh()
     
-    def refresh(self):
+    def refresh(self) -> None:
+        "refresh vesion and enter it into the entry"
         self.version = c.getVersion()
         self.versionEntry.delete(0, 'end')
         self.versionEntry.insert(0, self.version)
         
     
-    def update(self):
+    def update(self) -> None:
+        "update"
         nv = self.versionEntry.get()
         if self.version!=nv:
             c.setVersion(nv)
 
-    def end(self, *args):
+    def end(self, *args) -> None:
+        "end the connection and close the window"
         self.c.end()
-        exit()
 
 if __name__ == '__main__':
-    c = Connection()
-
-    w = window(c)
+    w = window(Connection())
     w.run()
     w.end()

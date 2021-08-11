@@ -1,4 +1,6 @@
+from types import FunctionType
 from copy import deepcopy
+from time import time
 
 class List:
     def RemoveAll(lst:list, value): # remove all values from list
@@ -80,9 +82,23 @@ def inverse(value): # inverse a bool or int (or technically also a str) object
 		val=False
 	return t(val)   # return converted value
 
+def timeit(func) -> FunctionType:
+    """
+    when calling function, add argument "times"
+
+    it will loop this function for the given number,
+
+    then return the result in seconds
+    """
+    def wrapper(times:int, *args, **kw) -> float:
+        start = time()
+        for _ in range(times):
+            func(*args, **kw)
+        return time()-start
+    return wrapper
+
 if __name__ == '__main__':
     from traceback import format_exc
-
     # mylist = [[1, 2], [1, 2], [1, 2]]
     # print(list(ListFromMatrix(mylist, 0)))
     # print(list(ListFromMatrix(mylist, 1)))

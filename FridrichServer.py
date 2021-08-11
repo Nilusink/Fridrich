@@ -1,11 +1,14 @@
 #! /usr/bin/python3
+from fridrich import InvalidStringError
 from gpiozero import CPUTemperature
 import datetime, socket, time, json
 from traceback import format_exc
 from contextlib import suppress
 from sys import exit as sExit
 from threading import Thread
+from typing import Any
 from os import system
+import socket
 
 # local imports
 from fridrich.cryption_tools import low, KeyFunc, MesCryp, NotEncryptedError
@@ -16,10 +19,12 @@ from fridrich.ServerFuncs import *
 Const = Constants()
 debug = Debug(Const.SerlogFile)
 
-def sendSuccess(client):
+def sendSuccess(client:socket.socket) -> None:
+    "send the success message to the client"
     Communication.send(client, {'Success':'Done'}, encryption = MesCryp.encrypt)
 
-def verify(username, password, client):
+def verify(username:str, password:str, client:socket.socket) -> None:
+    "verify the client and send result"
     global ClientKeys
     resp = AccManager.verify(username, password)
     IsValid = False
@@ -36,27 +41,29 @@ def verify(username, password, client):
     debug.debug(f'Username : {username}, Auth: {IsValid}')
     Communication.send(client, {'Auth':IsValid, 'AuthKey':key}, encryption = MesCryp.encrypt)    # send result to client
 
-def dSendTraceback(func):
-        def wrapper(*args, **kw):
-            global client
-            try:
-                func(*args, **kw)
-            except Exception as e:
-                with suppress(BrokenPipeError):
-                    error = str(type(e)).split("'")[1]
-                    info  = str(e)
-                    fullTraceback = format_exc()
-                    with suppress(UnboundLocalError):
-                        Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback})
-                    with suppress((OSError, AttributeError, UnboundLocalError)):
-                        client.close()
+def dSendTraceback(func:FunctionType) -> FunctionType:
+    "execute function and send traceback to client"
+    def wrapper(*args, **kw):
+        global client
+        try:
+            func(*args, **kw)
+        except Exception as e:
+            with suppress(BrokenPipeError):
+                error = str(type(e)).split("'")[1]
+                info  = str(e)
+                fullTraceback = format_exc()
+                with suppress(UnboundLocalError):
+                    Communication.send(client, {'Error':error, 'info':info, 'full':fullTraceback})
+                with suppress((OSError, AttributeError, UnboundLocalError)):
+                    client.close()
 
-                debug.debug('Thread 1 error:')
-                debug.debug(format_exc())
-        return wrapper
+            debug.debug('Thread 1 error:')
+            debug.debug(format_exc())
+    return wrapper
 
 @dSendTraceback
-def clientHandler():
+def clientHandler() -> None:
+    "Handles communication with all clients"
     global server, reqCounter, ClientKeys, client
     try:
         client, mes = Communication.recieve(server, debug.debug, list(ClientKeys))
@@ -98,7 +105,8 @@ def clientHandler():
     client.close()  # close so it can be reused
 
 @debug.catchTraceback
-def temp_updater(starttime):
+def temp_updater(starttime:float) -> None:
+    "update the temperature"
     if time.time()-starttime>=1:    # every 2 seconds
         starttime+=1
         #s = str(reqCounter)
@@ -111,8 +119,9 @@ def temp_updater(starttime):
         time.sleep(.8)
 
 @debug.catchTraceback
-def ZSwitch():
-    if time.strftime('%H:%M') == '00:00':
+def ZSwitch(stime='00:00') -> None:
+    "if time is stime, execute the switch"
+    if time.strftime('%H:%M') == stime:
         with open(Const.lastFile, 'w') as out:    # get newest version of the "votes" dict and write it to the lastFile
             with open(Const.nowFile, 'r') as inp:
                 last = inp.read()
@@ -169,14 +178,26 @@ def ZSwitch():
         time.sleep(61)
 
 @debug.catchTraceback
-def AutoReboot():
-    if time.strftime('%H:%M') == '03:00':
+def AutoReboot(rtime="03:00") -> None:
+    """
+    if time is rtime, reboot the server
+    
+    if you don't want this, just set rtime to "99:99"
+
+    or any other time that will never happen
+    """
+    if not len(rtime)==5 and rtime.replace(':', '').isnumeric():
+        raise InvalidStringError('rtime needs to be formated like this: HH:MM')
+
+    if time.strftime('%H:%M') == rtime:
         time.sleep(55)
         system('sudo reboot')
 
 class DoubleVote:
+    "Handle Double Votes"
     globals()
-    def __init__(self, filePath):
+    def __init__(self, filePath:str) -> None:
+        "filePath: path to file where doublevotes are saved"
         validUsers = json.loads(low.decrypt(open(Const.crypFile, 'r').read()))
         self.filePath = filePath
 
@@ -190,13 +211,24 @@ class DoubleVote:
         
         dump(value, open(self.filePath, 'w'))
     
-    def read(self):
+    def read(self) -> dict:
+        "returns the DoubleVote dict"
         return load(open(self.filePath, 'r'))
     
-    def write(self, value:dict):
+    def write(self, value:dict) -> None:
+        """
+        write doubleVotes
+        
+        overwrites the file!
+        """
         dump(value, open(self.filePath, 'w'))
 
-    def vote(self, vote, User):
+    def vote(self, vote:str, User:str) -> bool:
+        """
+        if the user has any double votes left,
+
+        vote as "double-user"
+        """
         global Vote
 
         votes = Vote.get()
@@ -220,7 +252,8 @@ class DoubleVote:
         Vote.write(value)
         return False
 
-    def unVote(self, User, voting):
+    def unVote(self, User:str, voting:str) -> None:
+        "unvote doublevote"
         global Vote
 
         votes = Vote.get()
@@ -233,7 +266,8 @@ class DoubleVote:
 
         Vote.write(votes)
     
-    def getFrees(self, User):
+    def getFrees(self, User:str) -> int:
+        "returns the free double-votes for the given users"
         value = self.read()
         print(value)
         print(f'user {User} in value: {User in value}')
@@ -243,7 +277,9 @@ class DoubleVote:
         return False
 
 class FunctionManager:
+    "manages the requested functions"
     def __init__(self):
+        "init switch dict"
         self.switch = {
             'admin' : {
                 'getUsers':AdminFuncs.getAccounts,
@@ -283,7 +319,8 @@ class FunctionManager:
             }
         }
     
-    def exec(self, message, client):
+    def exec(self, message:str, client:socket.socket) -> Tuple[bool, Any]:
+        "execute the requested function or return error"
         clearance = ClientKeys[message['AuthKey']][0]
         if clearance in self.switch:
             if message['type'] in self.switch[clearance]:
@@ -308,42 +345,57 @@ class FunctionManager:
             return 'ClearanceIssue', f'Clearance not set: "{clearance}"'
         
 class AdminFuncs:
-    def getAccounts(message, client, *args):
+    "Manages the AdminFucntions"
+    def getAccounts(message:str, client:socket.socket, *args) -> None:
+        "get all users | passwords | clearances"
         acclist = AccManager.getAccs() # getting and decrypting accounts list
         Communication.send(client, acclist, encryption=MesCryp.encrypt) # sending list to client
     
-    def setPassword(message, client, *args):
+    def setPassword(message:str, client:socket.socket, *args) -> None:
+        "set a new password for the given user"
         AccManager.setPwd(message['User'], message['newPwd'])   # set new password
         sendSuccess(client) # send success
 
-    def setUsername(message, client, *args):
+    def setUsername(message:str, client:socket.socket, *args) -> None:
+        "change the username for the given user"
         AccManager.setUserN(message['OldUser'], message['NewUser']) # change account name 
         sendSuccess(client) # send success
     
-    def setSecurity(message, client, *args):
+    def setSecurity(message:str, client:socket.socket, *args) -> None:
+        "change the clearance for the given user"
         AccManager.setUserSec(message['Name'], message['sec'])
         sendSuccess(client)
 
-    def addUser(message, client, *args):
+    def addUser(message:str, client:socket.socket, *args) -> None:
+        "add a new user with set name, password and clearance"
         AccManager.newUser(message['Name'], message['pwd'], message['sec'])
         sendSuccess(client)
     
-    def rmUser(message, client, *args):
+    def rmUser(message:str, client:socket.socket, *args) -> None:
+        "remove user by username"
         AccManager.rmUser(message['Name'])
         sendSuccess(client)
 
-    def resetUserLogins(message, client, *args):
+    def resetUserLogins(message:str, client:socket.socket, *args) -> None:
+        "reset all current logins (clear the ClientKeys variable)"
         global ClientKeys
         ClientKeys = dict()
         sendSuccess(client)
 
-    def end(message, *args):
+    def end(message:str, *args) -> None:
+        "log-out user"
         with suppress(Exception):
             ClientKeys.pop(message['AuthKey'])
 
-class ClientFuncs:  # class for the Switch
+class ClientFuncs:
+    "Manages the Client Functions"
     globals()
-    def vote(message, client, *args):
+    def vote(message:str, client:socket.socket, *args) -> None:
+        """
+        vote a name
+        
+        votes user by username
+        """
         global  Vote, ClientKeys
         votes = Vote.get()    # update votes
         resp = checkif(message['vote'], votes, message['voting'])
@@ -357,7 +409,8 @@ class ClientFuncs:  # class for the Switch
 
         sendSuccess(client)
     
-    def unvote(message, client, *args):
+    def unvote(message:str, client:socket.socket, *args) -> None:
+        "unvote a user"
         global nowFile, Vote
         votes = Vote.get()    # update votes
         name = ClientKeys[message['AuthKey']][1] # WHY U NOT WORKING
@@ -367,7 +420,8 @@ class ClientFuncs:  # class for the Switch
 
         sendSuccess(client)
     
-    def CalendarHandler(message, client, *args):
+    def CalendarHandler(message:str, client:socket.socket, *args) -> None:
+        "Handle the Calendar requests/write"
         global CalFile
         cal = json.load(open(Const.CalFile, 'r'))
         if not message['event'] in cal[message['date']]:    # if event is not there yet, create it
@@ -381,7 +435,8 @@ class ClientFuncs:  # class for the Switch
         
         sendSuccess(client)
 
-    def reqHandler(message, client, *args):
+    def reqHandler(message:str, client:socket.socket, *args) -> None:
+        "Handle some default requests / logs"
         global reqCounter, nowFile, Vote, lastFile
         reqCounter+=1
         if message['reqType']=='now':   # now is for the current "votes" dictionary
@@ -411,7 +466,8 @@ class ClientFuncs:  # class for the Switch
         else:   # notify if an invalid request has been sent
             debug.debug(f'Invalid Request {message["reqType"]}')
 
-    def changePwd(message, client,  *args):
+    def changePwd(message:str, client:socket.socket,  *args) -> None:
+        "change the password of the user (only for logged in user)"
         global ClientKeys
         validUsers = json.loads(low.decrypt(open(Const.crypFile, 'r').read()))
         name = ClientKeys[message['AuthKey']][1]
@@ -426,7 +482,8 @@ class ClientFuncs:  # class for the Switch
         
         sendSuccess(client)
 
-    def getVote(message, client, *args):
+    def getVote(message:str, client:socket.socket, *args) -> None:
+        "get the vote of the logged-in user"
         votes = Vote.get()
         if 'flag' in message:
             x = '2' if message['flag'] == 'double' else ''
@@ -444,17 +501,20 @@ class ClientFuncs:  # class for the Switch
         cVote = votes[message['voting']][name]
         Communication.send(client, {'Vote':cVote}, encryption=MesCryp.encrypt, key=message['AuthKey'])
 
-    def getVersion(message, client, *args):
+    def getVersion(message:str, client:socket.socket, *args) -> None:
+        "read the Version variable"
         vers = open(Const.versFile, 'r').read()
         Communication.send(client, {'Version':vers}, encryption=MesCryp.encrypt, key=message['AuthKey'])
 
-    def setVersion(message, client, *args):
+    def setVersion(message:str, client:socket.socket, *args) -> None:
+        "set the version variable"
         with open(Const.versFile, 'w') as out:
             out.write(message['version'])
 
         sendSuccess(client)
 
-    def DoubVote(message, client, *args):
+    def DoubVote(message:str, client:socket.socket, *args) -> None:
+        "double vote"
         global DV, Vote
         name = ClientKeys[message['AuthKey']][1]
         resp = checkif(message['vote'], Vote.get(), message['voting'])     
@@ -464,13 +524,15 @@ class ClientFuncs:  # class for the Switch
         else:
             Communication.send(client, {'Error':'NoVotes'}, encryption=MesCryp.encrypt, key=message['AuthKey'])
     
-    def DoubUnVote(message, client, *args):
+    def DoubUnVote(message:str, client:socket.socket, *args) -> None:
+        "double unvote"
         global DV
         name = ClientKeys[message['AuthKey']][1]
         DV.unVote(name, message['voting'])
         sendSuccess(client)
     
-    def getFreeVotes(message, client, *args):
+    def getFreeVotes(message:str, client:socket.socket, *args) -> None:
+        "get free double votes of logged in user"
         global DV
         name = ClientKeys[message['AuthKey']][1]
         frees = DV.getFrees(name)
@@ -480,7 +542,8 @@ class ClientFuncs:  # class for the Switch
             return
         Communication.send(client, {'Value':frees}, encryption=MesCryp.encrypt, key=message['AuthKey'])
 
-    def getOUser(message, client, *args):
+    def getOUser(message:str, client:socket.socket, *args) -> None:
+        "get all logged in users"
         global ClientKeys
         names = list()
         for element in ClientKeys:
@@ -489,26 +552,31 @@ class ClientFuncs:  # class for the Switch
         Communication.send(client, {'users':names}, encryption=MesCryp.encrypt, key=message['AuthKey'])
 
 
-    def aChat(message, client, *args):
+    def aChat(message:str, client:socket.socket, *args) -> None:
+        "Add message to chat"
         name = ClientKeys[message['AuthKey']][1]
         Chat.add(message['message'], name)
         sendSuccess(client)
     
-    def gChat(message, client, *args):
+    def gChat(message:str, client:socket.socket, *args) -> None:
+        "get Chat"
         resp = Chat.get()
         Communication.send(client, resp, encryption=MesCryp.encrypt, key=message['AuthKey'])
 
 
-    def end(message, *args):
+    def end(message:str, *args) -> None:
+        "clear logged in user"
         global ClientKeys
         with suppress(Exception):
             ClientKeys.pop(message['AuthKey'])
 
-def recieve():  # Basicly the whole server
+def recieve() -> None:
+    "Basicly the whole server"
     while not Const.Terminate:
         clientHandler()
 
-def update():   # updates every few seconds
+def update() -> None:
+    "updates every few seconds"
     global currTemp, reqCounter, Vote, FanC, UpDebug
     start = time.time()
     start1 = start

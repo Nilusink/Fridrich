@@ -3,7 +3,10 @@ from datetime import datetime as dd
 from json import load, dump, dumps
 from traceback import format_exc
 from contextlib import suppress
+from types import FunctionType
 from time import strftime
+from typing import Tuple
+import socket
 
 # TemperatureReader import
 import RPi.GPIO as GPIO
@@ -17,7 +20,8 @@ GPIO.cleanup()
 # read data using pin 18
 instance = dht11.DHT11(pin = 18)
 
-def readTemp():
+def readTemp() -> Tuple[float, float]:
+    "returns Temperature in °C and humidity in %"
     try:
         result = instance.read()    # happens, don't know why
     except RuntimeError:
@@ -49,28 +53,49 @@ def readTemp():
 
     return temp, hum
 
-def checkif(s:str, d:dict, voting:str): # if s is already voted, return False, else True
+def checkif(s:str, d:dict, voting:str) -> str:
+    """
+    if the name is already in the dict, return the name in the dict
+    
+    else return the given name ("s")
+    """
     if voting in d:
         d = d[voting]
         keys = [d[key] for key in d]+['Lukas', 'Melvin', 'Niclas']  # keys is (ex.) ['Fridrich', 'Lukas', 'Melvin', 'Niclas]
-        print(keys)
+
         for element in keys:
-            print(element)
             if s.lower().replace(' ', '') == element.lower().replace(' ', ''):
                 return element
         return s
     return s
 
-def KeyValue(dictionary:dict):   # funktion to return a list from the Values (funktion becuz of changes)
-    return list(dictionary)
+class VOTES:
+    'class for votes "variable"'
+    def __init__(self, getFile:str, *args) -> None:
+        """
+        getFile: main File to write and read
 
-def inverseDict(dictionary:dict):
-    x = dict()
-    for element in dictionary:
-        x[dictionary[element]] = element
-    return x
+        all other arguments are seen as other Files to write to
 
-def getNewones(flag, VoteInstance, lastFile, voting):   # get all attendants wich are not in the default name list
+        spciefie main file and other files to update
+        """
+        self.getFile = getFile
+        self.FilesToWrite = args
+    
+    def get(self) -> dict:
+        "get variable from main file"
+        odict = load(open(self.getFile, 'r'))
+        return odict
+    
+    def write(self, newValue:dict) -> None:
+        "write variable to all files"
+        dump(newValue, open(self.getFile, 'w'), indent=4)
+
+        for element in self.FilesToWrite:
+            dump(newValue, open(element, 'w'), indent=4)
+
+def getNewones(flag:str, VoteInstance:VOTES, lastFile:str, voting:str) -> list:
+    "get all attendants wich are not in the default name list"
     newones = list()
     if flag=='now':
         tmp = VoteInstance.get()
@@ -83,46 +108,39 @@ def getNewones(flag, VoteInstance, lastFile, voting):   # get all attendants wic
     
     return newones
 
-class VOTES:    # class for votes "variable"
-    def __init__(self, getFile, *args): # spciefie main file and other files to update
-        self.getFile = getFile
-        self.FilesToWrite = args
-    
-    def get(self):  # get variable from main file
-        odict = load(open(self.getFile, 'r'))
-        return odict
-    
-    def write(self, newValue:dict): # write variable to all files
-        dump(newValue, open(self.getFile, 'w'), indent=4)
-
-        for element in self.FilesToWrite:
-            dump(newValue, open(element, 'w'), indent=4)
- 
 class Debug:
-    def __init__(self, debFile):
+    "for debugging..."
+    def __init__(self, debFile:str) -> None:
+        "debFile: file to write debugmessages to"
         self.file = debFile
         with open(self.file, 'w') as out:
             out.write('')
     
-    def debug(self, *args):
+    def debug(self, *args) -> None:
+        """
+        prints and writes all arguments
+
+        for each argument a new line in the file is begun
+        """
         print(*args)
         with open(self.file, 'a') as out:
             for element in args:
                 out.write(str(element)+'\n')
     
-    def catchTraceback(self, func):
-        def wrapper(*args, **kw):
+    def catchTraceback(self, func:FunctionType) -> FunctionType:
+        "execute function with traceback and debug all errors"
+        def wrapper(*args, **kw) -> None:
             try:
                 func(*args, **kw)
             except:
                 err = '\n\n\n'+strftime('%H:%M:%S')+'\n'+format_exc()
-                print(err)
-                with open(self.file, 'a') as out:
-                    out.write(err)
+                self.debug(err)
         return wrapper
 
 class Chat:
-    def add(message, fromUser):
+    "Handler for Chat file"
+    def add(message:str, fromUser:str) -> None:
+        "append a message to the file"
         mes = Chat.get()    	# get message list from file
 
         curr_time = dd.now()
@@ -130,7 +148,8 @@ class Chat:
         mes.append({'time':formatted_time, 'content':message, 'user':fromUser})  # append message
         dump(mes, open(con.ChatFile, 'w'), indent=4)  # write message
     
-    def get():
+    def get() -> list:
+        "get all messages"
         try:
             mes = load(open(con.ChatFile, 'r')) # try to read file
         except FileNotFoundError:
@@ -138,7 +157,9 @@ class Chat:
         return mes
 
 class Communication:
-    def send(client, message:dict, encryption=None, key=None):
+    "Handler for server side communication between Server and Client"
+    def send(client:socket.socket, message:dict, encryption=None, key=None) -> None:
+        "send message to client"
         stringMes = dumps(message, ensure_ascii=False)
         print(stringMes)
         if encryption:
@@ -150,32 +171,35 @@ class Communication:
         with suppress((OSError, AttributeError)):
             client.send(stringMes.encode('utf-8'))
 
-    def recieve(server, debugingMethod, Keys):
+    def recieve(server:socket.socket, debugingMethod:Debug, Keys:list) -> Tuple[socket.socket, str]:
+        "recieve message from client"
         # Accept Connection
-            try:
-                client, address = server.accept()
-                del address
-                #debug.debug(f'Connected to {address}')
-            except OSError:
-                return False
-            # try to load the message, else ignore it and restart
-            mes = client.recv(2048)
-            mes = tryDecrypt(mes, Keys)
+        try:
+            client, address = server.accept()
+            del address
+            #debug.debug(f'Connected to {address}')
+        except OSError:
+            return False
+        # try to load the message, else ignore it and restart
+        mes = client.recv(2048)
+        mes = tryDecrypt(mes, Keys)
 
-            if not mes:
-                debugingMethod('Message Error')
-                with suppress(AttributeError):
-                    Communication.send(client, {'Error':'MessageError', 'info':'Invalid Message/AuthKey'})
-                    client.close()
-                return None, None
-            return client, mes
+        if not mes:
+            debugingMethod('Message Error')
+            with suppress(AttributeError):
+                Communication.send(client, {'Error':'MessageError', 'info':'Invalid Message/AuthKey'})
+                client.close()
+            return None, None
+        return client, mes
 
- # if message is invalid or an other error occured, ignore the message and jump to start
+        # if message is invalid or an other error occured, ignore the message and jump to start
             
-            return mes
-            #debug.debug(f'Got message: {mes}')
+        return mes
+        #debug.debug(f'Got message: {mes}')
 class Constants:
-    def __init__(self):
+    "All constants (modify in file constants.json)"
+    def __init__(self) -> None:
+        "create instance"
         try:
             dic = load(open('modules/constants.json', 'r'))
         except FileNotFoundError:
@@ -183,5 +207,3 @@ class Constants:
         
         for Index, Value in dic.items():
             setattr(self, Index, Value)
-
-con = Constants()

@@ -9,11 +9,13 @@ from fridrich.FridrichBackend import Connection
 
 secEquals = {'admin':0, 'user':1, 'guest':2, 'other':3}    # for sorting the users
 
-def sortUserList(lst:list, flag='sec'):
+def sortUserList(lst:list, flag='sec') -> list:
+    """return a sotred list by "sec" | "Name" | "pwd"""
     values = sorted(lst, key=lambda element: secEquals[element[flag]] if element[flag] in secEquals else secEquals['other'])
     return list(values)
 
-def getWifiName():
+def getWifiName() -> str:
+    "return the name of the wifi currently connected to"
     ret = popen('Netsh WLAN show interfaces').readlines()
     wifiDict = dict()
     for element in ret:
@@ -27,7 +29,8 @@ def getWifiName():
     
     return wifiDict['SSID']
 
-def tryConnectWifi(wifiName):
+def tryConnectWifi(wifiName:str) -> None:
+    "try to connect to the given wifi"
     ret = system(f'netsh wlan connect {wifiName}')
 
     if ret==1:
@@ -35,7 +38,9 @@ def tryConnectWifi(wifiName):
     return True
 
 class window:
-    def __init__(self, ConnectionInstance):
+    "class for the main window"
+    def __init__(self, ConnectionInstance:Connection) -> None:
+        "ConnectionInstance: instance of fridirch.FridrichBackend.Connection"
         # variable definitions
         self.userEs = list()
 
@@ -64,8 +69,10 @@ class window:
         self.loginPassword.place(x=115, y=350)
 
         self.loginButton = tk.Button(self.loginFrame,   # button for login
-                                    text='login', bg='grey5', 
-                                    fg='white', relief=tk.FLAT,
+                                    text='login', bg='black', 
+                                    fg='white', activeforeground='green',
+                                    activebackground='black',
+                                    relief=tk.FLAT,
                                     command=self.login,
                                     font = "Helvetica 30"
                                     )
@@ -114,10 +121,12 @@ class window:
             messagebox.showerror('Fatal Error', 'Cant reach Fridrich Server!')
             exit()
 
-    def run(self):
+    def run(self) -> None:
+        "start tkinter.root.mainloop"
         self.root.mainloop()
 
-    def login(self, *args):
+    def login(self, *args) -> None:
+        "try to login with username and password"
         name = self.loginUsername.get()
         pwd = self.loginPassword.get()
 
@@ -137,7 +146,8 @@ class window:
 
         self.refresh()
     
-    def refresh(self):
+    def refresh(self) -> None:
+        "refresh the window"
         self.users = sortUserList(c.AdminGetUsers())
         self.onlineUsers = c.getOnlineUsers()
 
@@ -208,7 +218,8 @@ class window:
 
         self.root.update()
     
-    def update(self, *args):
+    def update(self, *args) -> None:
+        "update the variables"
         for i in range(len(self.userEs)):
             try:
                 name = self.userEs[i][0].get()
@@ -234,11 +245,13 @@ class window:
                 break
         self.refresh()
 
-    def remUser(self, user):
+    def remUser(self, user:str) -> None:
+        "remove user"
         self.c.AdminRemoveUser(user)
         self.update()
 
-    def addUser(self):
+    def addUser(self) -> None:
+        "add a new user"
         self.update()
         try:
             self.c.AdminAddUser('', '', '')
@@ -247,7 +260,8 @@ class window:
         except Exception:
             messagebox.showerror('Error', f'User with name "{""}" already exists')
 
-    def resetLogins(self, event=None):
+    def resetLogins(self, event=None) -> None:
+        "reset all logins"
         global w, c
         ans = messagebox.askyesno('Confirm', 'Clear all users (logout)')
         if ans:
@@ -259,13 +273,14 @@ class window:
             self.update()
 
 
-    def end(self, *args):
+    def end(self, *args) -> None:
+        "end connection to fridrich and destroy the tkinter.root"
         self.c.end()
-        exit()
+        self.root.destroy()
 
 if __name__ == '__main__':
     try:
-        c = Connection()
+        c = Connection(host='192.168.1.156')
     except gaierror:    # if connection issue
         WifiName = getWifiName()    # get wifi name
         if not WifiName == 'Fridrich':  # if not connected to "Fridich" wifi
@@ -283,3 +298,4 @@ if __name__ == '__main__':
     w = window(c)
     w.run()
     w.end()
+    exit()

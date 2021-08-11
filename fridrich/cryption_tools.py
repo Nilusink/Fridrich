@@ -20,7 +20,9 @@ class NotEncryptedError(Exception):
     pass
 
 class extra:
-    def median(string:str, medians:int):
+    "extra functions"
+    def median(string:str, medians:int) -> str:
+        "split in medians number of parts and then reverse"
         parts = list()
         out = list()
         for i in range(1, medians+1):
@@ -34,6 +36,7 @@ class extra:
 
 class low:
     def encrypt(string:str) -> str:
+        "encrypt a string"
         out = str()
         for charter in string:
             part = str(sqrt(ord(charter)-20))
@@ -41,6 +44,7 @@ class low:
         return out
 
     def decrypt(string:str) -> str:
+        "decrypt a string"
         try:
             out = str()
             parts = string.split(' ')
@@ -55,6 +59,7 @@ class low:
 
 class high:
     def encrypt(string:str) -> str:
+        "encrypt a string"
         temp1, temp2 = str(), str()
         for charter in string:
             temp1 += low.encrypt((extra.median(charter, 3)+' '))+' '
@@ -65,6 +70,7 @@ class high:
         return extra.median(str(base64.b85encode(out.encode('utf-32'))).lstrip("b'").rstrip("='")[::-1], 327)
     
     def decrypt(string:str) -> str:
+        "decrypt a string"
         temp1, temp2 = str(), str()
         string = extra.median(string, 327)[::-1]
         string = base64.b85decode(string).decode('utf-32')
@@ -92,19 +98,27 @@ except FileNotFoundError:
 
 #/home/pi/Server/
 class MesCryp:
-    def encrypt(string:str, key=None):
+    "en/de-cryption for messages"
+    def encrypt(string:str, key=None) -> bytes:
+        """
+        encrypt a string
+        
+        if a key is given, use it
+        """
         if not key:
             key = defKey
         f = Fernet(key)
         encrypted = f.encrypt(string.encode('utf-8'))
         return encrypted    # returns bytes
     
-    def decrypt(byte:bytes, key:bytes):
+    def decrypt(byte:bytes, key:bytes) -> str:
+        "decrypt a bytes element"
         f = Fernet(key)
         decrypted = str(f.decrypt(byte)).lstrip("b'").rstrip("'")
         return decrypted    # returns string
 
-def tryDecrypt(message:bytes, ClientKeys, errors=True, repUni=False):
+def tryDecrypt(message:bytes, ClientKeys:dict, errors=True) -> str:
+    "try to decrypt a string with multiple methods"
     with suppress(JSONDecodeError):
         mes = loads(message)
         if errors==True:
@@ -138,7 +152,8 @@ def tryDecrypt(message:bytes, ClientKeys, errors=True, repUni=False):
             return None
     return jsonMes
 
-def KeyFunc(ClientKeys, length=10): # generate random key
+def KeyFunc(ClientKeys:dict, length=10) -> str:
+    "generate random key"
     String = 'abcdefghijklmnopqrstuvwxyz'                               # string for creating auth Keys
     String += String.upper()+'1234567890ß´^°!"§$%&/()=?`+*#.:,;µ@€<>|'
 

@@ -3,19 +3,24 @@ from fridrich.useful import List
 from json import loads, dumps
 
 class manager:
-    def __init__(self, accfile):
+    "account manager"
+    def __init__(self, accfile:str) -> None:
+        "accfile - file to store encrypted account data in"
         self.crypFile = accfile
 
-    def getAccs(self):
+    def getAccs(self) -> dict:
+        "get account data"
         accs = loads(low.decrypt(open(self.crypFile, 'r').read()))
         return accs
 
-    def writeAccs(self, accs:dict):
+    def writeAccs(self, accs:dict) -> None:
+        "write account file"
         cryp = low.encrypt(dumps(accs))
         with open(self.crypFile, 'w') as out:
             out.write(cryp)
 
-    def setPwd(self, username, password):
+    def setPwd(self, username:str, password:str) -> None:
+        "set password of given user"
         acclist = self.getAccs() # getting and decrypting accounts list
         for element in acclist:
             if element['Name'] == username:
@@ -24,7 +29,8 @@ class manager:
 
         self.writeAccs(acclist) # write output to file
 
-    def setUserN(self, oldUser, newUser):
+    def setUserN(self, oldUser:str, newUser:str) -> None:
+        "change username"
         acclist = self.getAccs() # getting and decrypting accounts list
         UsedNames = List.getInnerDictValues(acclist, 'Name')  # so it doesnt matter if you don't change the username
         UsedNames.remove(oldUser)
@@ -41,7 +47,8 @@ class manager:
             return
         raise NameError('Username already exists')
 
-    def setUserSec(self, username, SecurityClearance):
+    def setUserSec(self, username:str, SecurityClearance:str) -> None:
+        "set clearance of user"
         acclist = self.getAccs() # getting and decrypting accounts list
         for i, element in enumerate(acclist):
             if element['Name'] == username:
@@ -52,7 +59,8 @@ class manager:
 
         self.writeAccs(acclist) # write output to file
 
-    def newUser(self, username, password, secClearance):    # add new user
+    def newUser(self, username:str, password:str, secClearance:str) -> None:
+        "add new user"
         accs = list(self.getAccs())   # get accounts
         UsedNames = List.getInnerDictValues(accs, 'Name')
 
@@ -61,7 +69,8 @@ class manager:
         accs.append({'Name':username, 'pwd':password, 'sec':secClearance})  # create user
         self.writeAccs(accs)    # write user
     
-    def rmUser(self, username): # remove user
+    def rmUser(self, username:str) -> None:
+        "remove user"
         accs = self.getAccs()   # get accounts
         for i in range(len(accs)):  # iterate accounts
             if accs[i]['Name'] == username: #   if account name is username
@@ -70,7 +79,8 @@ class manager:
         
         self.writeAccs(accs)    # update accounts
 
-    def verify(self, username, password):   # return False or user security Clearance
+    def verify(self, username:str, password:str):
+        "return False or user security Clearance"
         users = self.getAccs()  # get accounts
         Auth = False
         for element in users:   # iterate users

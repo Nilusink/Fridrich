@@ -5,14 +5,21 @@ import time, json
 from fridrich.ServerFuncs import Constants
 
 class CPUHeatHandler():
-    def __init__(self):
+    "handler for the cpu temperature/fan"
+    def __init__(self) -> None:
+        """
+        they say with this class you could handle the cpu temperature
+
+        but can you trust them?
+        """
         self.On = LED(21)
         self.cpu = CPUTemperature()
         self.Trigger = False
         self.triggmap = {True:self.On.on, False:self.On.off}
         self.const = Constants()
     
-    def iter(self):
+    def iter(self) -> None:
+        "new cycle"
         try:
             file = json.load(open(self.const.tempFile, 'r'))
             maxtemp = file['temp']+25 if file['temp'] else 60
@@ -23,7 +30,7 @@ class CPUHeatHandler():
                 from os import system
                 system('sudo shutdown now')
             
-            if 0<int(time.strftime('%H'))<7:
+            if 0<=int(time.strftime('%H'))<7:
                 Trigger = False
             else:
                 Trigger = True
