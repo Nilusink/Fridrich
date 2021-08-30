@@ -15,6 +15,7 @@ from fridrich.cryption_tools import low, KeyFunc, MesCryp, NotEncryptedError
 from fridrich.FanController import CPUHeatHandler
 from fridrich.Accounts import manager
 from fridrich.ServerFuncs import *
+from fridrich.types import *
 
 Const = Constants()
 debug = Debug(Const.SerlogFile)
@@ -120,7 +121,7 @@ def temp_updater(starttime:float) -> None:
         time.sleep(.8)
 
 @debug.catchTraceback
-def ZSwitch(stime='00:00') -> None:
+def ZSwitch(stime : str | None = '00:00') -> None:
     "if time is stime, execute the switch"
     if time.strftime('%H:%M') == stime:
         with open(Const.lastFile, 'w') as out:    # get newest version of the "votes" dict and write it to the lastFile
@@ -128,9 +129,8 @@ def ZSwitch(stime='00:00') -> None:
                 last = inp.read()
                 out.write(last)
 
-        Vote.write({'GayKing':dict()})
+        Vote.set({'GayKing':dict()})
         
-
         # ---- Log File (only for GayKing Voting)
         last = json.loads(last)['GayKing'] # get last ones
 
@@ -155,33 +155,27 @@ def ZSwitch(stime='00:00') -> None:
                 Highest += '|'+element
         
         if HighestInt!=0:
-            kIn = json.loads(open(Const.KingFile, 'r').read())    # write everything to logs
-            kIn[time.strftime('%d.%m.%Y')] = Highest
-            with open(Const.KingFile, 'w') as out:
-                json.dump(kIn, out, indent=4)
-            
-            with open(Const.varLogFile, 'w') as out:
-                json.dump(kIn, out, indent=4)
+            KingVar[time.strftime('%d.%m.%Y')] = Highest
             
             with open(Const.varKingLogFile, 'w') as out:
                 out.write(Highest)
             
-            debug.debug(f"backed up files and logged the GayKing ({time.strftime('%H:%M')})\nGaymaster: {Highest}")
+            debug.debug(f"backed up files and logged the GayKing ({time.strftime('%H:%M')})\nGayking: {Highest}")
         
         else:
             debug.debug('no votes recieved')
-        if time.strftime('%a')=='Mon':  # if Monday, reset double votes
-            dVotes = DV.read()
+        if time.strftime('%a') == 'Mon':  # if Monday, reset double votes
+            dVotes = DV.value.get()
             for element in dVotes:
                 dVotes[element] = Const.DoubleVotes
-            DV.write(dVotes)
+            DV.value.set(dVotes)
 
         time.sleep(61)
 
 @debug.catchTraceback
-def AutoReboot(rtime="03:00") -> None:
+def AutoReboot(rtime : str | None = "03:00") -> None:
     """
-    if time is rtime, reboot the server
+    if time is rtime, reboot the server (format is "HH:MM")
     
     if you don't want this, just set rtime to "99:99"
 
@@ -209,20 +203,8 @@ class DoubleVote:
             value = dict()
             for element in validUsers:
                 value[element['Name']] = 1
-        
-        dump(value, open(self.filePath, 'w'))
-    
-    def read(self) -> dict:
-        "returns the DoubleVote dict"
-        return load(open(self.filePath, 'r'))
-    
-    def write(self, value:dict) -> None:
-        """
-        write doubleVotes
-        
-        overwrites the file!
-        """
-        dump(value, open(self.filePath, 'w'))
+
+        self.value = fileVar(value, self.filePath)
 
     def vote(self, vote:str, User:str) -> bool:
         """
@@ -232,46 +214,38 @@ class DoubleVote:
         """
         global Vote
 
-        votes = Vote.get()
-        value = self.read()
+        value = self.value.get()
         if User in value:
             if value[User] < 1:
                 return False
             try:
-                votes['GayKing'][User+'2'] = vote
+                Vote['GayKing'][User+'2'] = vote
             except KeyError:
-                votes['GayKing'] = dict()
-                votes['GayKing'][User+'2'] = vote
-            Vote.write(votes)
-            print(votes)
+                Vote['GayKing'] = dict()
+                Vote['GayKing'][User+'2'] = vote
 
             value[User] -= 1
-            self.write(value)
+            self.value.set(value)
             return True
         
         value[User] = 0
-        Vote.write(value)
+        self.value.set(value)
         return False
 
     def unVote(self, User:str, voting:str) -> None:
         "unvote doublevote"
         global Vote
 
-        votes = Vote.get()
         with suppress(KeyError):
-            votes[voting].pop(User+'2')
+            Vote[voting].pop(User+'2')
         
             value = self.read()
             value[User]+=1
-            self.write(value)
-
-        Vote.write(votes)
+            self.value.set(value)
     
     def getFrees(self, User:str) -> int:
         "returns the free double-votes for the given users"
-        value = self.read()
-        print(value)
-        print(f'user {User} in value: {User in value}')
+        value = self.value.get()
         if User in value:
             return value[User]
 
@@ -398,26 +372,21 @@ class ClientFuncs:
         votes user by username
         """
         global  Vote, ClientKeys
-        votes = Vote.get()    # update votes
-        resp = checkif(message['vote'], votes, message['voting'])
+        resp = checkif(message['vote'], Vote.get(), message['voting'])
         name = ClientKeys[message['AuthKey']][1]
-        if not message['voting'] in votes:
-            votes[message['voting']] = dict()
-        votes[message['voting']][name] = resp    # set vote
-        print(votes)
+        if not message['voting'] in Vote:
+            Vote[message['voting']] = dict()
+        Vote[message['voting']][name] = resp    # set vote
         debug.debug(f'got vote: {message["vote"]}                     .')   # print that it recievd vote (debugging)
-        Vote.write(votes)  # write to file
 
         sendSuccess(client)
     
     def unvote(message:str, client:socket.socket, *args) -> None:
         "unvote a user"
         global nowFile, Vote
-        votes = Vote.get()    # update votes
         name = ClientKeys[message['AuthKey']][1] # WHY U NOT WORKING
         with suppress(KeyError): 
-            del votes[message['voting']][name]  # try to remove vote from client, if client hasn't voted yet, ignore it
-        Vote.write(votes) # update file
+            del Vote[message['voting']][name]  # try to remove vote from client, if client hasn't voted yet, ignore it
 
         sendSuccess(client)
     
@@ -485,21 +454,20 @@ class ClientFuncs:
 
     def getVote(message:str, client:socket.socket, *args) -> None:
         "get the vote of the logged-in user"
-        votes = Vote.get()
         if 'flag' in message:
             x = '2' if message['flag'] == 'double' else ''
         else:
             x = ''
 
         name = ClientKeys[message['AuthKey']][1] + x
-        if not message['voting'] in votes:
+        if not message['voting'] in Vote:
             Communication.send(client, {'Error':'NotVoted'}, encryption=MesCryp.encrypt, key=message['AuthKey'])
             return
 
-        if not name in votes[message['voting']]:
+        if not name in Vote[message['voting']]:
             Communication.send(client, {'Error':'NotVoted'}, encryption=MesCryp.encrypt, key=message['AuthKey'])
             return
-        cVote = votes[message['voting']][name]
+        cVote = Vote[message['voting']][name]
         Communication.send(client, {'Vote':cVote}, encryption=MesCryp.encrypt, key=message['AuthKey'])
 
     def getVersion(message:str, client:socket.socket, *args) -> None:
@@ -578,7 +546,7 @@ def recieve() -> None:
 
 def update() -> None:
     "updates every few seconds"
-    global currTemp, reqCounter, Vote, FanC, UpDebug
+    global currTemp, reqCounter, FanC, UpDebug
     start = time.time()
     start1 = start
     while not Const.Terminate:
@@ -615,8 +583,9 @@ if __name__=='__main__':
 
     UpDebug = Debug(Const.SerUpLogFile)
 
-    Vote = VOTES(Const.nowFile, Const.varNowFile)
+    Vote = fileVar({}, (Const.nowFile, Const.varNowFile))
     DV   = DoubleVote(Const.doubFile)
+    KingVar = fileVar(load(open(Const.KingFile, 'r')), (Const.KingFile, Const.varLogFile))
 
     with open(Const.logFile, 'w') as out:
         out.write('')

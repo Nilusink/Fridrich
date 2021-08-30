@@ -1,6 +1,7 @@
 from fridrich.cryption_tools import tryDecrypt
 from datetime import datetime as dd
 from json import load, dump, dumps
+from fridrich.types import fileVar
 from traceback import format_exc
 from contextlib import suppress
 from types import FunctionType
@@ -69,32 +70,7 @@ def checkif(s:str, d:dict, voting:str) -> str:
         return s
     return s
 
-class VOTES:
-    'class for votes "variable"'
-    def __init__(self, getFile:str, *args) -> None:
-        """
-        getFile: main File to write and read
-
-        all other arguments are seen as other Files to write to
-
-        spciefie main file and other files to update
-        """
-        self.getFile = getFile
-        self.FilesToWrite = args
-    
-    def get(self) -> dict:
-        "get variable from main file"
-        odict = load(open(self.getFile, 'r'))
-        return odict
-    
-    def write(self, newValue:dict) -> None:
-        "write variable to all files"
-        dump(newValue, open(self.getFile, 'w'), indent=4)
-
-        for element in self.FilesToWrite:
-            dump(newValue, open(element, 'w'), indent=4)
-
-def getNewones(flag:str, VoteInstance:VOTES, lastFile:str, voting:str) -> list:
+def getNewones(flag:str, VoteInstance:fileVar, lastFile:str, voting:str) -> list:
     "get all attendants wich are not in the default name list"
     newones = list()
     if flag=='now':

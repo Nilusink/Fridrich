@@ -145,5 +145,6 @@ BackendAccessPanel - Fridrich.lnk
 VersionChanger - Fridrich.lnk
 tests/
 testFile.py
+test.file
 test.txt
 ChatElement.pyw
