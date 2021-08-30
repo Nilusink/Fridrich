@@ -1,5 +1,5 @@
-import json
 from typing import Any, Iterator
+import json
 
 class fileVar:
     def __init__(self, value : str | dict, fileS = str | list | tuple) -> None:

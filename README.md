@@ -12,7 +12,7 @@ The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It
 |---♦ data  
 |   |---♦ chat.json
 |   |---♦ Calendar.json
-|   |---♦ constants.json
+|   |---♦ settings.json
 |   |---♦ dVotes.json
 |   |---♦ KeyFile.enc  
 |   |---♦ KingLog.json

@@ -164,7 +164,7 @@ def ZSwitch(stime : str | None = '00:00') -> None:
         
         else:
             debug.debug('no votes recieved')
-        if time.strftime('%a') == 'Mon':  # if Monday, reset double votes
+        if time.strftime('%a') == Const.DoubleVoteResetDay:  # if Monday, reset double votes
             dVotes = DV.value.get()
             for element in dVotes:
                 dVotes[element] = Const.DoubleVotes
@@ -318,7 +318,7 @@ class FunctionManager:
 
         else:
             return 'ClearanceIssue', f'Clearance not set: "{clearance}"'
-        
+
 class AdminFuncs:
     "Manages the AdminFucntions"
     def getAccounts(message:str, client:socket.socket, *args) -> None:
@@ -554,10 +554,10 @@ def update() -> None:
         temp_updater(start)
         
         # --------  00:00 switch ---------
-        ZSwitch()
+        ZSwitch(Const.switchTime)
 
         # --------- daily reboot ---------
-        AutoReboot()
+        AutoReboot(Const.rebootTime)
 
         # -------- Fan Controller --------
         if time.time()-start1>=10:

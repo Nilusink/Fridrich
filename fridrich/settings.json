@@ -27,5 +27,9 @@
     "errFile" : "/home/pi/Server/data/temp.err.log",
     "tempFile" : "/home/pi/Server/data/tempData.json",
 
-    "DoubleVotes" : 1
+    "DoubleVotes" : 1,
+
+    "DoubleVoteResetDay" : "Mon",
+    "switchTime" : "00:00",
+    "rebootTime" : "00:03"
 }

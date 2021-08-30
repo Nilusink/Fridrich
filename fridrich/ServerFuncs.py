@@ -7,7 +7,9 @@ from contextlib import suppress
 from types import FunctionType
 from time import strftime
 from typing import Tuple
+from os import getcwd
 import socket
+
 
 # TemperatureReader import
 import RPi.GPIO as GPIO
@@ -173,13 +175,10 @@ class Communication:
         return mes
         #debug.debug(f'Got message: {mes}')
 class Constants:
-    "All constants (modify in file constants.json)"
+    "All constants (modify in file settings.json)"
     def __init__(self) -> None:
         "create instance"
-        try:
-            dic = load(open('modules/constants.json', 'r'))
-        except FileNotFoundError:
-            dic = load(open('/home/pi/Server/fridrich/constants.json', 'r'))
+        dic = load(open(getcwd()+'/fridrich/settings.json', 'r'))
         
         for Index, Value in dic.items():
             setattr(self, Index, Value)
