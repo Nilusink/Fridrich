@@ -375,8 +375,10 @@ class ClientFuncs:
         resp = checkif(message['vote'], Vote.get(), message['voting'])
         name = ClientKeys[message['AuthKey']][1]
         if not message['voting'] in Vote:
-            Vote[message['voting']] = dict()
-        Vote[message['voting']][name] = resp    # set vote
+            Vote.__setitem__(message['voting'], dict())
+        tmp = Vote.get()
+        tmp[message['voting']][name] = message['vote']
+        Vote.set(tmp)    # set vote
         debug.debug(f'got vote: {message["vote"]}                     .')   # print that it recievd vote (debugging)
 
         sendSuccess(client)
