@@ -32,6 +32,7 @@ class fileVar:
     # dict options
     def __getitem__(self, key:str) -> Any:
         "get an item if ``self.value`` is a dict"
+        print(f'called getitem with key {key}')
         self.get() # update variable in case something in the file has changed
         self.checktype(dict)
         if not key in self.value:
@@ -89,6 +90,7 @@ class fileVar:
 
     def get(self) -> str | dict:
         "get the variable in its original type"
+        print('called get')
         file = self.files[0]
         with open(file, 'r') as inp:
             try:
