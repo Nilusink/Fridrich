@@ -244,7 +244,7 @@ class DoubleVote:
             value = self.value.get()
             value[User]+=1
             self.value.set(value)
-        Vote.set()
+        Vote.set(tmp)
     
     def getFrees(self, User:str) -> int:
         "returns the free double-votes for the given users"
