@@ -215,17 +215,19 @@ class DoubleVote:
         global Vote
 
         value = self.value.get()
+        tmp = Vote.get()
         if User in value:
             if value[User] < 1:
                 return False
             try:
-                Vote['GayKing'][User+'2'] = vote
+                tmp['GayKing'][User+'2'] = vote
             except KeyError:
-                Vote['GayKing'] = dict()
-                Vote['GayKing'][User+'2'] = vote
+                tmp['GayKing'] = dict()
+                tmp['GayKing'][User+'2'] = vote
 
             value[User] -= 1
             self.value.set(value)
+            Vote.set(tmp)
             return True
         
         value[User] = 0
@@ -235,13 +237,14 @@ class DoubleVote:
     def unVote(self, User:str, voting:str) -> None:
         "unvote doublevote"
         global Vote
-
+        tmp = Vote.get()
         with suppress(KeyError):
-            Vote[voting].pop(User+'2')
+            tmp[voting].pop(User+'2')
         
             value = self.read()
             value[User]+=1
             self.value.set(value)
+        Vote.set()
     
     def getFrees(self, User:str) -> int:
         "returns the free double-votes for the given users"
@@ -374,7 +377,7 @@ class ClientFuncs:
         global  Vote, ClientKeys
         resp = checkif(message['vote'], Vote.get(), message['voting'])
         name = ClientKeys[message['AuthKey']][1]
-        if not message['voting'] in Vote:
+        if not message['voting'] in Vote.get():
             Vote.__setitem__(message['voting'], dict())
         tmp = Vote.get()
         tmp[message['voting']][name] = message['vote']
@@ -386,10 +389,11 @@ class ClientFuncs:
     def unvote(message:str, client:socket.socket, *args) -> None:
         "unvote a user"
         global nowFile, Vote
+        tmp = Vote.get()
         name = ClientKeys[message['AuthKey']][1] # WHY U NOT WORKING
         with suppress(KeyError): 
-            del Vote[message['voting']][name]  # try to remove vote from client, if client hasn't voted yet, ignore it
-
+            del tmp[message['voting']][name]  # try to remove vote from client, if client hasn't voted yet, ignore it
+        Vote.set(tmp)
         sendSuccess(client)
     
     def CalendarHandler(message:str, client:socket.socket, *args) -> None:
@@ -424,7 +428,7 @@ class ClientFuncs:
                 Communication.send(client, json.load(inp), encryption=MesCryp.encrypt, key=message['AuthKey'])
                 
         elif message['reqType'] == 'attds': # returns All attendants (also non standart users)
-            newones = getNewones(message['atype'], Vote, Const.lastFile, message['voting'])  
+            newones = getNewones(message['atype'], Vote.get(), Const.lastFile, message['voting'])  
             Communication.send(client, {'Names':['Lukas', 'Niclas', 'Melvin']+newones}, encryption=MesCryp.encrypt, key=message['AuthKey'])    # return stardart users + new ones
                 
         elif message['reqType'] == 'temps': # returns the temperatures
@@ -462,7 +466,7 @@ class ClientFuncs:
             x = ''
 
         name = ClientKeys[message['AuthKey']][1] + x
-        if not message['voting'] in Vote:
+        if not message['voting'] in Vote.get():
             Communication.send(client, {'Error':'NotVoted'}, encryption=MesCryp.encrypt, key=message['AuthKey'])
             return
 
