@@ -241,7 +241,7 @@ class DoubleVote:
         with suppress(KeyError):
             tmp[voting].pop(User+'2')
         
-            value = self.read()
+            value = self.value.get()
             value[User]+=1
             self.value.set(value)
         Vote.set()
