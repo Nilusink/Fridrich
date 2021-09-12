@@ -42,9 +42,13 @@ def dateforsort(message) -> str:
 #                      Server Communication Class                          #
 ############################################################################
 class Connection:
-    def __init__(self, debugmode=fr.Off, host='fridrich') -> None:
+    def __init__(self, debugmode : str | None = fr.Off, host : str | None = 'fridrich') -> None:
         """
         connect with any fridrich server
+        options:
+            ``debugmode`` - ``"normal"`` | ``"full"`` | ``False``
+            
+            ``host`` - name of the host, either IP or hostname / address
         """
         self.debugmode = debugmode
 
@@ -65,7 +69,7 @@ class Connection:
         self.userN = None
 
     # "local" functions
-    def errorHandler(self, error:str, *args) -> Exception:
+    def errorHandler(self, error: str, *args) -> Exception:
         """
         Handle incomming errors
         """
@@ -116,7 +120,7 @@ class Connection:
 
         raise fr.UnknownError('An Unknown Error Occured: \n'+st)
 
-    def send(self, dictionary:dict) -> None:
+    def send(self, dictionary: dict) -> None:
         """
         send messages to server
         """
@@ -141,7 +145,7 @@ class Connection:
         if self.debugmode in ('normal', 'full'):
             print(fr.bcolors.OKCYAN+stringMes+fr.bcolors.ENDC)
 
-    def recieve(self, length=2048):
+    def recieve(self, length: int | None = 2048):
         """
         recieve messages from server, decrypt them and raise incomming errors
         """
@@ -178,7 +182,7 @@ class Connection:
             raise ConnectionError('Server not reachable')
 
     # user functions
-    def auth(self, username:str, password:str) -> bool:
+    def auth(self, username: str, password: str) -> bool:
         """
         authenticate with the server
         """
@@ -205,7 +209,7 @@ class Connection:
         resp = self.recieve()
         return resp['sec']
 
-    def getAttendants(self, flag = 'now', voting = 'GayKing') -> list:
+    def getAttendants(self, flag : str | None = 'now', voting : str | None =  'GayKing') -> list:
         """
         get Attendants of voting\n
         flag can be "now" or "last"
@@ -215,7 +219,7 @@ class Connection:
 
         return resp['Names']    # return names
 
-    def sendVote(self, *args, flag = 'vote', voting = 'GayKing') -> None:
+    def sendVote(self, *args, flag : str | None = 'vote', voting : str | None = 'GayKing') -> None:
         """
         send vote to server\n
         flag can be "vote", "unvote", "dvote" or "dUvote", voting is custom\n
@@ -229,7 +233,7 @@ class Connection:
         self.send(msg)  # send vote
         self.recieve()  # recieve success or error
     
-    def getResults(self, flag = 'now') -> dict:
+    def getResults(self, flag : str | None = 'now') -> dict:
         """
         get results of voting\n
         flag can be "now", "last"\n
@@ -316,7 +320,7 @@ class Connection:
         res = self.recieve()    # get response
         return res  # return response
 
-    def sendCal(self, date:str, event:str) -> None:
+    def sendCal(self, date: str, event: str) -> None:
         """
         send entry to calender
         """
@@ -324,7 +328,7 @@ class Connection:
         self.send(msg)  # send message
         self.recieve()  # recieve response (success, error)
 
-    def changePwd(self, newPassword:str) -> None:
+    def changePwd(self, newPassword: str) -> None:
         """
         Change password of user currently logged in to
         """
@@ -332,7 +336,7 @@ class Connection:
         self.send(mes)  # send message
         self.recieve()  # get response (success, error)
 
-    def getVote(self, flag = 'normal', voting = 'GayKing') -> str:
+    def getVote(self, flag : str | None = 'normal', voting : str | None = 'GayKing') -> str:
         """
         get current vote of user\n
         flag can be normal or double
@@ -354,7 +358,7 @@ class Connection:
 
         return resp['Version']  # return version
 
-    def setVersion(self, version:str) -> str:
+    def setVersion(self, version: str) -> str:
         """
         set current version of GUI program
         """
@@ -380,7 +384,7 @@ class Connection:
         users = self.recieve()['users']
         return users
 
-    def sendChat(self, message:str) -> None:
+    def sendChat(self, message: str) -> None:
         """
         send message to chat
         """
@@ -409,7 +413,7 @@ class Connection:
         resp = self.recieve()
         return resp
     
-    def AdminSetPassword(self, User:str, Password:str) -> None:
+    def AdminSetPassword(self, User: str, Password: str) -> None:
         """
         set password of given user
         """
@@ -417,7 +421,7 @@ class Connection:
         self.send(msg)
         self.recieve()
     
-    def AdminSetUsername(self, OldUsername:str, NewUsername:str) -> None:
+    def AdminSetUsername(self, OldUsername: str, NewUsername: str) -> None:
         """
         change username of given user
         """
@@ -425,7 +429,7 @@ class Connection:
         self.send(msg)
         self.recieve()
 
-    def AdminSetSecurity(self, username:str, password:str) -> None:
+    def AdminSetSecurity(self, username: str, password: str) -> None:
         """
         change security clearance of given user
         """
@@ -433,7 +437,7 @@ class Connection:
         self.send(msg)
         self.recieve()
 
-    def AdminAddUser(self, username:str, password:str, clearance:str) -> None:
+    def AdminAddUser(self, username: str, password: str, clearance: str) -> None:
         """
         add new user
         """
@@ -441,7 +445,7 @@ class Connection:
         self.send(msg)
         self.recieve()
 
-    def AdminRemoveUser(self, username:str) -> None:
+    def AdminRemoveUser(self, username: str) -> None:
         """
         remove user
         """
