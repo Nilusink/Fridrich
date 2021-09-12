@@ -9,10 +9,12 @@ class fileVar:
         self.set(value) # assign variable
 
     def __repr__(self) -> str:
+        self.get()
         return repr(self.value)
 
     def __len__(self) -> int:
         "return the lenght of ``self.value``"
+        self.get()
         return len(self.value)
 
     def __str__(self) -> str:
@@ -40,10 +42,10 @@ class fileVar:
         "set an item of a dict"
         self.get()
         self.checktype(dict)
-
+        print(f'Changed From {self.value} - key: {key}, value: {value}')
         self.value[key] = value
         self.set(self.value)
-
+        print(f'now: {self.value}')
         return self.value
 
     def __delitem__(self, key: str) -> None:
@@ -81,6 +83,7 @@ class fileVar:
             with open(file, 'w') as out:
                 if self.type == dict:
                     json.dump(self.value, out, indent=4)
+                    print(f'wrote {value} to file {file}')
                     continue
                 out.write(self.value)
 
