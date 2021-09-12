@@ -6,7 +6,7 @@ system('color')
 if __name__ == '__main__':
     from traceback import format_exc    # imports for shell
 
-    c = Connection(debugmode='normal', host='192.168.1.156')    # create connection instance
+    c = Connection(debugmode='normal', host='fridrich')    # create connection instance
     #w = wiki()  # create wiki instance
     print(bcolors.OKGREEN+'initialised Connections')
 

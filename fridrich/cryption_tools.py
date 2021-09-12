@@ -1,4 +1,4 @@
-from json.decoder import JSONDecodeError
+from json import JSONDecodeError
 from contextlib import suppress
 from random import sample
 from json import loads

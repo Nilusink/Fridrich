@@ -140,11 +140,11 @@ calendar.pyw
 calendar_Test.pyw
 
 # shortcuts
-AdminTool - Fridrich.lnk
-BackendAccessPanel - Fridrich.lnk
-VersionChanger - Fridrich.lnk
 tests/
 testFile.py
 test.file
 test.txt
 ChatElement.pyw
+
+*.bat
+*.lnk

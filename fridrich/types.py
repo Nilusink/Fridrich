@@ -81,8 +81,8 @@ class fileVar:
             with open(file, 'w') as out:
                 if self.type == dict:
                     json.dump(self.value, out, indent=4)
-                    return
-
+                    print(f'wrote {value} to file: {file}')
+                    continue
                 out.write(self.value)
 
     def get(self) -> str | dict:

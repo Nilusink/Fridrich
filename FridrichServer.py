@@ -129,7 +129,7 @@ def ZSwitch(stime : str | None = '00:00') -> None:
                 last = inp.read()
                 out.write(last)
 
-        Vote.set({'GayKing':dict()})
+        Vote.set({'GayKing':{}})
         
         # ---- Log File (only for GayKing Voting)
         last = json.loads(last)['GayKing'] # get last ones
