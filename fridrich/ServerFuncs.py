@@ -173,7 +173,12 @@ class Constants:
     "All constants (modify in file settings.json)"
     def __init__(self) -> None:
         "create instance"
-        dic = load(open(getcwd()+'/fridrich/settings.json', 'r'))
+        try:
+            dic = load(open(getcwd()+'/fridrich/settings.json', 'r'))
+        except:
+            dic = load(open('/home/pi/Server/fridrich/settings.json', 'r'))
         
         for Index, Value in dic.items():
             setattr(self, Index, Value)
+
+con = Constants()
