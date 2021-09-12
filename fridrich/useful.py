@@ -116,7 +116,7 @@ def inverse(value:bool|int|str) -> bool|int|str:
         val=True
     else:
         val=False
-	return t(val)   # return converted value
+    return t(val)   # return converted value
 
 def timeit(func) -> FunctionType:
     """

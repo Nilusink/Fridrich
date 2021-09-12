@@ -94,9 +94,6 @@ except FileNotFoundError:
     with open('data/KeyFile.enc', 'r') as inp:
         defKey = low.decrypt(inp.read())
 
-#defKey = b'fBAXqbIYs0Mvslqzc2eVcpi3mFfXOJdOTsQLNAjU_RQ='
-
-#/home/pi/Server/
 class MesCryp:
     "en/de-cryption for messages"
     def encrypt(string:str, key=None) -> bytes:

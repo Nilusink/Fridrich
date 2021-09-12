@@ -290,7 +290,7 @@ class FunctionManager:
             'guest' : {                                  # instead of 5 billion if'S
                 'CalEntry':ClientFuncs.CalendarHandler, 
                 'req':ClientFuncs.reqHandler,
-                'end':ClientFuncs.end,
+                'end':ClientFuncs.end
             }
         }
     

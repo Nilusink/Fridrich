@@ -7,6 +7,7 @@ class manager:
     def __init__(self, accfile:str) -> None:
         "accfile - file to store encrypted account data in"
         self.crypFile = accfile
+        self.ClientKeys = dict()
 
     def getAccs(self) -> dict:
         "get account data"

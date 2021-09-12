@@ -10,7 +10,6 @@ from typing import Tuple
 from os import getcwd
 import socket
 
-
 # TemperatureReader import
 import RPi.GPIO as GPIO
 import dht11
@@ -170,10 +169,6 @@ class Communication:
             return None, None
         return client, mes
 
-        # if message is invalid or an other error occured, ignore the message and jump to start
-            
-        return mes
-        #debug.debug(f'Got message: {mes}')
 class Constants:
     "All constants (modify in file settings.json)"
     def __init__(self) -> None:

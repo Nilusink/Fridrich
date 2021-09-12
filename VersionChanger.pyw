@@ -1,7 +1,7 @@
 import tkinter as tk
 
 # local imports
-from fridrich.FridrichBackend import Connection
+from fridrich.backend import Connection
 
 class window:
     def __init__(self, ConnectionInstance:Connection) -> None:
@@ -62,7 +62,7 @@ class window:
     
     def refresh(self) -> None:
         "refresh vesion and enter it into the entry"
-        self.version = c.getVersion()
+        self.version = self.c.getVersion()
         self.versionEntry.delete(0, 'end')
         self.versionEntry.insert(0, self.version)
         
@@ -71,7 +71,7 @@ class window:
         "update"
         nv = self.versionEntry.get()
         if self.version!=nv:
-            c.setVersion(nv)
+            self.c.setVersion(nv)
 
     def end(self, *args) -> None:
         "end the connection and close the window"

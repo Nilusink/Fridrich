@@ -280,7 +280,7 @@ class window:
 
 if __name__ == '__main__':
     try:
-        c = Connection(host='192.168.1.156')
+        c = Connection(host='fridrich')
     except gaierror:    # if connection issue
         WifiName = getWifiName()    # get wifi name
         if not WifiName == 'Fridrich':  # if not connected to "Fridich" wifi
