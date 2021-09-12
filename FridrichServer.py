@@ -583,9 +583,9 @@ if __name__=='__main__':
 
     UpDebug = Debug(Const.SerUpLogFile)
 
-    Vote = fileVar({}, (Const.nowFile, Const.varNowFile))
+    Vote = fileVar(json.load(open(Const.nowFile, 'r')), (Const.nowFile, Const.varNowFile))
     DV   = DoubleVote(Const.doubFile)
-    KingVar = fileVar(load(open(Const.KingFile, 'r')), (Const.KingFile, Const.varLogFile))
+    KingVar = fileVar(json.load(open(Const.KingFile, 'r')), (Const.KingFile, Const.varLogFile))
 
     with open(Const.logFile, 'w') as out:
         out.write('')
