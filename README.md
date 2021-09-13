@@ -1,12 +1,12 @@
 # Fridrich
-Fridrich is a project by 3 stupid guys who were bored so they created a programm on wich they can vote whom of them is the gayest.
-It mainly consist of three parts:
+Fridrich is a project by 3 stupid guys who were bored so they created a program on which they can vote who of them is the gayest. 
+It mainly consists of three parts:
 * Fridrich Server
 * Fridrich Backend
 * Fridrich Dashboard
 <br><br><br>
 ## Fridrich Server
-The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It saves alle the data in files and accepts requests, handels events like the 0 o'clock vote and some other "cool" stuff. The basic File Layout for the Server should look like this:  
+The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It saves all the data in files and accepts requests, handles events like the 0 o'clock vote and some other "cool" stuff. The basic File Layout for the Server should look like this:  
 <pre>
 |  
 |---♦ data  
@@ -22,14 +22,15 @@ The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It
 |   |---♦ Version
 |   |---♦ yes.json
 |  
-|---♦ modules  
-|   |---♦ __init__.py  
-|   |---♦ Accounts.py  
-|   |---♦ cryption_tools.py  
-|   |---♦ err_classes.py  
-|   |---♦ FanController.py  
-|   |---♦ ServerFuncs.py  
-|   |---♦ useful.py  
+|---♦ fridrich  
+|   |---♦ __init__.py
+|   |---♦ Accounts.py
+|   |---♦ cryption_tools.py
+|   |---♦ FanController.py
+|   |---♦ ServerFuncs.py
+|   |---♦ settings.json
+|   |---♦ types.py
+|   |---♦ useful.py
 |  
 |---♦ FridrichServer.py  
 </pre>
@@ -41,7 +42,7 @@ The **Calendar.json** file saves the configurations of the calendar in a dict:
 ```Python
 {'User1':1, 'User2':0}
 ```
-The **KeyFile.enc** is the default key if the client hasen't yet authentificated or to send errors. It is encrypted with the cryption_tools.low class.
+The **KeyFile.enc** is the default key if the client hasn't yet authenticated or sends errors. It is encrypted with the cryption_tools.low class.
 **KingLog.json** is the file where all the Gaykings are saved (basically a *log*):
 ```Python
 {
@@ -51,7 +52,7 @@ The **KeyFile.enc** is the default key if the client hasen't yet authentificated
     "01.06.2021": "Jack",
 }
 ```
-The file **now.json** is used to save all current Votes (in case of a server restart/poweroff) and in newer versions generally used as the *Votes* Variable. It stores informations like this:
+The file **now.json** is used to save all current Votes (in case of a server restart/power off) and in newer versions generally used as the *Votes* Variable. It stores information like this:
 ```Python
 {
     "GayKing":
@@ -65,36 +66,37 @@ The file **now.json** is used to save all current Votes (in case of a server res
     }
 }
 ```
-**tempData.json** is used to transrer temperature data between the main program and the CPUHeatHandler:
+**tempData.json** is used to transfer temperature data between the main program and the CPUHeatHandler:
 ```Python
 {"temp": 29.0, "cptemp": 38.628, "hum": 39.0}
 ```
 In **users.enc** is a fridrichcryption_tools.low encrypted dictionary with all users and passwords (low encryption because of speed)<br><br>
-The **Version** file stores information about the current version: *Version:0.3.7,MaxLen:20* (Managed by the GUI developer).<br><br>
+The **Version** file stores information about the current version: *Version:0.3.7,MaxLen:20* (Managed by the GUI developer).
 **yes.json** is basically the same file as *now.json* but from yesterday.<br><br>
-All the files in the **moduels** folder are all just modules for the Server to run.<br><br><br>
+All the files in the **fridrich** folder are just modules for the Server to run.
+
 
 ## Fridrich Backend
-The Backend File is meant to be imported by another programm (**Fridrich Dashboard**). It is generally used to communicate with the server, get informations and send votes.
-The File Layout is straight forward:  
+The Backend File is meant to be imported by another program (**Fridrich Dashboard**). It is generally used to communicate with the server, get information and send votes.
+The File Layout is straightforward:  
 <pre>
 |  
 |---♦ data  
 |   |---♦ KeyFile.enc  
 |  
-|---♦ modules  
-|   |---♦ __init__.py  
-|   |---♦ cryption_tools.py  
-|   |---♦ err_classes.py  
+|---♦ fridrich  
+|   |---♦ __init__.py
+|   |---♦ cryption_tools.py
 |   |---♦ backend.py
+|   |---♦ types.py
 |   |---♦ useful.py
 |  
 |---♦ YourProgramm.py  
 </pre>  
-Optionally there also is the file **FridrichBackendOffline.py** wich is for testing in case you can't connect to a Fridrich Server.
+Optionally there also is the file **FridrichBackendOffline.py** which is for testing if you can't connect to a Fridrich Server.
 <br><br>
 ## Fridrich Dashboard
-As you may have noticed, this program is not acutally included in this repository. The Programer of it has made his own repository, but the code is not open-source and he only publishes .exe files of his program (I really don't know why). So sadly, you either have to use the .exe or create your own program.
+As you may have noticed, this program is not actually included in this repository. The Programmer of it has made his own repository, but the code is not open-source and he only publishes .exe files of his program (I really don't know why). So sadly, you either have to use the .exe or create your own program.
 
 # **Attention!**
 This project uses Python-3.10 Syntax (Server and backend), so it won't run on anything else than Python-3.10 or Higher!
