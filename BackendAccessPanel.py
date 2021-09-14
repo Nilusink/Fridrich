@@ -1,12 +1,20 @@
 from fridrich.backend import Connection
 from fridrich import bcolors
+from socket import gaierror
 from os import system
 system('color')
 
 if __name__ == '__main__':
     from traceback import format_exc    # imports for shell
+    while True:
+        try:
+            c = Connection(debugmode='normal', host='fridrich')    # create connection instance
+            break
 
-    c = Connection(debugmode='normal', host='fridrich')    # create connection instance
+        except gaierror:
+            print(bcolors.FAIL+"Couldn't connect to Server: Getaddrinfo failed")
+            input(bcolors.WARNING+'to try again hit enter\n')
+
     #w = wiki()  # create wiki instance
     print(bcolors.OKGREEN+'initialised Connections')
 
@@ -15,7 +23,7 @@ if __name__ == '__main__':
         print(bcolors.OKGREEN+'\nfunctions of Connection: '+bcolors.ENDC)  #return all functions of the two classes
         funcs = dir(Connection)
         for element in funcs:
-            if not element.startswith('__'):
+            if not element.endswith('__'):
                 print('  - '+bcolors.HEADER+element+bcolors.ENDC)
 
     # print('\nfunctions of wiki: ')

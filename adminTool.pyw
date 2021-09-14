@@ -270,8 +270,6 @@ class window:
             w.root.destroy()
             w = window(c)
 
-            self.update()
-
 
     def end(self, *args) -> None:
         "end connection to fridrich and destroy the tkinter.root"
