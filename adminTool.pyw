@@ -7,14 +7,20 @@ import tkinter as tk
 # local imports
 from fridrich.backend import Connection
 
-secEquals = {'admin': 0, 'user': 1, 'guest': 2, 'other': 3}    # for sorting the users
+secEquals = ('admin', 'bot', 'user', 'guest')    # for sorting the users
 
 
 def sort_user_list(lst: list, flag='sec') -> list:
     """
     return a sorted list by "sec" | "Name" | "pwd"
     """
-    values = sorted(lst, key=lambda element: secEquals[element[flag]] if element[flag] in secEquals else secEquals['other'])
+    def sorter(element) -> int:
+        element = element[flag]
+        if element in secEquals:
+            return secEquals.index(element)
+        return len(secEquals)
+
+    values = sorted(sorted(lst, key=lambda x: x['Name']), key=sorter)
     return list(values)
 
 
@@ -331,5 +337,4 @@ if __name__ == '__main__':
 
     w = Window(c)
     w.run()
-    w.end()
     exit()

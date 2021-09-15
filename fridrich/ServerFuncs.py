@@ -1,5 +1,5 @@
+from fridrich import new_types
 from fridrich import *
-import new_types
 import typing
 import contextlib
 import json
@@ -9,6 +9,10 @@ import time
 import traceback
 import socket
 import os
+
+import RPi.GPIO as GPIO
+import dht11
+
 # initialize GPIO
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)

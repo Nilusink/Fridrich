@@ -314,7 +314,6 @@ class FunctionManager:
                 'end': ClientFuncs.end,
                 'changePwd': ClientFuncs.change_pwd,
                 'getVersion': ClientFuncs.get_version,
-                'setVersion': ClientFuncs.set_version,
                 'gOuser': ClientFuncs.get_online_users,
                 'appendChat': ClientFuncs.append_chat,
                 'getChat': ClientFuncs.get_chat
@@ -323,6 +322,9 @@ class FunctionManager:
                 'CalEntry': ClientFuncs.calendar_handler,
                 'req': ClientFuncs.req_handler,
                 'end': ClientFuncs.end
+            },
+            'bot': {
+                'setVersion': ClientFuncs.set_version
             }
         }
     

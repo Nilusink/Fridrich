@@ -1,6 +1,8 @@
 from fridrich import backend
 from fridrich import *
 import socket
+import os
+os.system('color')
 
 if __name__ == '__main__':
     from traceback import format_exc    # imports for shell
