@@ -320,6 +320,7 @@ class FunctionManager:
             },
             'guest': {                                  # instead of 5 billion if'S
                 'CalEntry': ClientFuncs.calendar_handler,
+                'getVersion': ClientFuncs.get_version,
                 'req': ClientFuncs.req_handler,
                 'end': ClientFuncs.end
             },

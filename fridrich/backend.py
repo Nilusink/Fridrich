@@ -7,8 +7,6 @@ import os
 ############################################################################
 #                             other functions                              #
 ############################################################################
-
-
 def json_repair(string: str) -> str:
     """
     if two messages are scrambled together, split them and use the first one
@@ -40,11 +38,10 @@ def date_for_sort(message) -> str:
     y = message['time'].split(' - ')    # split date and time
     return '.'.join(reversed(y[1].split('.')))+' - '+y[0]   # reverse date and place time at end
 
+
 ############################################################################
 #                      Server Communication Class                          #
 ############################################################################
-
-
 class Connection:
     def __init__(self, debug_mode: str | None = Off, host: str | None = 'fridrich') -> None:
         """
