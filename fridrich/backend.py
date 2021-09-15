@@ -74,56 +74,38 @@ class Connection:
         self.userN = None
 
     # "local" functions
-    def error_handler(self, error: str, *args) -> None:
+    @staticmethod
+    def error_handler(error: str, *args) -> None:
         """
         Handle incoming errors
         """
-        if error == 'AccessError':
-            raise AccessError('Access denied')
-        
-        elif error == 'AuthError':
-            raise AuthError('Authentication failed')
-        
-        elif error == 'NotVoted':
-            raise NameError('Not Voted')
-        
-        elif error == 'json':
-            raise JsonError('Crippled message')
-        
-        elif error == 'NoVotes':
-            raise NoVotes('No Votes left')
+        match error:    # match errors where not specific error class exists (and NotEncryptedError)
+            case 'NotVoted':
+                raise NameError('No votes registered for user')
 
-        elif error == 'RegistryError':
-            raise RegistryError('Not registered')
-        
-        elif error == 'SwitchToUser':
-            raise NotAUser('Switch to user account to vote')
-        
-        elif error == 'InvalidRequest':
-            raise InvalidRequest('Invalid request: '+args[0]['info'])
-        
-        elif error == 'SecurityNotSet':
-            raise SecurityClearanceNotSet('Security clearance not set! Contact administrator')
-        
-        elif error == 'NotEncryptedError':
-            raise cryption_tools.NotEncryptedError('You just send a not encrypted message. How tf did you do that??')
-        
-        elif error == 'NameError':
-            raise NameError('Username Already exits')
-        
-        elif error == 'MessageError':
-            raise MessageError(args[0]['info'])
+            case 'json':
+                raise JsonError('Crippled message')
 
-        else:
-            if self.debug_mode == 'full':
-                st = f'Error: {error}\nInfo: {args[0]["info"] if "info" in args[0] else "None"}\nFullBug: {args[0]["full"] if "full" in args[0] else "None"}'
-            elif self.debug_mode == 'normal':
-                st = f'Error: {error}\nInfo: {args[0]["info"] if "info" in args[0] else "None"}'
+            case 'SecurityNotSet':
+                raise SecurityClearanceNotSet(args[0]['info'])
 
-            else:
-                raise UnknownError(f'A Unknown Error Occurred:\nError: {error}')
+            case 'NotEncryptedError':
+                raise cryption_tools.NotEncryptedError('Server received non encrypted message')
 
-        raise UnknownError('An Unknown Error Occurred: \n'+st)
+            case _:  # for all other errors try to raise them and when that fails, raise a ServerError
+                if 'full' in args[0] and 'info' in args[0]:
+                    st = f'raise {error}("info: {args[0]["info"]} -- Full Traceback: {args[0]["full"]}")'
+
+                elif 'info' in args[0]:
+                    st = f'raise {error}("info: {args[0]["info"]}")'
+
+                else:
+                    st = f'raise {error}'
+
+                try:
+                    exec(st)
+                except NameError:
+                    raise ServerError(f'{error}:\n{st.lstrip(f"raise {error}(").rstrip(")")}')
 
     def send(self, dictionary: dict) -> None:
         """

@@ -1,3 +1,4 @@
+from tkinter import messagebox
 import tkinter as tk
 
 # local imports
@@ -64,6 +65,7 @@ class Window:
         login
         """
         if not self.c.auth('VersionChanger', 'IChangeDaVersion'):
+            messagebox.showerror('Error', 'bot login used for this application is not valid anymore (quitting)!')
             exit()
 
         self.refresh()
@@ -88,10 +90,10 @@ class Window:
         """
         end the connection and close the window
         """
+        self.root.destroy()
         self.c.end()
 
 
 if __name__ == '__main__':
     w = Window(Connection())
     w.run()
-    w.end()

@@ -36,7 +36,7 @@ def verify(username: str, password: str, cl: socket.socket) -> None:
     IsValid = False
     key = None
     if resp is None:
-        Communication.send(cl, {'Error': 'SecurityNotSet'}, encryption=MesCryp.encrypt)
+        Communication.send(cl, {'Error': 'SecurityNotSet', 'info': f'no information about security clearance for user {username}'}, encryption=MesCryp.encrypt)
         return
 
     elif resp:
@@ -44,7 +44,7 @@ def verify(username: str, password: str, cl: socket.socket) -> None:
         key = key_func(ClientKeys, length=30)
         ClientKeys[key] = resp
         
-    debug.debug(f'Username : {username}, Auth: {IsValid}')
+    debug.debug(f'Username : {username}'+(' (Bot)' if resp == 'Bot' else '')+', Auth: {IsValid}')   # print out username, if connected successfully or not and if it is a bot
     Communication.send(cl, {'Auth': IsValid, 'AuthKey': key}, encryption=MesCryp.encrypt)    # send result to client
 
 
@@ -324,7 +324,9 @@ class FunctionManager:
                 'end': ClientFuncs.end
             },
             'bot': {
-                'setVersion': ClientFuncs.set_version
+                'setVersion': ClientFuncs.set_version,
+                'getVersion': ClientFuncs.get_version,
+                'end': ClientFuncs.end
             }
         }
     
