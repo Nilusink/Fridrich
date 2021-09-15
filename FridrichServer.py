@@ -44,7 +44,7 @@ def verify(username: str, password: str, cl: socket.socket) -> None:
         key = key_func(ClientKeys, length=30)
         ClientKeys[key] = resp
         
-    debug.debug(f'Username : {username}'+(' (Bot)' if resp == 'Bot' else '')+', Auth: {IsValid}')   # print out username, if connected successfully or not and if it is a bot
+    debug.debug(f'Username : {username}'+(' (Bot)' if resp == 'bot' else '')+', Auth: {IsValid}')   # print out username, if connected successfully or not and if it is a bot
     Communication.send(cl, {'Auth': IsValid, 'AuthKey': key}, encryption=MesCryp.encrypt)    # send result to client
 
 
