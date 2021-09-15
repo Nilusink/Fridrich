@@ -321,6 +321,7 @@ class FunctionManager:
             'guest': {                                  # instead of 5 billion if'S
                 'CalEntry': ClientFuncs.calendar_handler,
                 'getVersion': ClientFuncs.get_version,
+                'getVote': ClientFuncs.get_vote,
                 'req': ClientFuncs.req_handler,
                 'end': ClientFuncs.end
             },
@@ -351,6 +352,7 @@ class FunctionManager:
                         break
                 
                 if isIn:
+                    debug.debug(f'user {clearance} tried to use function {message["type"]} ({req})')
                     return 'ClearanceIssue', f'Clearance required: "{req}"'
                 
                 else:
