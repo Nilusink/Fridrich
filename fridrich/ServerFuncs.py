@@ -113,7 +113,7 @@ class Debug:
             out.write('')
         
         with open(self.errFile, 'a') as out:
-            out.write(f'\n\n\n\n\n######## - Program restart [{datetime.datetime.now().strftime("%Y.%m.%d at %H:%M:%S.%f")}] - ########')
+            out.write(f'\n\n\n\n\n######## - Program restart [{datetime.datetime.now().strftime("%Y.%m.%d at %H:%M:%S.%f")}] - ########\n\n')
     
     def debug(self, *args) -> None:
         """
