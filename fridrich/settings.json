@@ -24,7 +24,7 @@
     "varNowFile" : "/var/www/html/json/now.json",
 
     "logFile" : "/home/pi/Server/data/temp.log",
-    "errFile" : "/home/pi/Server/data/temp.err.log",
+    "errFile" : "/home/pi/Server/data/Server.err.log",
     "tempFile" : "/home/pi/Server/data/tempData.json",
 
     "DoubleVotes" : 1,

@@ -1,4 +1,8 @@
-class bcolors:
+import cryption_tools
+import useful
+
+
+class ConsoleColors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKCYAN = '\033[96m'
@@ -10,40 +14,53 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 # error classes
+
+
 class AccessError(Exception):
     pass
+
+
 class AuthError(Exception):
     pass
+
 
 class JsonError(Exception):
     pass
 
+
 class NoVotes(Exception):
     pass
+
 
 class UnknownError(Exception):
     pass
 
+
 class RegistryError(Exception):
     pass
+
 
 class NotAUser(Exception):
     pass
 
+
 class InvalidRequest(Exception):
     pass
 
-class SecutiryClearanceNotSet(Exception):
+
+class SecurityClearanceNotSet(Exception):
     pass
+
 
 class MessageError(Exception):
     pass
+
 
 class InvalidStringError(Exception):
     pass
 
 
 Off = False
-On  = True
+On = True
 true = False
 false = True

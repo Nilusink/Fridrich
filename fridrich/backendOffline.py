@@ -83,7 +83,7 @@ class Connection:
         return 'user'
 
     def getAttendants(self, flag = 'now', voting = 'GayKing'): # flag can be 'now' or 'last'
-        attds = self.users + [element for element in Dict.Values(self.now[voting])]
+        attds = self.users + [element for element in Dict.values(self.now[voting])]
 
         return attds    # return names
 
@@ -139,7 +139,7 @@ class Connection:
 
         sortedlog = {x:log[x] for x in sorted(log, key=lambda x: '.'.join(reversed(x.split('.'))) )}    # sort list by year, month, date
 
-        fullList = list(reversed(list(Dict.Values(sortedlog)))) # get list of all Kings
+        fullList = list(reversed(list(Dict.values(sortedlog)))) # get list of all Kings
         StreakGuys = list(fullList[0].split('|'))   # if a|b|c make list of (a, b, c), else just (a)
 
         StreakDict = {StreakGuy:int() for StreakGuy in StreakGuys}  # create Dictionary with scheme: {a:0, b:0, c:0}

@@ -1,37 +1,39 @@
-from os import popen
-import socket, json
+from __init__ import *
+import os
+import socket
+import json
 
-# local imports
-from fridrich.cryption_tools import tryDecrypt, NotEncryptedError, MesCryp
-from fridrich.useful import Dict
-import fridrich as fr
 
 ############################################################################
 #                             other functions                              #
 ############################################################################
-def jsonRepair(string:str) -> str:
+
+
+def json_repair(string: str) -> str:
     """
     if two messages are scrambled together, split them and use the first one
     """
     parts = string.split('}{')  # happens sometimes, probably because python is to slow
-    if len(parts)>1:
+    if len(parts) > 1:
         return parts[0]+'}'
     return string
 
-def getWifiName() -> str:
+
+def get_wifi_name() -> str:
     """
     get the name of the wifi currently connected to
     """
-    ret = popen('Netsh WLAN show interfaces').readlines()   # read interface infos
+    ret = os.popen('Netsh WLAN show interfaces').readlines()   # read interface info
     wifiDict = dict()
     for element in ret:
         tmp = element.split(':')
-        if len(tmp)>1:  # if element is seperated with ":" then make it dict
+        if len(tmp) > 1:  # if element is separated with ":" then make it dict
             wifiDict[tmp[0].lstrip().rstrip()] = ':'.join(tmp[1::]).lstrip().rstrip().replace('\n', '')
     
     return wifiDict['SSID']
 
-def dateforsort(message) -> str:
+
+def date_for_sort(message) -> str:
     """
     go from format "hour:minute:second:millisecond - day.month.year" to "year.month.day - hour:minute:second:millisecond"
     """
@@ -41,125 +43,128 @@ def dateforsort(message) -> str:
 ############################################################################
 #                      Server Communication Class                          #
 ############################################################################
+
+
 class Connection:
-    def __init__(self, debugmode : str | None = fr.Off, host : str | None = 'fridrich') -> None:
+    def __init__(self, debug_mode: str | None = Off, host: str | None = 'fridrich') -> None:
         """
         connect with any fridrich server
         options:
-            ``debugmode`` - ``"normal"`` | ``"full"`` | ``False``
+            ``debug_mode`` - ``"normal"`` | ``"full"`` | ``False``
             
             ``host`` - name of the host, either IP or hostname / address
         """
-        self.debugmode = debugmode
+        self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # create socket instance
+        self.debug_mode = debug_mode
 
         sl = host.split('.')
-        if len(sl)==4 and all([digit in '0123456789' for element in sl for digit in element]):
+        if len(sl) == 4 and all([digit in '0123456789' for element in sl for digit in element]):
             self.ServerIp = host
         else:
             self.ServerIp = socket.gethostbyname(host)    # get ip of fridrich
         
-        if self.debugmode == 'full':
+        if self.debug_mode == 'full':
             print(self.ServerIp)
 
-        if self.debugmode in ('normal', 'full'):
-            print(fr.bcolors.OKGREEN+'Server IP: '+self.ServerIp+fr.bcolors.ENDC)
+        if self.debug_mode in ('normal', 'full'):
+            print(ConsoleColors.OKGREEN+'Server IP: '+self.ServerIp+ConsoleColors.ENDC)
         self.port = 12345   # set communication port with server
 
         self.AuthKey = None 
         self.userN = None
 
     # "local" functions
-    def errorHandler(self, error: str, *args) -> Exception:
+    def error_handler(self, error: str, *args) -> None:
         """
-        Handle incomming errors
+        Handle incoming errors
         """
         if error == 'AccessError':
-            raise fr.AccessError('Access denied')
+            raise AccessError('Access denied')
         
         elif error == 'AuthError':
-            raise fr.AuthError('Authentification failed')
+            raise AuthError('Authentication failed')
         
         elif error == 'NotVoted':
             raise NameError('Not Voted')
         
         elif error == 'json':
-            raise fr.JsonError('Crypled message')
+            raise JsonError('Crippled message')
         
         elif error == 'NoVotes':
-            raise fr.NoVotes('No Votes left')
+            raise NoVotes('No Votes left')
 
         elif error == 'RegistryError':
-            raise fr.RegistryError('Not registered')
+            raise RegistryError('Not registered')
         
         elif error == 'SwitchToUser':
-            raise fr.NotAUser('Switch to user account to vote')
+            raise NotAUser('Switch to user account to vote')
         
         elif error == 'InvalidRequest':
-            raise fr.InvalidRequest('Invalid erquest: '+args[0]['info'])
+            raise InvalidRequest('Invalid request: '+args[0]['info'])
         
         elif error == 'SecurityNotSet':
-            raise fr.SecutiryClearanceNotSet('Security clearance not set! Contact administrator')
+            raise SecurityClearanceNotSet('Security clearance not set! Contact administrator')
         
         elif error == 'NotEncryptedError':
-            raise NotEncryptedError('You just send a not encrypted message. How tf did you do that??')
+            raise cryption_tools.NotEncryptedError('You just send a not encrypted message. How tf did you do that??')
         
         elif error == 'NameError':
             raise NameError('Username Already exits')
         
         elif error == 'MessageError':
-            raise fr.MessageError(args[0]['info'])
+            raise MessageError(args[0]['info'])
 
         else:
-            if self.debugmode == 'full':
+            if self.debug_mode == 'full':
                 st = f'Error: {error}\nInfo: {args[0]["info"] if "info" in args[0] else "None"}\nFullBug: {args[0]["full"] if "full" in args[0] else "None"}'
-            elif self.debugmode == 'normal':
+            elif self.debug_mode == 'normal':
                 st = f'Error: {error}\nInfo: {args[0]["info"] if "info" in args[0] else "None"}'
 
             else:
-                raise fr.UnknownError(f'A Unknown Error Occured:\nError: {error}')
+                raise UnknownError(f'A Unknown Error Occurred:\nError: {error}')
 
-        raise fr.UnknownError('An Unknown Error Occured: \n'+st)
+        raise UnknownError('An Unknown Error Occurred: \n'+st)
 
     def send(self, dictionary: dict) -> None:
         """
         send messages to server
         """
-        self.reconnect() # reconnect to the server
+        self.reconnect()  # reconnect to the server
         
         if self.AuthKey:
             # add AuthKey to the dictionary+
             dictionary['AuthKey'] = self.AuthKey
             stringMes = json.dumps(dictionary, ensure_ascii=False)
             if any(c in stringMes.lower() for c in ('ö', 'ä', 'ü')):
-                raise fr.InvalidRequest('non-ascii charters are not allowed')
-            mes = MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
+                raise InvalidRequest('non-ascii charters are not allowed')
+            mes = cryption_tools.MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
             self.Server.send(mes)
-            if self.debugmode in ('normal', 'full'):
-                print(fr.bcolors.OKCYAN+stringMes+fr.bcolors.ENDC)
-            if self.debugmode == 'full':
-                print(fr.bcolors.WARNING+str(mes)+fr.bcolors.ENDC)
+            if self.debug_mode in ('normal', 'full'):
+                print(ConsoleColors.OKCYAN+stringMes+ConsoleColors.ENDC)
+            if self.debug_mode == 'full':
+                print(ConsoleColors.WARNING+str(mes)+ConsoleColors.ENDC)
             return
 
         stringMes = json.dumps(dictionary, ensure_ascii=False)
-        self.Server.send(MesCryp.encrypt(stringMes))
-        if self.debugmode in ('normal', 'full'):
-            print(fr.bcolors.OKCYAN+stringMes+fr.bcolors.ENDC)
+        self.Server.send(cryption_tools.MesCryp.encrypt(stringMes))
+        if self.debug_mode in ('normal', 'full'):
+            print(ConsoleColors.OKCYAN+stringMes+ConsoleColors.ENDC)
 
-    def recieve(self, length: int | None = 2048):
+    def receive(self, length: int | None = 2048):
         """
-        recieve messages from server, decrypt them and raise incomming errors
+        receive messages from server, decrypt them and raise incoming errors
         """
         msg = ''
-        while msg=='':
+        while msg == '':
             mes = self.Server.recv(length)
-            if self.debugmode == 'full':
-                print(fr.bcolors.WARNING+str(mes)+fr.bcolors.ENDC)
-            msg = tryDecrypt(mes, [self.AuthKey], errors=False)
+            if self.debug_mode == 'full':
+                print(ConsoleColors.WARNING+str(mes)+ConsoleColors.ENDC)
+            msg = cryption_tools.try_decrypt(mes, [self.AuthKey], errors=False)
 
-            if msg == None:
-                msg = {'Error':'MessageError', 'info':'Server message receved is not valid'}
-            if self.debugmode in ('normal', 'full'):
-                print(fr.bcolors.OKCYAN+str(msg)+fr.bcolors.ENDC)
+            if msg is None:
+                msg = {'Error': 'MessageError', 'info': 'Server message received is not valid'}
+            if self.debug_mode in ('normal', 'full'):
+                print(ConsoleColors.OKCYAN+str(msg)+ConsoleColors.ENDC)
 
         if 'Error' in msg:  # if error was send by server
             success = False
@@ -169,15 +174,15 @@ class Connection:
         if success:
             return msg  # if no error was detected, return dict
         
-        self.errorHandler(msg['Error'], msg) #raise error if serverside-error
+        self.error_handler(msg['Error'], msg)  # raise error if serverside-error
 
     def reconnect(self) -> None:
         """
         reconnect to server
         """
         try:    # try to reconnect to the server
-            self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # create socket instance
-            self.Server.connect((self.ServerIp, self.port)) # connect to server
+            self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.Server.connect((self.ServerIp, self.port))  # connect to server
         except socket.error:
             raise ConnectionError('Server not reachable')
 
@@ -187,283 +192,283 @@ class Connection:
         authenticate with the server
         """
         msg = {  # message
-            'type':'auth',
-            'Name':username,
-            'pwd':password
+            'type': 'auth',
+            'Name': username,
+            'pwd': password
         }
         self.userN = username
-        self.AuthKey = None # reset AuthKey
+        self.AuthKey = None  # reset AuthKey
         self.send(msg)  # send message
-        resp = self.recieve()   # recieve authKey (or error)
+        resp = self.receive()   # receive authKey (or error)
 
         self.AuthKey = resp['AuthKey']
 
-        return resp['Auth'] # return True or False
+        return resp['Auth']  # return True or False
 
-    def getSecClearance(self) -> str:
+    def get_sec_clearance(self) -> str:
         """
-        if signed in, get sequrity clearance
+        if signed in, get security clearance
         """
-        msg = {'type':'secReq'}
+        msg = {'type': 'secReq'}
         self.send(msg)
-        resp = self.recieve()
+        resp = self.receive()
         return resp['sec']
 
-    def getAttendants(self, flag : str | None = 'now', voting : str | None =  'GayKing') -> list:
+    def get_attendants(self, flag: str | None = 'now', voting: str | None = 'GayKing') -> list:
         """
         get Attendants of voting\n
         flag can be "now" or "last"
         """
-        self.send({'type':'req', 'reqType':'attds', 'atype':flag, 'voting':voting})  # send message
-        resp = self.recieve()   # get response
+        self.send({'type': 'req', 'reqType': 'attds', 'atype': flag, 'voting': voting})  # send message
+        resp = self.receive()   # get response
 
         return resp['Names']    # return names
 
-    def sendVote(self, *args, flag : str | None = 'vote', voting : str | None = 'GayKing') -> None:
+    def send_vote(self, *args, flag: str | None = 'vote', voting: str | None = 'GayKing') -> None:
         """
         send vote to server\n
         flag can be "vote", "unvote", "dvote" or "dUvote", voting is custom\n
         DoubleVotes are only available once a week\n
         types will be ignored if flag is "dvote"
         """
-        msg = {'type':flag, 'voting':voting}
+        msg = {'type': flag, 'voting': voting}
         if flag in ('vote', 'dvote'):
-            msg['vote'] = args[0] # if vote send vote
+            msg['vote'] = args[0]  # if vote send vote
         
         self.send(msg)  # send vote
-        self.recieve()  # recieve success or error
+        self.receive()  # receive success or error
     
-    def getResults(self, flag : str | None = 'now') -> dict:
+    def get_results(self, flag: str | None = 'now') -> dict:
         """
         get results of voting\n
         flag can be "now", "last"\n
         return format: {voting : {"totalvotes" : int, "results" : {name1 : votes, name2 : votes}}}
         """
-        msg = {'type':'req', 'reqType':flag}    # set message                    
+        msg = {'type': 'req', 'reqType': flag}    # set message                    
         self.send(msg)  # send message
 
-        res = self.recieve()    # get response
+        res = self.receive()    # get response
 
         out = dict()
         for voting in res:
-            attds = dict()  # create dictionary with all attendants:votes
+            attendants = dict()  # create dictionary with all attendants:votes
             nowVoting = res[voting]
-            for element in [nowVoting[element] for element in nowVoting]+(['Lukas', 'Niclas', 'Melvin'] if voting=='GayKing' else []):
-                attds[element] = 0
+            for element in [nowVoting[element] for element in nowVoting]+(['Lukas', 'Niclas', 'Melvin'] if voting == 'GayKing' else []):
+                attendants[element] = 0
 
             votes = int()
-            for element in res[voting]: # assign votes to attendant
-                votes+=1
-                attds[res[voting][element]]+=1
+            for element in res[voting]:  # assign votes to attendant
+                votes += 1
+                attendants[res[voting][element]] += 1
             out[voting] = dict()
             out[voting]['totalVotes'] = votes
-            out[voting]['results'] = attds
+            out[voting]['results'] = attendants
         
-        return out # retur total votes and dict
+        return out  # return total votes and dict
     
-    def getLog(self) -> list:
+    def get_log(self) -> list:
         """
         get list of recent GayKings
         """
-        msg = {'type':'req', 'reqType':'log'}   # set message
+        msg = {'type': 'req', 'reqType': 'log'}   # set message
         self.send(msg)  # send request
 
-        res = self.recieve()    # get response
+        res = self.receive()    # get response
         return res  # return response
 
-    def getStreak(self) -> tuple[str, int]:
+    def get_streak(self) -> tuple[str, int]:
         """
         if someone got voted multiple times in a row,\n
         return his/her/their name and how often they\n
         got voted\n
         return format: (Name, Streak)
         """
-        log = self.getLog() # get log dictionary
+        log = self.get_log()  # get log dictionary
 
-        sortedlog = {x:log[x] for x in sorted(log, key=lambda x: '.'.join(reversed(x.split('.'))) )}    # sort list by year, month, date
+        sorted_log = {x: log[x] for x in sorted(log, key=lambda x: '.'.join(reversed(x.split('.'))))}    # sort list by year, month, date
 
-        fullList = list(reversed(list(Dict.Values(sortedlog)))) # get list of all Kings
+        fullList = list(reversed(list(useful.Dict.values(sorted_log))))  # get list of all Kings
         StreakGuys = list(fullList[0].split('|'))   # if a|b|c make list of (a, b, c), else just (a)
 
-        StreakDict = {StreakGuy:int() for StreakGuy in StreakGuys}  # create Dictionary with scheme: {a:0, b:0, c:0}
+        StreakDict = {StreakGuy: int() for StreakGuy in StreakGuys}  # create Dictionary with scheme: {a:0, b:0, c:0}
         for StreakGuy in StreakGuys:    # iterate all guys
             for element in fullList:    # iterate all votes
                 if StreakGuy.lower() in element.lower():    # guy was in previous vote
-                    StreakDict[StreakGuy]+=1    # add to streak and continue
+                    StreakDict[StreakGuy] += 1    # add to streak and continue
                 else:
                     break   # else begin with new guy
 
-        iDict = Dict.inverse(StreakDict)    # inversed Dict ({1:a, 3:b, 0:c} instead of {a:1, b:3, c:0})
+        iDict = useful.Dict.inverse(StreakDict)    # inverse Dict ({1:a, 3:b, 0:c} instead of {a:1, b:3, c:0})
         Name = iDict[max(iDict)]    # get name of the guy with max streak
         Streak = StreakDict[Name]   # get streak by name
         
-        return Name, Streak # return results
+        return Name, Streak  # return results
 
-    def getTemps(self) -> tuple[float, float, float]:
+    def get_temps(self) -> tuple[float, float, float]:
         """
-        get room and cpu temperature in °C aswell as humidity in %
+        get room and cpu temperature in °C as well as humidity in %
         """
-        msg = {'type':'req', 'reqType':'temps'} # set message
+        msg = {'type': 'req', 'reqType': 'temps'}  # set message
         self.send(msg)  # send message
 
-        res = self.recieve()    # get response
+        res = self.receive()    # get response
 
         return res['Room'], res['CPU'], res['Hum']  # return room and cpu temperature
     
-    def getCal(self) -> dict:
+    def get_cal(self) -> dict:
         """
         get Calendar in format {"date":listOfEvents}
         """
-        msg = {'type':'req', 'reqType':'cal'}   # set message
+        msg = {'type': 'req', 'reqType': 'cal'}   # set message
         self.send(msg)  # send request
 
-        res = self.recieve()    # get response
+        res = self.receive()    # get response
         return res  # return response
 
-    def sendCal(self, date: str, event: str) -> None:
+    def send_cal(self, date: str, event: str) -> None:
         """
         send entry to calender
         """
-        msg = {'type':'CalEntry', 'date':date, 'event':event}   # set message
+        msg = {'type': 'CalEntry', 'date': date, 'event': event}   # set message
         self.send(msg)  # send message
-        self.recieve()  # recieve response (success, error)
+        self.receive()  # receive response (success, error)
 
-    def changePwd(self, newPassword: str) -> None:
+    def change_pwd(self, new_password: str) -> None:
         """
         Change password of user currently logged in to
         """
-        mes = {'type':'changePwd', 'newPwd':newPassword}    # set message
+        mes = {'type': 'changePwd', 'newPwd': new_password}    # set message
         self.send(mes)  # send message
-        self.recieve()  # get response (success, error)
+        self.receive()  # get response (success, error)
 
-    def getVote(self, flag : str | None = 'normal', voting : str | None = 'GayKing') -> str:
+    def get_vote(self, flag: str | None = 'normal', voting: str | None = 'GayKing') -> str:
         """
         get current vote of user\n
         flag can be normal or double
         """
-        mes = {'type':'getVote', 'flag':flag, 'voting':voting}    # set message
+        mes = {'type': 'getVote', 'flag': flag, 'voting': voting}    # set message
         self.send(mes)  # send request
 
-        resp = self.recieve()   # get response
+        resp = self.receive()   # get response
 
-        return resp['Vote'] # return vote
+        return resp['Vote']  # return vote
 
-    def getVersion(self) -> str:
+    def get_version(self) -> str:
         """
         get current version of GUI program
         """
-        mes = {'type':'getVersion'} # set message
+        mes = {'type': 'getVersion'}  # set message
         self.send(mes)  # send request
-        resp = self.recieve()   # get response
+        resp = self.receive()   # get response
 
         return resp['Version']  # return version
 
-    def setVersion(self, version: str) -> str:
+    def set_version(self, version: str) -> None:
         """
         set current version of GUI program
         """
-        mes = {'type':'setVersion', 'version':version}  # set message
+        mes = {'type': 'setVersion', 'version': version}  # set message
         self.send(mes)  # send message
-        self.recieve()  # get response (success, error)
+        self.receive()  # get response (success, error)
 
-    def getFrees(self) -> int:
+    def get_frees(self) -> int:
         """
         get free double votes
         """
-        msg = {'type':'getFrees'}
+        msg = {'type': 'getFrees'}
         self.send(msg)
-        resp = self.recieve()
+        resp = self.receive()
         return resp['Value']
 
-    def getOnlineUsers(self) -> list:
+    def get_online_users(self) -> list:
         """
         get list of currently online users
         """
-        msg = {'type':'gOuser'}
+        msg = {'type': 'gOuser'}
         self.send(msg)
-        users = self.recieve()['users']
+        users = self.receive()['users']
         return users
 
-    def sendChat(self, message: str) -> None:
+    def send_chat(self, message: str) -> None:
         """
         send message to chat
         """
-        msg = {'type':'aChat', 'message':message}
+        msg = {'type': 'appendChat', 'message': message}
         self.send(msg)
-        self.recieve()
+        self.receive()
     
-    def getChat(self) -> list:
+    def get_chat(self) -> list:
         """
         get list of all chat messages
         """
-        msg = {'type':'gChat'}
+        msg = {'type': 'getChat'}
         self.send(msg)
-        raw = self.recieve(length=1048576)
-        out = sorted(raw, key = dateforsort)
+        raw = self.receive(length=1048576)
+        out = sorted(raw, key=date_for_sort)
         return out
 
     # Admin Functions
-    def AdminGetUsers(self) -> list:
+    def admin_get_users(self) -> list:
         """
         get list of all users with passwords and security clearance\n
         return format: [{"Name":username, "pwd":password, "sec":clearance}, ...]
         """
-        msg = {'type':'getUsers'}
+        msg = {'type': 'getUsers'}
         self.send(msg)
-        resp = self.recieve()
+        resp = self.receive()
         return resp
     
-    def AdminSetPassword(self, User: str, Password: str) -> None:
+    def admin_set_password(self, user: str, password: str) -> None:
         """
         set password of given user
         """
-        msg = {'type':'setPwd', 'User':User, 'newPwd':Password}
+        msg = {'type': 'setPwd', 'User': user, 'newPwd': password}
         self.send(msg)
-        self.recieve()
+        self.receive()
     
-    def AdminSetUsername(self, OldUsername: str, NewUsername: str) -> None:
+    def admin_ser_username(self, old_username: str, new_username: str) -> None:
         """
         change username of given user
         """
-        msg = {'type':'setName', 'OldUser':OldUsername, 'NewUser':NewUsername}
+        msg = {'type': 'setName', 'OldUser': old_username, 'NewUser': new_username}
         self.send(msg)
-        self.recieve()
+        self.receive()
 
-    def AdminSetSecurity(self, username: str, password: str) -> None:
+    def admin_set_security(self, username: str, password: str) -> None:
         """
         change security clearance of given user
         """
-        msg = {'type':'setSec', 'Name':username, 'sec':password}
+        msg = {'type': 'setSec', 'Name': username, 'sec': password}
         self.send(msg)
-        self.recieve()
+        self.receive()
 
-    def AdminAddUser(self, username: str, password: str, clearance: str) -> None:
+    def admin_add_user(self, username: str, password: str, clearance: str) -> None:
         """
         add new user
         """
-        msg = {'type':'newUser', 'Name':username, 'pwd':password, 'sec':clearance}
+        msg = {'type': 'newUser', 'Name': username, 'pwd': password, 'sec': clearance}
         self.send(msg)
-        self.recieve()
+        self.receive()
 
-    def AdminRemoveUser(self, username: str) -> None:
+    def admin_remove_user(self, username: str) -> None:
         """
         remove user
         """
-        msg = {'type':'rmUser', 'Name':username}
+        msg = {'type': 'removeUser', 'Name': username}
         self.send(msg)
-        self.recieve()
+        self.receive()
 
-    def AdminResetLogins(self) -> None:
+    def admin_reset_logins(self) -> None:
         """
         reset all current logins
         """
-        msg = {'type':'rsLogins'}
+        msg = {'type': 'rsLogins'}
         self.send(msg)
-        self.recieve()
+        self.receive()
 
     # magical functions
     def __repr__(self) -> str:
-        return f'Backend instance (debugmode: {self.debugmode}, user: {self.userN}, authkey: {self.AuthKey})'
+        return f'Backend instance (debug_mode: {self.debug_mode}, user: {self.userN}, authkey: {self.AuthKey})'
     
     def __str__(self) -> str:
         """
@@ -475,9 +480,9 @@ class Connection:
         """
         return dict of information when dict() is called
         """
-        d = {'debugmode':self.debugmode, 'user':self.userN, 'authkey':self.AuthKey}
+        d = {'debug_mode': self.debug_mode, 'user': self.userN, 'authkey': self.AuthKey}
         for element in d:
-            yield (element, d[element])
+            yield element, d[element]
 
     # def __del__(self):  # end connection if class instance is deleted # caused some issues where it got called without actually calling it
     #     self.end()
@@ -499,28 +504,6 @@ class Connection:
         """
         close connection with server and logout
         """
-        msg = {'type':'end'}    # set message
+        msg = {'type': 'end'}    # set message
         self.send(msg)  # send message
         self.AuthKey = None
-        
-############################################################################
-#                   Class for Searching Wolfram Alpha                      #
-############################################################################
-# class wiki:
-#     def __init__(self):
-#         app_id = ''
-#         # Instance of wolf ram alpha 
-#         # client class
-#         self.client = Client(app_id)
-    
-#     def getInfos(self, keyword):
-#         # Stores the response from 
-#         # wolf ram alpha
-#         res = self.client.query(keyword)
-#         resDict = dict()
-#         if res['@success']:
-#             for element in res['pod']:
-#                 t = element['@title']
-#                 with suppress(TypeError):
-#                     resDict[t] = element['subpod']['plaintext']
-#         return resDict

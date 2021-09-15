@@ -129,7 +129,8 @@ dmypy.json
 .pyre/
 
 # custom
-.vscode
+.idea/
+.vscode/
 data/
 lsd.pyw
 tempCodeRunnerFile.pyw

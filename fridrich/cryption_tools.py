@@ -1,32 +1,38 @@
-from json import JSONDecodeError
-from contextlib import suppress
-from random import sample
-from json import loads
-from math import sqrt
-import base64
+import math
+import json
+import contextlib
+import random
+import os
 
-# cryptography
+# cryptography imports
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.backends import default_backend
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
-from os import urandom
 import base64
+
 
 class DecryptionError(Exception):
     pass
 
+
 class NotEncryptedError(Exception):
     pass
 
-class extra:
-    "extra functions"
-    def median(string:str, medians:int) -> str:
-        "split in medians number of parts and then reverse"
+
+class Extra:
+    """
+    extra functions
+    """
+    @staticmethod
+    def median(string: str, medians: int) -> str:
+        """
+        split in medians number of parts and then reverse
+        """
         parts = list()
         out = list()
         for i in range(1, medians+1):
-            if not i==medians:
+            if not i == medians:
                 parts.append([int((len(string)-1)/medians*(i-1)), int((len(string)-1)/medians*i)])
             else:
                 parts.append([int((len(string)-1)/medians*(i-1)), len(string)])
@@ -34,17 +40,24 @@ class extra:
             out.append(string[::-1][part[0]:part[1]])
         return ''.join(out[::-1])
 
-class low:
-    def encrypt(string:str) -> str:
-        "encrypt a string"
+
+class Low:
+    @staticmethod
+    def encrypt(string: str) -> str:
+        """
+        encrypt a string
+        """
         out = str()
         for charter in string:
-            part = str(sqrt(ord(charter)-20))
-            out+=str(base64.b85encode(part.encode('utf-16'))).lstrip("b'").rstrip("='")+' '
+            part = str(math.sqrt(ord(charter)-20))
+            out += str(base64.b85encode(part.encode('utf-16'))).lstrip("b'").rstrip("='")+' '
         return out
 
-    def decrypt(string:str) -> str:
-        "decrypt a string"
+    @staticmethod
+    def decrypt(string: str) -> str:
+        """
+        decrypt a string
+        """
         try:
             out = str()
             parts = string.split(' ')
@@ -57,46 +70,58 @@ class low:
         except ValueError:
             raise DecryptionError('Not a valid encrypted string!')
 
-class high:
-    def encrypt(string:str) -> str:
-        "encrypt a string"
+
+class High:
+    @staticmethod
+    def encrypt(string: str) -> str:
+        """
+        encrypt a string
+        """
         temp1, temp2 = str(), str()
         for charter in string:
-            temp1 += low.encrypt((extra.median(charter, 3)+' '))+' '
-        for charter in extra.median(temp1, 13):
+            temp1 += Low.encrypt((Extra.median(charter, 3)+' '))+' '
+        for charter in Extra.median(temp1, 13):
             temp2 += str(ord(charter))+'|1|'
-        temp2 = low.encrypt(temp2)
-        out = extra.median(extra.median(temp2, 152), 72)
-        return extra.median(str(base64.b85encode(out.encode('utf-32'))).lstrip("b'").rstrip("='")[::-1], 327)
+        temp2 = Low.encrypt(temp2)
+        out = Extra.median(Extra.median(temp2, 152), 72)
+        return Extra.median(str(base64.b85encode(out.encode('utf-32'))).lstrip("b'").rstrip("='")[::-1], 327)
     
-    def decrypt(string:str) -> str:
-        "decrypt a string"
+    @staticmethod
+    def decrypt(string: str) -> str:
+        """
+        decrypt a string
+        """
         temp1, temp2 = str(), str()
-        string = extra.median(string, 327)[::-1]
+        string = Extra.median(string, 327)[::-1]
         string = base64.b85decode(string).decode('utf-32')
-        string = extra.median(extra.median(string, 72), 152)
-        string = low.decrypt(string)
-        parts  = string.split('|1|')
+        string = Extra.median(Extra.median(string, 72), 152)
+        string = Low.decrypt(string)
+        parts = string.split('|1|')
         for part in parts:
-            with suppress(ValueError):
+            with contextlib.suppress(ValueError):
                 temp1 += chr(int(part))
-        temp1 = extra.median(temp1, 13)
+        temp1 = Extra.median(temp1, 13)
         parts = temp1.split(' ')
         for part in parts:
-            temp2 += extra.median(low.decrypt(part), 3)
+            temp2 += Extra.median(Low.decrypt(part), 3)
         return temp2.replace('   ', '|tempspace|').replace(' ', '').replace('|tempspace|', ' ')
+
 
 try:
     with open('/home/pi/Server/data/KeyFile.enc', 'r') as inp:
-        defKey = low.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
+        defKey = Low.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
 
 except FileNotFoundError:
     with open('data/KeyFile.enc', 'r') as inp:
-        defKey = low.decrypt(inp.read())
+        defKey = Low.decrypt(inp.read())
+
 
 class MesCryp:
-    "en/de-cryption for messages"
-    def encrypt(string:str, key=None) -> bytes:
+    """
+    encryption/decryption for messages
+    """
+    @staticmethod
+    def encrypt(string: str, key=None) -> bytes:
         """
         encrypt a string
         
@@ -108,29 +133,35 @@ class MesCryp:
         encrypted = f.encrypt(string.encode('utf-8'))
         return encrypted    # returns bytes
     
-    def decrypt(byte:bytes, key:bytes) -> str:
-        "decrypt a bytes element"
+    @staticmethod
+    def decrypt(byte: bytes, key: bytes) -> str:
+        """
+        decrypt a bytes element
+        """
         f = Fernet(key)
         decrypted = str(f.decrypt(byte)).lstrip("b'").rstrip("'")
         return decrypted    # returns string
 
-def tryDecrypt(message:bytes, ClientKeys:dict, errors=True) -> str:
-    "try to decrypt a string with multiple methods"
-    with suppress(JSONDecodeError):
-        mes = loads(message)
-        if errors==True:
+
+def try_decrypt(message: bytes, client_keys: dict | list, errors=True) -> str | None:
+    """
+    try to decrypt a string with multiple methods
+    """
+    with contextlib.suppress(json.JSONDecodeError):
+        mes = json.loads(message)
+        if errors:
             raise NotEncryptedError('Message not encrypted')
         print(mes)
         return mes
 
     encMes = None
-    for key in ClientKeys:
-        with suppress((InvalidToken, ValueError)):
-            encMes = MesCryp.decrypt(message, key.encode() if type(key)==str else b'')
+    for key in client_keys:
+        with contextlib.suppress(InvalidToken, ValueError):
+            encMes = MesCryp.decrypt(message, key.encode() if type(key) == str else b'')
             break
     
     if not encMes:
-        with suppress(InvalidToken):
+        with contextlib.suppress(InvalidToken):
             encMes = MesCryp.decrypt(message, defKey)
     
     if not encMes:
@@ -139,28 +170,31 @@ def tryDecrypt(message:bytes, ClientKeys:dict, errors=True) -> str:
         return None
 
     try:
-        jsonMes = loads(encMes)
+        jsonMes = json.loads(encMes)
 
-    except JSONDecodeError:
+    except json.JSONDecodeError:
         try:
-            jsonMes = loads(message)
+            jsonMes = json.loads(message)
 
-        except JSONDecodeError:
+        except json.JSONDecodeError:
             return None
     return jsonMes
 
-def KeyFunc(ClientKeys:dict, length=10) -> str:
-    "generate random key"
+
+def key_func(client_keys: dict, length=10) -> str:
+    """
+    generate random key
+    """
     String = 'abcdefghijklmnopqrstuvwxyz'                               # string for creating auth Keys
     String += String.upper()+'1234567890ß´^°!"§$%&/()=?`+*#.:,;µ@€<>|'
 
-    s = ''.join(sample(String, length)) # try #1
-    while s in ClientKeys: 
-        s = ''.join(sample(String), length) # if try #1 is already in ClientKeys, try again
+    s = ''.join(random.sample(String, length))  # try #1
+    while s in client_keys: 
+        s = ''.join(random.sample(String, length))  # if try #1 is already in client_keys, try again
 
     password_provided = s  # This is input in the form of a string
     password = password_provided.encode()  # Convert to type bytes
-    salt = urandom(16)  
+    salt = os.urandom(16)
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -171,14 +205,15 @@ def KeyFunc(ClientKeys:dict, length=10) -> str:
     key = base64.urlsafe_b64encode(kdf.derive(password))  # Can only use kdf once
     return str(key).lstrip("b'").rstrip("'")
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     from time import time
     try:
         while True:
             st = input('\n\nSentence? ')
             start = time()
-            c = extra.median(low.encrypt(extra.median(st, 12)), 6)
-            e = extra.median(low.decrypt(extra.median(c, 6)), 12)
+            c = Extra.median(Low.encrypt(Extra.median(st, 12)), 6)
+            e = Extra.median(Low.decrypt(Extra.median(c, 6)), 12)
             end = time()
             print('Low encryption:')
             print(c)
@@ -192,12 +227,12 @@ if __name__=='__main__':
             print(c)
             print(e)
             print('\nencrypting and decrypting took:', round(end-start, 2))
-            input('Press enter to start high level encryption')
+            input('Press enter to start High level encryption')
             print('\nHigh encryption:')
             start1 = time()
-            c1 = high.encrypt(st)
+            c1 = High.encrypt(st)
             end1 = time()
-            e1 = high.decrypt(c1)
+            e1 = High.decrypt(c1)
             end2 = time()
             print(c1)
             print(e1)
