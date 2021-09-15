@@ -665,7 +665,7 @@ def update() -> None:
     """
     updates every few seconds
     """
-    global currTemp, reqCounter, FanC, UpDebug
+    global currTemp, reqCounter, FanC
     start = time.time()
     start1 = start
     while not Const.Terminate:
@@ -703,8 +703,6 @@ if __name__ == '__main__':
         
         AccManager = Manager(Const.crypFile)
         FunManager = FunctionManager()
-
-        UpDebug = Debug(Const.SerUpLogFile, Const.errFile)
 
         Vote = FileVar(json.load(open(Const.nowFile, 'r')), (Const.nowFile, Const.varNowFile))
         DV = DoubleVote(Const.doubFile)
