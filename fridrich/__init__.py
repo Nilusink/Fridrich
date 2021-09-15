@@ -1,5 +1,5 @@
-import cryption_tools
-import useful
+from fridrich import cryption_tools
+from fridrich import useful
 
 
 class ConsoleColors:

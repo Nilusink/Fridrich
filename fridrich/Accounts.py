@@ -1,5 +1,5 @@
+from fridrich import *
 import json
-from __init__ import *
 
 
 class Manager:

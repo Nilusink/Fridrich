@@ -1,4 +1,4 @@
-from __init__ import *
+from fridrich import *
 import new_types
 import typing
 import contextlib

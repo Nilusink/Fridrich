@@ -1,4 +1,4 @@
-import ServerFuncs
+from fridrich import ServerFuncs
 import traceback
 import time
 import json

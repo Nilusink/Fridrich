@@ -1,7 +1,7 @@
-from __init__ import *
-import os
+from fridrich import *
 import socket
 import json
+import os
 
 
 ############################################################################
