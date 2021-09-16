@@ -51,7 +51,7 @@ class Manager:
         element = str()
         i = int()
 
-        if new_user not in UsedNames:
+        if new_user not in UsedNames+[name+'2' for name in UsedNames]:  # name+'2' because the double-vote agent uses this for their votes
             for i, element in enumerate(account_list):
                 if element['Name'] == old_user:
                     element['Name'] = new_user  # if user is selected user, change its password

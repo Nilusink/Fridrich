@@ -1,3 +1,4 @@
+import socket
 import typing
 import json
 
@@ -125,3 +126,89 @@ class FileVar:
         """
         if not self.type == wanted_type:
             raise TypeError(f'Expected {wanted_type}, got {self.type}. This function is not available for the given variable type')
+
+
+class User:
+    def __init__(self, name: str, sec: str, enc_key: str) -> None:
+        """
+        ´´name´´: Name of the client
+        ´´sec´´: security clearance
+        ´´key´´: encryption key of client
+        """
+        self.name = name
+        self.sec = sec
+        self.enc_key = enc_key
+
+    def __getitem__(self, item) -> str:
+        return dict(self)[item]
+
+    def __iter__(self) -> typing.Iterator:
+        for key, item in (('key', self.enc_key), ('name', self.name), ('sec', self.sec)):
+            yield key, item
+
+    def __contains__(self, item) -> bool:
+        return item in self.name or item in self.enc_key
+
+
+class UserList:
+    def __init__(self, users: typing.List[User] | None = ...) -> None:
+        """
+        initialize a list for all users
+
+        special: ´´get_user´´ function (gets a user by its name or encryption key)
+        """
+        self.users = users if users is not ... else list()
+
+    def names(self) -> typing.Generator:
+        """
+        return the names of all users
+        """
+        for element in self.users:
+            yield element.name
+
+    def keys(self) -> typing.Generator:
+        """
+        return the encryption keys of all users
+        """
+        for element in self.users:
+            yield element.enc_key
+
+    def append(self, obj: User) -> None:
+        """
+        append object to the end of the list
+        """
+        self.users.append(obj)
+
+    def get_user(self, key: str | None = ..., name: str | None = ...) -> User:
+        """
+        get a user by its name or encryption key
+        """
+        for element in self.users:
+            if key in element or name in element:
+                return element
+        raise KeyError(f'No User with encryption key {key} or name {name} found!')
+
+    def remove(self, user: User) -> None:
+        """
+        remove a user by its class
+        """
+        self.users.remove(user)
+
+    def remove_by(self, *args, **kw) -> None:
+        """
+        remove a user by its username or encryption key
+
+        arguments are the same as for UserList.get_user
+        """
+        self.remove(self.get_user(*args, **kw))
+
+    def reset(self) -> None:
+        """
+        reset all users (clear self.users)
+        """
+        self.users = list()
+
+    def __iter__(self) -> typing.Iterator:
+        for element in self.users:
+            yield element
+

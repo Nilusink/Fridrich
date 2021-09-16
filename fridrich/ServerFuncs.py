@@ -188,7 +188,7 @@ class Communication:
             client.send(stringMes.encode('utf-8'))
 
     @staticmethod
-    def receive(server: socket.socket, debugging_method, keys: list) -> typing.Tuple[socket.socket, str] | typing.Tuple[None, None] | bool:
+    def receive(server: socket.socket, debugging_method, keys: list | typing.Generator) -> typing.Tuple[socket.socket, str] | typing.Tuple[None, None] | bool:
         """
         receive message from client
         """

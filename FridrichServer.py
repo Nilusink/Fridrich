@@ -19,6 +19,8 @@ debug = Debug(Const.SerlogFile, Const.errFile)
 
 client: socket.socket
 
+Users = UserList()
+
 
 def send_success(cl: socket.socket) -> None:
     """
@@ -31,7 +33,6 @@ def verify(username: str, password: str, cl: socket.socket) -> None:
     """
     verify the client and send result
     """
-    global ClientKeys
     resp = AccManager.verify(username, password)
     IsValid = False
     key = None
@@ -41,8 +42,8 @@ def verify(username: str, password: str, cl: socket.socket) -> None:
 
     elif resp:
         IsValid = True
-        key = key_func(ClientKeys, length=30)
-        ClientKeys[key] = resp
+        key = key_func((element.cryp_key for element in Users), length=30)
+        Users.append(User(username, resp, key))
         
     debug.debug(f'Username : {username}'+(' (Bot)' if resp == 'bot' else '')+', Auth: {IsValid}')   # print out username, if connected successfully or not and if it is a bot
     Communication.send(cl, {'Auth': IsValid, 'AuthKey': key}, encryption=MesCryp.encrypt)    # send result to client
@@ -77,9 +78,9 @@ def client_handler() -> None:
     """
     Handles communication with all clients
     """
-    global server, reqCounter, ClientKeys, client
+    global server, reqCounter, client
     try:
-        client, mes = Communication.receive(server, debug.debug, list(ClientKeys))
+        client, mes = Communication.receive(server, debug.debug, (element.cryp_key for element in Users))
         if mes is None:
             Communication.send(client, {'Error': 'MessageError', 'info': 'Invalid Message/AuthKey'})
             return
@@ -92,7 +93,7 @@ def client_handler() -> None:
         verify(mes['Name'], mes['pwd'], client)
 
     elif mes['type'] == 'secReq':
-        Communication.send(client, {'sec': ClientKeys[mes['AuthKey']][0]}, encryption=MesCryp.encrypt, key=mes['AuthKey'])
+        Communication.send(client, {'sec': Users.get_user(key=mes['AuthKey']).sec}, encryption=MesCryp.encrypt, key=mes['AuthKey'])
 
     else:
         if 'AuthKey' not in mes:    # if no AuthKey in message
@@ -336,7 +337,7 @@ class FunctionManager:
         """
         execute the requested function or return error
         """
-        clearance = ClientKeys[message['AuthKey']][0]
+        clearance = Users.get_user(message['AuthKey']).sec
         if clearance in self.switch:
             if message['type'] in self.switch[clearance]:
                 self.switch[clearance][message['type']](message, cl)
@@ -417,10 +418,10 @@ class AdminFuncs:
     @staticmethod
     def reset_user_logins(message: dict, cl: socket.socket, *args) -> None:
         """
-        reset all current logins (clear the ClientKeys variable)
+        reset all current logins (clear the Users variable)
         """
-        global ClientKeys
-        ClientKeys = dict()
+        global Users
+        Users.reset()
         send_success(cl)
 
     @staticmethod
@@ -429,7 +430,7 @@ class AdminFuncs:
         log-out user
         """
         with suppress(Exception):
-            ClientKeys.pop(message['AuthKey'])
+            Users.remove_by(key=message['AuthKey'])
 
 
 class ClientFuncs:
@@ -443,9 +444,8 @@ class ClientFuncs:
         
         votes user by username
         """
-        global Vote, ClientKeys
         resp = check_if(message['vote'], Vote.get(), message['voting'])
-        name = ClientKeys[message['AuthKey']][1]
+        name = Users.get_user(message['AuthKey']).name
         
         if not message['voting'] in Vote.get():
             Vote.__setitem__(message['voting'], dict())
@@ -464,7 +464,7 @@ class ClientFuncs:
         """
         global Vote
         tmp = Vote.get()
-        name = ClientKeys[message['AuthKey']][1]  # WHY U NOT WORKING
+        name = Users.get_user(message['AuthKey']).name
         with suppress(KeyError): 
             del tmp[message['voting']][name]  # try to remove vote from client, if client hasn't voted yet, ignore it
         Vote.set(tmp)
@@ -526,9 +526,8 @@ class ClientFuncs:
         """
         change the password of the user (only for logged in user)
         """
-        global ClientKeys
         validUsers = json.loads(cryption_tools.Low.decrypt(open(Const.crypFile, 'r').read()))
-        name = ClientKeys[message['AuthKey']][1]
+        name = Users.get_user(message['AuthKey']).name
         for element in validUsers:
             if element['Name'] == name:
                 element['pwd'] = message['newPwd']
@@ -550,7 +549,7 @@ class ClientFuncs:
         else:
             x = ''
 
-        name = ClientKeys[message['AuthKey']][1] + x
+        name = Users.get_user(message['AuthKey']).name + x
         if not message['voting'] in Vote.get():
             Communication.send(cl, {'Error': 'NotVoted'}, encryption=MesCryp.encrypt, key=message['AuthKey'])
             return
@@ -584,8 +583,7 @@ class ClientFuncs:
         """
         double vote
         """
-        global DV, Vote
-        name = ClientKeys[message['AuthKey']][1]
+        name = Users.get_user(message['AuthKey']).name
         resp = check_if(message['vote'], Vote.get(), message['voting'])     
         resp = DV.vote(resp, name)
         if resp:
@@ -599,7 +597,7 @@ class ClientFuncs:
         double unvote
         """
         global DV
-        name = ClientKeys[message['AuthKey']][1]
+        name = Users.get_user(message['AuthKey']).name
         DV.unvote(name, message['voting'])
         send_success(cl)
 
@@ -609,7 +607,7 @@ class ClientFuncs:
         get free double votes of logged in user
         """
         global DV
-        name = ClientKeys[message['AuthKey']][1]
+        name = Users.get_user(message['AuthKey']).name
         frees = DV.get_frees(name)
 
         if frees is False and frees != 0:
@@ -622,10 +620,9 @@ class ClientFuncs:
         """
         get all logged in users
         """
-        global ClientKeys
         names = list()
-        for element in ClientKeys:
-            names.append(ClientKeys[element][1])
+        for name in Users.names():
+            names.append(name)
         
         Communication.send(cl, {'users': names}, encryption=MesCryp.encrypt, key=message['AuthKey'])
 
@@ -634,7 +631,7 @@ class ClientFuncs:
         """
         Add message to chat
         """
-        name = ClientKeys[message['AuthKey']][1]
+        name = Users.get_user(message['AuthKey']).name
         Chat.add(message['message'], name)
         send_success(cl)
 
@@ -651,9 +648,8 @@ class ClientFuncs:
         """
         clear logged in user
         """
-        global ClientKeys
         with suppress(Exception):
-            ClientKeys.pop(message['AuthKey'])
+            Users.remove_by(message['AuthKey'])
 
 
 def receive() -> None:
@@ -701,8 +697,6 @@ if __name__ == '__main__':
         currTemp = cpu.temperature
 
         FanC = CPUHeatHandler()
-
-        ClientKeys = dict()  # list for Client AuthKeys
         
         AccManager = Manager(Const.crypFile)
         FunManager = FunctionManager()

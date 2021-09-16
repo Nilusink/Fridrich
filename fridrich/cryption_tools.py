@@ -1,5 +1,7 @@
 import contextlib
+import typing
 import random
+import types
 import math
 import json
 import os
@@ -181,7 +183,7 @@ def try_decrypt(message: bytes, client_keys: dict | list, errors=True) -> str | 
     return jsonMes
 
 
-def key_func(client_keys: dict, length=10) -> str:
+def key_func(client_keys: list | typing.Generator, length=10) -> str:
     """
     generate random key
     """
