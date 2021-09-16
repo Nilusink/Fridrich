@@ -43,10 +43,7 @@ def verify(username: str, password: str, cl: socket.socket) -> None:
     elif resp:
         IsValid = True
         key = key_func((element.key for element in Users), length=30)
-        new_user = User(username, resp, key)
-        print(new_user)
-        print(dict(new_user))
-        Users.append(new_user)
+        Users.append(User(username, resp, key))
         
     debug.debug(f'Username : {username}'+(' (Bot)' if resp == 'bot' else '')+', Auth: {IsValid}')   # print out username, if connected successfully or not and if it is a bot
     Communication.send(cl, {'Auth': IsValid, 'AuthKey': key}, encryption=MesCryp.encrypt)    # send result to client
