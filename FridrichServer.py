@@ -36,6 +36,7 @@ def verify(username: str, password: str, cl: socket.socket) -> None:
     resp = AccManager.verify(username, password)
     IsValid = False
     key = None
+    new_user = None
     if resp is None:
         Communication.send(cl, {'Error': 'SecurityNotSet', 'info': f'no information about security clearance for user {username}'}, encryption=MesCryp.encrypt)
         return
@@ -43,9 +44,10 @@ def verify(username: str, password: str, cl: socket.socket) -> None:
     elif resp:
         IsValid = True
         key = key_func((element.key for element in Users), length=30)
-        Users.append(User(username, resp, key))
+        new_user = User(name=username, sec=resp, key=key)
+        Users.append(new_user)
         
-    debug.debug(f'Username : {username}'+(' (Bot)' if resp == 'bot' else '')+', Auth: {IsValid}')   # print out username, if connected successfully or not and if it is a bot
+    debug.debug(f'{new_user}, Auth: {IsValid}')   # print out username, if connected successfully or not and if it is a bot
     Communication.send(cl, {'Auth': IsValid, 'AuthKey': key}, encryption=MesCryp.encrypt)    # send result to client
 
 

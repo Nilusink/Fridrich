@@ -105,7 +105,7 @@ class Manager:
         
         self.write_accounts(accounts)    # update accounts
 
-    def verify(self, username: str, password: str):
+    def verify(self, username: str, password: str) -> None | str:
         """
         return False or user security Clearance
         """
