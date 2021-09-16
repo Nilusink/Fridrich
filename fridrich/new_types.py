@@ -181,7 +181,7 @@ class UserList:
         """
         self.users.append(obj)
 
-    def get_user(self, key: str | None = ..., name: str | None = ...) -> User:
+    def get_user(self, key: str | None = "", name: str | None = "") -> User:
         """
         get a user by its name or encryption key
         """

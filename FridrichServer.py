@@ -126,13 +126,14 @@ def temp_updater(start_time: float) -> None:
     """
     update the temperature
     """
+    global currTemp
     if time.time()-start_time >= 1:    # every 2 seconds
         start_time += 1
-        curr_temp = cpu.temperature
+        currTemp = cpu.temperature
         room_temp, room_hum = read_temp()
         for element in (Const.tempLog, Const.varTempLog):
             with open(element, 'w') as output:
-                json.dump({"temp": room_temp, "cptemp": curr_temp, "hum": room_hum}, output)
+                json.dump({"temp": room_temp, "cptemp": currTemp, "hum": room_hum}, output)
         time.sleep(.8)
 
 
@@ -665,7 +666,7 @@ def update() -> None:
     """
     updates every few seconds
     """
-    global currTemp, reqCounter, FanC
+    global reqCounter, FanC
     start = time.time()
     start1 = start
     while not Const.Terminate:
