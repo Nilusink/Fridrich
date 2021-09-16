@@ -278,10 +278,10 @@ class Connection:
                     break   # else begin with new guy
 
         iDict = useful.Dict.inverse(StreakDict)    # inverse Dict ({1:a, 3:b, 0:c} instead of {a:1, b:3, c:0})
-        Name = iDict[max(iDict)]    # get name of the guy with max streak
-        Streak = StreakDict[Name]   # get streak by name
+        max_num = max(list(iDict))
+        Name = '|'.join([name for name in StreakDict if StreakDict[name] == max_num])
         
-        return Name, Streak  # return results
+        return Name, max_num  # return results
 
     def get_temps(self) -> tuple[float, float, float]:
         """
