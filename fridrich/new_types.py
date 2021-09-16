@@ -181,13 +181,18 @@ class UserList:
         """
         self.users.append(obj)
 
-    def get_user(self, key: str | None = "", name: str | None = "") -> User:
+    def get_user(self, key: str | None = ..., name: str | None = ...) -> User:
         """
         get a user by its name or encryption key
         """
         for element in self.users:
-            if key in element or name in element:
-                return element
+            if key is not ...:
+                if key in element:
+                    return element
+
+            if name is not ...:
+                if name in element:
+                    return element
         raise KeyError(f'No User with encryption key {key} or name {name} found!')
 
     def remove(self, user: User) -> None:
