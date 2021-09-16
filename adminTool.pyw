@@ -160,7 +160,9 @@ class Window:
             messagebox.showerror('Error', 'Invalid Username/Password')
             return
 
+        print(self.c)
         sec = self.c.get_sec_clearance()
+        print(sec)
         if sec != 'admin':
             messagebox.showerror('Error', f'Account is not admin ({sec})')
             return

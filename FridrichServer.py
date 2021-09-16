@@ -96,7 +96,9 @@ def client_handler() -> None:
         verify(mes['Name'], mes['pwd'], client)
 
     elif mes['type'] == 'secReq':
-        Communication.send(client, {'sec': Users.get_user(key=mes['AuthKey']).sec}, encryption=MesCryp.encrypt, key=mes['AuthKey'])
+        user = Users.get_user(key=mes['AuthKey'])
+        debug.debug('security request: ', user)
+        Communication.send(client, {'sec': user.sec}, encryption=MesCryp.encrypt, key=mes['AuthKey'])
 
     else:
         if 'AuthKey' not in mes:    # if no AuthKey in message
