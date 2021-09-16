@@ -42,7 +42,7 @@ def verify(username: str, password: str, cl: socket.socket) -> None:
 
     elif resp:
         IsValid = True
-        key = key_func((element.cryp_key for element in Users), length=30)
+        key = key_func((element.key for element in Users), length=30)
         Users.append(User(username, resp, key))
         
     debug.debug(f'Username : {username}'+(' (Bot)' if resp == 'bot' else '')+', Auth: {IsValid}')   # print out username, if connected successfully or not and if it is a bot
@@ -73,14 +73,15 @@ def debug_send_traceback(func: types.FunctionType) -> typing.Callable:
     return wrapper
 
 
-@debug_send_traceback
+#@debug_send_traceback
+@debug.catch_traceback
 def client_handler() -> None:
     """
     Handles communication with all clients
     """
     global server, reqCounter, client
     try:
-        client, mes = Communication.receive(server, debug.debug, (element.cryp_key for element in Users))
+        client, mes = Communication.receive(server, debug.debug, (element.key for element in Users))
         if mes is None:
             Communication.send(client, {'Error': 'MessageError', 'info': 'Invalid Message/AuthKey'})
             return

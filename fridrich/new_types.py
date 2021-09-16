@@ -1,4 +1,3 @@
-import socket
 import typing
 import json
 
@@ -129,7 +128,7 @@ class FileVar:
 
 
 class User:
-    def __init__(self, name: str, sec: str, enc_key: str) -> None:
+    def __init__(self, name: str, sec: str, key: str) -> None:
         """
         ´´name´´: Name of the client
         ´´sec´´: security clearance
@@ -137,17 +136,17 @@ class User:
         """
         self.name = name
         self.sec = sec
-        self.enc_key = enc_key
+        self.key = key
 
     def __getitem__(self, item) -> str:
         return dict(self)[item]
 
     def __iter__(self) -> typing.Iterator:
-        for key, item in (('key', self.enc_key), ('name', self.name), ('sec', self.sec)):
+        for key, item in (('key', self.key), ('name', self.name), ('sec', self.sec)):
             yield key, item
 
     def __contains__(self, item) -> bool:
-        return item in self.name or item in self.enc_key
+        return item in self.name or item in self.key
 
 
 class UserList:
@@ -171,7 +170,7 @@ class UserList:
         return the encryption keys of all users
         """
         for element in self.users:
-            yield element.enc_key
+            yield element.key
 
     def append(self, obj: User) -> None:
         """
@@ -211,4 +210,3 @@ class UserList:
     def __iter__(self) -> typing.Iterator:
         for element in self.users:
             yield element
-
