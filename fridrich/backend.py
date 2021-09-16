@@ -342,6 +342,17 @@ class Connection:
 
         return resp['Version']  # return version
 
+    def set_version(self, version: str) -> None:
+        """
+        set current version of GUI program
+        """
+        mes = {
+            'type': 'setVersion',
+            'version': version
+        }
+        self.send(mes)  # send message
+        self.receive()  # get response (success, error)
+
     def get_frees(self) -> int:
         """
         get free double votes
