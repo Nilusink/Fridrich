@@ -182,11 +182,14 @@ class Communication:
             mes = encryption(stringMes, key=key)
             # print(mes)
             with contextlib.suppress(OSError, AttributeError):
-                print(mes)
-                client.send(mes if type(mes) == bytes else mes.encode('utf-8'))
+                tmp = mes if type(mes) == bytes else mes.encode('utf-8')
+                client.send(tmp)
+                print(f'sent to client: {tmp}')
+            print('failed to send')
             return
+
         with contextlib.suppress(OSError, AttributeError):
-            print(stringMes)
+            print(f'sent to client: {stringMes}')
             client.send(stringMes.encode('utf-8'))
 
     @staticmethod

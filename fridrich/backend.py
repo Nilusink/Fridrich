@@ -184,13 +184,12 @@ class Connection:
         self.AuthKey = None  # reset AuthKey
         stringMes = json.dumps(msg, ensure_ascii=False)
 
-        print(stringMes)
-
+        print(f'sent to server: {stringMes}')
         mes = cryption_tools.MesCryp.encrypt(stringMes)
         self.Server.send(mes)
 
         tmp = self.Server.recv(2048)
-        print(f'Recieved from Server: {tmp}')
+        print(f'Received from Server: {tmp}')
         mes = json.loads(tmp.decode('utf-8'))  # cryption_tools.MesCryp.decrypt(self.Server.recv(2048)))
         print(mes)
         self.AuthKey = mes['AuthKey']
