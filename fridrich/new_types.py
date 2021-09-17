@@ -199,9 +199,6 @@ class User:
     def __contains__(self, item) -> bool:
         return item in self.name or item in self.key
 
-    def __del__(self) -> None:
-        self.end()
-
 
 class UserList:
     def __init__(self, users: typing.List[User] | None = ...) -> None:

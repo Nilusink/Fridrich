@@ -95,16 +95,16 @@ def client_handler() -> None:
         debug.debug(t_mes)
 
     except InvalidToken:
-        Communication.send(client, {'error': 'MessageError', 'info': "Couldn'T decrypt message with default key"}, encryption=MesCryp.encrypt)
+        Communication.send(cl, {'error': 'MessageError', 'info': "Couldn'T decrypt message with default key"}, encryption=MesCryp.encrypt)
         return
 
     mes = json.loads(t_mes)
     debug.debug(mes)
     if mes['type'] == 'auth':   # authorization function
-        verify(mes['Name'], mes['pwd'], client)
+        verify(mes['Name'], mes['pwd'], cl)
 
     else:
-        Communication.send(client, {'error': 'AuthError', 'info': 'user must be logged in to user functions'}, encryption=MesCryp.encrypt)
+        Communication.send(cl, {'error': 'AuthError', 'info': 'user must be logged in to user functions'}, encryption=MesCryp.encrypt)
 
 
 @debug.catch_traceback
@@ -667,7 +667,6 @@ def update() -> None:
 #                              Main Program                                #
 ############################################################################
 if __name__ == '__main__':
-    client = socket.socket()
     server = socket.socket()
     try:
         reqCounter = 0

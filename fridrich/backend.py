@@ -2,6 +2,7 @@ from fridrich import *
 import socket
 import json
 import os
+import time
 
 
 ############################################################################
@@ -184,14 +185,11 @@ class Connection:
         self.AuthKey = None  # reset AuthKey
         stringMes = json.dumps(msg, ensure_ascii=False)
 
-        print(f'sent to server: {stringMes}')
         mes = cryption_tools.MesCryp.encrypt(stringMes)
         self.Server.send(mes)
 
-        tmp = self.Server.recv(2048)
-        print(f'Received from Server: {tmp}')
-        mes = json.loads(tmp.decode('utf-8'))  # cryption_tools.MesCryp.decrypt(self.Server.recv(2048)))
-        print(mes)
+        mes = json.loads(cryption_tools.MesCryp.decrypt(self.Server.recv(2048)))
+
         self.AuthKey = mes['AuthKey']
         return mes['Auth']  # return True or False
 
