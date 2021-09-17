@@ -136,7 +136,7 @@ class MesCryp:
         return encrypted    # returns bytes
     
     @staticmethod
-    def decrypt(byte: bytes, key: bytes) -> str:
+    def decrypt(byte: bytes, key: bytes | None = defKey) -> str:
         """
         decrypt a bytes element
         """

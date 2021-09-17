@@ -1,5 +1,10 @@
+from concurrent.futures import ThreadPoolExecutor
+from fridrich import cryption_tools
+import contextlib
+import socket
 import typing
 import json
+import time
 
 
 class FileVar:
@@ -128,7 +133,7 @@ class FileVar:
 
 
 class User:
-    def __init__(self, name: str, sec: str, key: str) -> None:
+    def __init__(self, name: str, sec: str, key: str, cl: socket.socket, function_manager) -> None:
         """
         ´´name´´: Name of the client
         ´´sec´´: security clearance
@@ -137,6 +142,49 @@ class User:
         self.name = name
         self.sec = sec
         self.key = key
+
+        self.client = cl
+        self.manager = function_manager
+
+        self.disconnect = False
+
+        self.loop = True
+
+    def receive(self) -> None:
+        """
+        needs to be run in a thread, handles communication with client
+        """
+        while self.loop:
+            try:
+                mes = cryption_tools.MesCryp.decrypt(self.client.recv(2048), self.key.encode())
+
+                if not mes or mes is None:
+                    self.send({'Error': 'MessageError', 'info': 'Invalid Message/AuthKey'})
+                    continue
+
+                self.exec_func(json.loads(mes))
+
+            except cryption_tools.NotEncryptedError:
+                self.send({'Error': 'NotEncryptedError'})
+                return
+
+    def send(self, message: dict | list) -> None:
+        stringMes = json.dumps(message, ensure_ascii=False)
+        mes = cryption_tools.MesCryp.encrypt(stringMes, key=self.key.encode())
+
+        with contextlib.suppress(OSError, AttributeError):
+            self.client.send(mes)
+
+    def exec_func(self, message: dict):
+        """
+        execute functions for the client
+        """
+        self.manager.exec(message, self)
+
+    def end(self) -> None:
+        self.disconnect = True
+        self.loop = False
+        self.client.close()
 
     def __getitem__(self, item) -> str:
         return dict(self)[item]
@@ -151,15 +199,24 @@ class User:
     def __contains__(self, item) -> bool:
         return item in self.name or item in self.key
 
+    def __del__(self) -> None:
+        self.end()
+
 
 class UserList:
     def __init__(self, users: typing.List[User] | None = ...) -> None:
         """
-        initialize a list for all users
+        initialize a list for all users and start garbage-collector
 
         special: ´´get_user´´ function (gets a user by its name or encryption key)
         """
         self.users = users if users is not ... else list()
+        self.client_threads = list()
+
+        self.executor = ThreadPoolExecutor()
+        self.collector = self.executor.submit(self._garbage_collector, .5)
+
+        self.loop = True
 
     def names(self) -> typing.Generator:
         """
@@ -177,8 +234,9 @@ class UserList:
 
     def append(self, obj: User) -> None:
         """
-        append object to the end of the list
+        append object to the end of the list and start receive thread
         """
+        self.client_threads.append(self.executor.submit(obj.receive))
         self.users.append(obj)
 
     def get_user(self, key: str | None = ..., name: str | None = ...) -> User:
@@ -199,6 +257,7 @@ class UserList:
         """
         remove a user by its class
         """
+        user.end()
         self.users.remove(user)
 
     def remove_by(self, *args, **kw) -> None:
@@ -213,7 +272,30 @@ class UserList:
         """
         reset all users (clear self.users)
         """
+        for user in self.users:
+            user.send({'warning': 'server_logout'})
+            user.end()
         self.users = list()
+
+    def _garbage_collector(self, time_between_loops: int | None = .5) -> None:
+        """
+        check if any of the clients is disconnected and if yes, remove it
+        """
+        while self.loop:
+            for element in self.users:
+                if element.disconnect:
+                    element.end()
+                    self.users.remove(element)
+            time.sleep(time_between_loops)
+
+    def end(self) -> None:
+        """
+        shutdown all threads
+        """
+        self.loop = False
+        for user in self.users:
+            user.end()
+        self.executor.shutdown(wait=False)
 
     def __iter__(self) -> typing.Iterator:
         for element in self.users:

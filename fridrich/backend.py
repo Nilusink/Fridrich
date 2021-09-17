@@ -70,6 +70,8 @@ class Connection:
         self.AuthKey = None 
         self.userN = None
 
+        self.loop = True
+
     # "local" functions
     @staticmethod
     def error_handler(error: str, *args) -> None:
@@ -108,7 +110,6 @@ class Connection:
         """
         send messages to server
         """
-        self.reconnect()  # reconnect to the server
         
         if self.AuthKey:
             # add AuthKey to the dictionary+
@@ -133,27 +134,29 @@ class Connection:
         """
         receive messages from server, decrypt them and raise incoming errors
         """
-        msg = ''
-        while msg == '':
-            mes = self.Server.recv(length)
-            if self.debug_mode == 'full':
-                print(ConsoleColors.WARNING+str(mes)+ConsoleColors.ENDC)
-            msg = cryption_tools.try_decrypt(mes, [self.AuthKey], errors=False)
-
-            if msg is None:
-                msg = {'Error': 'MessageError', 'info': 'Server message received is not valid'}
-            if self.debug_mode in ('normal', 'full'):
-                print(ConsoleColors.OKCYAN+str(msg)+ConsoleColors.ENDC)
-
-        if 'Error' in msg:  # if error was send by server
-            success = False
-        else:
-            success = True
-
-        if success:
-            return msg  # if no error was detected, return dict
-        
-        self.error_handler(msg['Error'], msg)  # raise error if serverside-error
+        while self.loop:
+            mes = cryption_tools.MesCryp.decrypt(self.Server.recv(2048), self.AuthKey.encode())
+        # msg = ''
+        # while msg == '':
+        #     mes = self.Server.recv(length)
+        #     if self.debug_mode == 'full':
+        #         print(ConsoleColors.WARNING+str(mes)+ConsoleColors.ENDC)
+        #     msg = cryption_tools.try_decrypt(mes, [self.AuthKey], errors=False)
+        #
+        #     if msg is None:
+        #         msg = {'Error': 'MessageError', 'info': 'Server message received is not valid'}
+        #     if self.debug_mode in ('normal', 'full'):
+        #         print(ConsoleColors.OKCYAN+str(msg)+ConsoleColors.ENDC)
+        #
+        # if 'Error' in msg:  # if error was send by server
+        #     success = False
+        # else:
+        #     success = True
+        #
+        # if success:
+        #     return msg  # if no error was detected, return dict
+        #
+        # self.error_handler(msg['Error'], msg)  # raise error if serverside-error
 
     def reconnect(self) -> None:
         """
@@ -177,12 +180,18 @@ class Connection:
         }
         self.userN = username
         self.AuthKey = None  # reset AuthKey
-        self.send(msg)  # send message
-        resp = self.receive()   # receive authKey (or error)
+        stringMes = json.dumps(msg, ensure_ascii=False)
 
-        self.AuthKey = resp['AuthKey']
+        print(stringMes)
 
-        return resp['Auth']  # return True or False
+        mes = cryption_tools.MesCryp.encrypt(stringMes)
+        self.Server.send(mes)
+
+        mes = json.loads(cryption_tools.MesCryp.decrypt(self.Server.recv(2048)))
+        print(mes)
+        self.AuthKey = mes['AuthKey']
+
+        return mes['Auth']  # return True or False
 
     def get_sec_clearance(self) -> str:
         """
