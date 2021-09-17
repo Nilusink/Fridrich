@@ -189,7 +189,9 @@ class Connection:
         mes = cryption_tools.MesCryp.encrypt(stringMes)
         self.Server.send(mes)
 
-        mes = json.loads(self.Server.recv(2048).decode('utf-8'))  # cryption_tools.MesCryp.decrypt(self.Server.recv(2048)))
+        tmp = self.Server.recv(2048)
+        print(f'Recieved from Server: {tmp}')
+        mes = json.loads(tmp.decode('utf-8'))  # cryption_tools.MesCryp.decrypt(self.Server.recv(2048)))
         print(mes)
         self.AuthKey = mes['AuthKey']
         return mes['Auth']  # return True or False

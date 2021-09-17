@@ -236,6 +236,9 @@ class UserList:
         """
         append object to the end of the list and start receive thread
         """
+        if self.__contains__(obj.name):
+            self.remove_by(name=obj.name)
+
         self.client_threads.append(self.executor.submit(obj.receive))
         self.users.append(obj)
 
@@ -300,3 +303,13 @@ class UserList:
     def __iter__(self) -> typing.Iterator:
         for element in self.users:
             yield element
+
+    def __contains__(self, other: str) -> bool:
+        with contextlib.suppress(KeyError):
+            self.get_user(name=other)
+            return True
+
+        with contextlib.suppress(KeyError):
+            self.get_user(key=other)
+            return True
+        return False
