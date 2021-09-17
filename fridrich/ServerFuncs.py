@@ -188,7 +188,7 @@ class Communication:
             return
 
         with contextlib.suppress(OSError, AttributeError):
-            print(f'sent to client: {stringMes.encode("utf-8")}')
+            print(f'sent to client ({client}): {stringMes.encode("utf-8")}')
             client.send(stringMes.encode('utf-8'))
 
     @staticmethod
