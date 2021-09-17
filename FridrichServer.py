@@ -49,7 +49,8 @@ def verify(username: str, password: str, cl: socket.socket) -> None:
         Users.append(new_user)
         
     debug.debug(f'{new_user}, Auth: {IsValid}')   # print out username, if connected successfully or not and if it is a bot
-    Communication.send(cl, {'Auth': IsValid, 'AuthKey': key})  #, encryption=MesCryp.encrypt)    # send result to client
+    mes = cryption_tools.MesCryp.encrypt(json.dumps({'Auth': IsValid, 'AuthKey': key}))
+    cl.send(mes)
 
 
 def debug_send_traceback(func: types.FunctionType) -> typing.Callable:
