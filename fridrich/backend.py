@@ -173,6 +173,8 @@ class Connection:
         """
         authenticate with the server
         """
+        self.reconnect()
+
         msg = {  # message
             'type': 'auth',
             'Name': username,
@@ -187,10 +189,9 @@ class Connection:
         mes = cryption_tools.MesCryp.encrypt(stringMes)
         self.Server.send(mes)
 
-        mes = json.loads(cryption_tools.MesCryp.decrypt(self.Server.recv(2048)))
+        mes = json.loads(self.Server.recv(2048).decode('utf-8'))  # cryption_tools.MesCryp.decrypt(self.Server.recv(2048)))
         print(mes)
         self.AuthKey = mes['AuthKey']
-
         return mes['Auth']  # return True or False
 
     def get_sec_clearance(self) -> str:
