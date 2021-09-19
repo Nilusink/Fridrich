@@ -1,10 +1,38 @@
 from concurrent.futures import ThreadPoolExecutor
 from fridrich import cryption_tools
 import contextlib
+import traceback
+import datetime
 import socket
 import typing
+import types
 import json
 import time
+
+
+def debug(*args) -> None:
+    """
+    prints and writes all arguments
+
+    for each argument a new line in the file is begun
+    """
+    print('debugged: ', *args)
+    with open('thread_debug.txt', 'a') as out:
+        for element in args:
+            out.write(str(element)+'\n')
+
+
+def catch_traceback(func: types.FunctionType) -> typing.Callable:
+    """
+    execute function with traceback and debug all errors
+    """
+    def wrapper(*args, **kw) -> None:
+        try:
+            return func(*args, **kw)
+        except Exception as e:
+            err = f'######## - Exception "{e}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")} - ########\n\n{traceback.format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n'
+            debug(err)
+    return wrapper
 
 
 class FileVar:
@@ -157,32 +185,37 @@ class User:
         while self.loop:
             try:
                 mes = cryption_tools.MesCryp.decrypt(self.client.recv(2048), self.key.encode())
-                print(mes)
+                debug(f'received: {mes}')
 
                 if not mes or mes is None:
+                    debug('message error')
                     self.send({'Error': 'MessageError', 'info': 'Invalid Message/AuthKey'})
                     continue
-
+                debug('executing function')
                 self.exec_func(json.loads(mes))
+                debug('executed function')
 
             except cryption_tools.NotEncryptedError:
+                debug('encryption error when receiving')
                 self.send({'Error': 'NotEncryptedError'})
                 return
 
-    def send(self, message: dict | list) -> None:
-        stringMes = json.dumps(message, ensure_ascii=False)
+    @catch_traceback
+    def send(self, message: dict | list, message_type: str | None = 'function') -> None:
+        message['type'] = message_type
+        debug(f'sending data: {message}')
+        stringMes = json.dumps(message)
         mes = cryption_tools.MesCryp.encrypt(stringMes, key=self.key.encode())
 
-        with contextlib.suppress(OSError, AttributeError):
-            self.client.send(mes)
+        self.client.send(mes)
 
     def exec_func(self, message: dict):
         """
         execute functions for the client
         """
-
-        print(f'executing function: {message}')
-        self.manager.exec(message, self)
+        error, info = self.manager.exec(message, self)
+        if error:
+            self.send({"Error": error, "info": info})
 
     def end(self) -> None:
         self.disconnect = True

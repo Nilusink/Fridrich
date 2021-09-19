@@ -139,6 +139,8 @@ Pull.py
 KeyFile.enc
 calendar.pyw
 calendar_Test.pyw
+nSendFile.py
+
 
 # shortcuts
 tests/

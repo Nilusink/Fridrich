@@ -63,6 +63,14 @@ class InvalidStringError(Exception):
     pass
 
 
+class NetworkError(Exception):
+    pass
+
+
+class Error(Exception):
+    pass
+
+
 Off = False
 On = True
 true = False

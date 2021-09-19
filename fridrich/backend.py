@@ -1,3 +1,6 @@
+import typing
+from concurrent.futures import ThreadPoolExecutor
+from traceback import format_exc
 from fridrich import *
 import socket
 import json
@@ -40,6 +43,18 @@ def date_for_sort(message) -> str:
     return '.'.join(reversed(y[1].split('.')))+' - '+y[0]   # reverse date and place time at end
 
 
+def debug(func: typing.Callable) -> typing.Callable:
+    def wrapper(*args, **kw):
+        try:
+            return func(*args, **kw)
+
+        except Exception:
+            with open("backend.err.log", 'a') as out:
+                out.write(format_exc())
+            raise
+    return wrapper
+
+
 ############################################################################
 #                      Server Communication Class                          #
 ############################################################################
@@ -52,6 +67,7 @@ class Connection:
             
             ``host`` - name of the host, either IP or hostname / address
         """
+        self.messages = dict()
         self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # create socket instance
         self.debug_mode = debug_mode
 
@@ -72,6 +88,8 @@ class Connection:
         self.userN = None
 
         self.loop = True
+        
+        self.executor = ThreadPoolExecutor()
 
     # "local" functions
     @staticmethod
@@ -111,7 +129,9 @@ class Connection:
         """
         send messages to server
         """
-        
+
+        dictionary['time'] = time.time()
+
         if self.AuthKey:
             # add AuthKey to the dictionary+
             dictionary['AuthKey'] = self.AuthKey
@@ -131,33 +151,45 @@ class Connection:
         if self.debug_mode in ('normal', 'full'):
             print(ConsoleColors.OKCYAN+stringMes+ConsoleColors.ENDC)
 
+    @debug
     def receive(self, length: int | None = 2048):
         """
         receive messages from server, decrypt them and raise incoming errors
         """
         while self.loop:
             mes = cryption_tools.MesCryp.decrypt(self.Server.recv(2048), self.AuthKey.encode())
-        # msg = ''
-        # while msg == '':
-        #     mes = self.Server.recv(length)
-        #     if self.debug_mode == 'full':
-        #         print(ConsoleColors.WARNING+str(mes)+ConsoleColors.ENDC)
-        #     msg = cryption_tools.try_decrypt(mes, [self.AuthKey], errors=False)
-        #
-        #     if msg is None:
-        #         msg = {'Error': 'MessageError', 'info': 'Server message received is not valid'}
-        #     if self.debug_mode in ('normal', 'full'):
-        #         print(ConsoleColors.OKCYAN+str(msg)+ConsoleColors.ENDC)
-        #
-        # if 'Error' in msg:  # if error was send by server
-        #     success = False
-        # else:
-        #     success = True
-        #
-        # if success:
-        #     return msg  # if no error was detected, return dict
-        #
-        # self.error_handler(msg['Error'], msg)  # raise error if serverside-error
+            try:
+                mes = json.loads(mes)
+            except json.decoder.JSONDecodeError:
+                raise Error(f"cant decode: {mes}, type: {type(mes)}")
+
+            print(mes)
+            if mes["type"] == "function":
+                self.messages[mes["time"]] = mes["content"]
+            else:
+                raise ServerError(f"server send message: {mes}")
+
+    def wait_for_message(self, time_sent: float, timeout: int | None = ...) -> dict | list:
+        """
+        wait for the server message to be received.
+        :param time_sent: the time the message was sent
+        :param timeout: raise a error if no correct message was received (seconds)
+        :return: message(dict)
+        """
+        start = time.time()
+        print(f'waiting for message: {time_sent}')
+        while time_sent not in self.messages:  # wait for server message
+            print(self.messages)
+            if timeout is not ... and time.time()-start >= timeout:
+                raise NetworkError("no message was received from server before timeout")
+
+        out = self.messages[time_sent]
+        del self.messages[time_sent]
+        if "Error" in out:
+            self.error_handler(out["Error"], out)
+
+        print(f"found message: {out}")
+        return out
 
     def reconnect(self) -> None:
         """
@@ -174,6 +206,8 @@ class Connection:
         """
         authenticate with the server
         """
+        if not self.loop:
+            raise Error("already called 'end'")
         self.reconnect()
 
         msg = {  # message
@@ -191,15 +225,18 @@ class Connection:
         mes = json.loads(cryption_tools.MesCryp.decrypt(self.Server.recv(2048)))
 
         self.AuthKey = mes['AuthKey']
+        
+        self.executor.submit(self.receive, length=64000000)  # start thread for receiving
         return mes['Auth']  # return True or False
 
     def get_sec_clearance(self) -> str:
         """
         if signed in, get security clearance
         """
-        msg = {'type': 'secReq'}
+        msg = {'type': 'secReq', 'time': time.time()}
         self.send(msg)
-        resp = self.receive()
+        
+        resp = self.wait_for_message(msg["time"])
         return resp['sec']
 
     def get_attendants(self, flag: str | None = 'now', voting: str | None = 'GayKing') -> list:
@@ -207,8 +244,15 @@ class Connection:
         get Attendants of voting\n
         flag can be "now" or "last"
         """
-        self.send({'type': 'req', 'reqType': 'attds', 'atype': flag, 'voting': voting})  # send message
-        resp = self.receive()   # get response
+        msg = {
+               'type': 'req',
+               'reqType': 'attds',
+               'atype': flag, 
+               'voting': voting,
+               'time': time.time()
+        }
+        self.send(msg)  # send message
+        resp = self.wait_for_message(msg["time"])   # get response
 
         return resp['Names']    # return names
 
@@ -219,12 +263,16 @@ class Connection:
         DoubleVotes are only available once a week\n
         types will be ignored if flag is "dvote"
         """
-        msg = {'type': flag, 'voting': voting}
+        msg = {
+               'type': flag,
+               'voting': voting,
+               'time': time.time()
+        }
         if flag in ('vote', 'dvote'):
             msg['vote'] = args[0]  # if vote send vote
         
         self.send(msg)  # send vote
-        self.receive()  # receive success or error
+        self.wait_for_message(msg["time"])  # receive success or error
     
     def get_results(self, flag: str | None = 'now') -> dict:
         """
@@ -232,10 +280,14 @@ class Connection:
         flag can be "now", "last"\n
         return format: {voting : {"totalvotes" : int, "results" : {name1 : votes, name2 : votes}}}
         """
-        msg = {'type': 'req', 'reqType': flag}    # set message                    
+        msg = {
+               'type': 'req',
+               'reqType': flag,
+               'time': time.time()
+        }    # set message                    
         self.send(msg)  # send message
 
-        res = self.receive()    # get response
+        res = self.wait_for_message(msg["time"])    # get response
 
         out = dict()
         for voting in res:
@@ -258,10 +310,14 @@ class Connection:
         """
         get list of recent GayKings
         """
-        msg = {'type': 'req', 'reqType': 'log'}   # set message
+        msg = {
+               'type': 'req',
+               'reqType': 'log',
+               'time': time.time()
+        }   # set message
         self.send(msg)  # send request
 
-        res = self.receive()    # get response
+        res = self.wait_for_message(msg["time"])    # get response
         return res  # return response
 
     def get_streak(self) -> tuple[str, int]:
@@ -296,10 +352,14 @@ class Connection:
         """
         get room and cpu temperature in °C as well as humidity in %
         """
-        msg = {'type': 'req', 'reqType': 'temps'}  # set message
+        msg = {
+               'type': 'req',
+               'reqType': 'temps',
+               'time': time.time()
+        }  # set message
         self.send(msg)  # send message
 
-        res = self.receive()    # get response
+        res = self.wait_for_message(msg["time"])    # get response
 
         return res['Room'], res['CPU'], res['Hum']  # return room and cpu temperature
     
@@ -307,37 +367,55 @@ class Connection:
         """
         get Calendar in format {"date":listOfEvents}
         """
-        msg = {'type': 'req', 'reqType': 'cal'}   # set message
+        msg = {
+               'type': 'req',
+               'reqType': 'cal',
+               'time': time.time()
+        }   # set message
         self.send(msg)  # send request
 
-        res = self.receive()    # get response
+        res = self.wait_for_message(msg["time"])    # get response
         return res  # return response
 
     def send_cal(self, date: str, event: str) -> None:
         """
         send entry to calender
         """
-        msg = {'type': 'CalEntry', 'date': date, 'event': event}   # set message
+        msg = {
+               'type': 'CalEntry',
+               'date': date,
+               'event': event,
+               'time': time.time()
+        }   # set message
         self.send(msg)  # send message
-        self.receive()  # receive response (success, error)
+        self.wait_for_message(msg["time"])  # receive response (success, error)
 
     def change_pwd(self, new_password: str) -> None:
         """
         Change password of user currently logged in to
         """
-        mes = {'type': 'changePwd', 'newPwd': new_password}    # set message
-        self.send(mes)  # send message
-        self.receive()  # get response (success, error)
+        msg = {
+               'type': 'changePwd',
+               'newPwd': new_password,
+               'time': time.time()
+        }    # set message
+        self.send(msg)  # send message
+        self.wait_for_message(msg["time"])  # get response (success, error)
 
     def get_vote(self, flag: str | None = 'normal', voting: str | None = 'GayKing') -> str:
         """
         get current vote of user\n
         flag can be normal or double
         """
-        mes = {'type': 'getVote', 'flag': flag, 'voting': voting}    # set message
-        self.send(mes)  # send request
+        msg = {
+               'type': 'getVote',
+               'flag': flag,
+               'voting': voting,
+               'time': time.time()
+        }    # set message
+        self.send(msg)  # send request
 
-        resp = self.receive()   # get response
+        resp = self.wait_for_message(msg["time"])   # get response
 
         return resp['Vote']  # return vote
 
@@ -345,9 +423,12 @@ class Connection:
         """
         get current version of GUI program
         """
-        mes = {'type': 'getVersion'}  # set message
-        self.send(mes)  # send request
-        resp = self.receive()   # get response
+        msg = {
+               'type': 'getVersion',
+               'time': time.time()
+        }  # set message
+        self.send(msg)  # send request
+        resp = self.wait_for_message(msg["time"])   # get response
 
         return resp['Version']  # return version
 
@@ -356,8 +437,9 @@ class Connection:
         set current version of GUI program
         """
         mes = {
-            'type': 'setVersion',
-            'version': version
+               'type': 'setVersion',
+               'version': version,
+               'time': time.time()
         }
         self.send(mes)  # send message
         self.receive()  # get response (success, error)
@@ -366,35 +448,48 @@ class Connection:
         """
         get free double votes
         """
-        msg = {'type': 'getFrees'}
+        msg = {
+               'type': 'getFrees',
+               'time': time.time()
+        }
         self.send(msg)
-        resp = self.receive()
+        resp = self.wait_for_message(msg["time"])
         return resp['Value']
 
     def get_online_users(self) -> list:
         """
         get list of currently online users
         """
-        msg = {'type': 'gOuser'}
+        msg = {
+               'type': 'gOuser',
+               'time': time.time()
+        }
         self.send(msg)
-        users = self.receive()['users']
+        users = self.wait_for_message(msg["time"])['users']
         return users
 
     def send_chat(self, message: str) -> None:
         """
         send message to chat
         """
-        msg = {'type': 'appendChat', 'message': message}
+        msg = {
+               'type': 'appendChat',
+               'message': message,
+               'time': time.time()
+        }
         self.send(msg)
-        self.receive()
+        self.wait_for_message(msg["time"])
     
     def get_chat(self) -> list:
         """
         get list of all chat messages
         """
-        msg = {'type': 'getChat'}
+        msg = {
+               'type': 'getChat',
+               'time': time.time()
+        }
         self.send(msg)
-        raw = self.receive(length=1048576)
+        raw = self.wait_for_message(msg["time"])
         out = sorted(raw, key=date_for_sort)
         return out
 
@@ -404,58 +499,89 @@ class Connection:
         get list of all users with passwords and security clearance\n
         return format: [{"Name":username, "pwd":password, "sec":clearance}, ...]
         """
-        msg = {'type': 'getUsers'}
+        msg = {
+               'type': 'getUsers',
+               'time': time.time()
+        }
         self.send(msg)
-        resp = self.receive()
+        resp = self.wait_for_message(msg["time"])
         return resp
     
     def admin_set_password(self, user: str, password: str) -> None:
         """
         set password of given user
         """
-        msg = {'type': 'setPwd', 'User': user, 'newPwd': password}
+        msg = {
+               'type': 'setPwd',
+               'User': user,
+               'newPwd': password,
+               'time': time.time()
+        }
         self.send(msg)
-        self.receive()
+        self.wait_for_message(msg["time"])
     
     def admin_ser_username(self, old_username: str, new_username: str) -> None:
         """
         change username of given user
         """
-        msg = {'type': 'setName', 'OldUser': old_username, 'NewUser': new_username}
+        msg = {
+               'type': 'setName',
+               'OldUser': old_username,
+               'NewUser': new_username,
+               'time': time.time()
+        }
         self.send(msg)
-        self.receive()
+        self.wait_for_message(msg["time"])
 
     def admin_set_security(self, username: str, password: str) -> None:
         """
         change security clearance of given user
         """
-        msg = {'type': 'setSec', 'Name': username, 'sec': password}
+        msg = {
+               'type': 'setSec',
+               'Name': username,
+               'sec': password,
+               'time': time.time()
+        }
         self.send(msg)
-        self.receive()
+        self.wait_for_message(msg["time"])
 
     def admin_add_user(self, username: str, password: str, clearance: str) -> None:
         """
         add new user
         """
-        msg = {'type': 'newUser', 'Name': username, 'pwd': password, 'sec': clearance}
+        msg = {
+               'type': 'newUser',
+               'Name': username,
+               'pwd': password,
+               'sec': clearance,
+               'time': time.time()
+        }
         self.send(msg)
-        self.receive()
+        self.wait_for_message(msg["time"])
 
     def admin_remove_user(self, username: str) -> None:
         """
         remove user
         """
-        msg = {'type': 'removeUser', 'Name': username}
+        msg = {
+               'type': 'removeUser',
+               'Name': username,
+               'time': time.time()
+        }
         self.send(msg)
-        self.receive()
+        self.wait_for_message(msg["time"])
 
     def admin_reset_logins(self) -> None:
         """
         reset all current logins
         """
-        msg = {'type': 'rsLogins'}
+        msg = {
+               'type': 'rsLogins',
+               'time': time.time()
+        }
         self.send(msg)
-        self.receive()
+        self.wait_for_message(msg["time"])
 
     # magical functions
     def __repr__(self) -> str:
@@ -495,6 +621,12 @@ class Connection:
         """
         close connection with server and logout
         """
-        msg = {'type': 'end'}    # set message
+        msg = {
+               'type': 'end',
+               'time': time.time()
+        }    # set message
         self.send(msg)  # send message
         self.AuthKey = None
+
+        self.executor.shutdown(wait=False)
+        self.loop = False
