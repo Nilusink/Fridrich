@@ -189,15 +189,21 @@ class Connection:
                 self.messages["Error"] = f"cant decode: {mes}, type: {type(mes)}"
                 continue
 
-            match mes["type"]:
-                case "function":
-                    self.messages[mes["time"]] = mes["content"]
+            try:
+                match mes["type"]:
+                    case "function":
+                        self.messages[mes["time"]] = mes["content"]
 
-                case "Error":
-                    self.messages["Error"] = f"{mes['Error']} - {mes['info']}"
+                    case "Error":
+                        self.messages["Error"] = f"{mes['Error']} - {mes['info']}"
 
-                case _:
-                    raise ServerError(f"server send message: {mes}")
+                    case _:
+                        raise ServerError(f"server send message: {mes}")
+
+            except KeyError:
+                with open("backend.err.log", 'a') as out:
+                    out.write(format_exc()+f'message: {mes}')
+                raise
 
     def wait_for_message(self, time_sent: float, timeout: int | None = ...) -> dict | list:
         """
