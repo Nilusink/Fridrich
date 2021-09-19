@@ -161,9 +161,7 @@ class Connection:
             data = b''
             no_rec = 0
             to_read = 0
-            while len(data) < length:
-                # doing it in batches is generally better than trying
-                # to do it all in one go, so I believe.
+            while len(data) < length:   # receive message in patches so size doesn't matter
                 o_to_read = to_read
                 to_read = length - len(data)
                 data += self.Server.recv(
@@ -179,9 +177,11 @@ class Connection:
                     raise socket.error('Failed receiving data - connection loss')
 
             try:
-                mes = cryption_tools.MesCryp.decrypt(mes, self.AuthKey.encode()).replace('\\', '')
+                mes = cryption_tools.MesCryp.decrypt(data, self.AuthKey.encode()).replace('\\', '')
             except cryption_tools.InvalidToken:
-                self.messages["Error"] = f"cant decrypt: {mes}"
+                self.messages["Error"] = f"cant decrypt: {data}"
+                continue
+
             try:
                 mes = json.loads(mes)
 

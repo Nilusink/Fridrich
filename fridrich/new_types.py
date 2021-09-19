@@ -2,38 +2,10 @@ from concurrent.futures import ThreadPoolExecutor
 from fridrich import cryption_tools
 from struct import pack
 import contextlib
-import traceback
-import datetime
 import socket
 import typing
-import types
 import json
 import time
-
-
-def debug(*args) -> None:
-    """
-    prints and writes all arguments
-
-    for each argument a new line in the file is begun
-    """
-    print('debugged: ', *args)
-    with open('thread_debug.txt', 'a') as out:
-        for element in args:
-            out.write(str(element)+'\n')
-
-
-def catch_traceback(func: types.FunctionType) -> typing.Callable:
-    """
-    execute function with traceback and debug all errors
-    """
-    def wrapper(*args, **kw) -> None:
-        try:
-            return func(*args, **kw)
-        except Exception as e:
-            err = f'######## - Exception "{e}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")} - ########\n\n{traceback.format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n'
-            debug(err)
-    return wrapper
 
 
 class FileVar:
@@ -186,22 +158,17 @@ class User:
         while self.loop:
             try:
                 mes = cryption_tools.MesCryp.decrypt(self.client.recv(2048), self.key.encode())
-                debug(f'received: {mes}')
 
                 if not mes or mes is None:
-                    debug('message error')
                     self.send({'Error': 'MessageError', 'info': 'Invalid Message/AuthKey'})
                     continue
-                debug('executing function')
+
                 self.exec_func(json.loads(mes))
-                debug('executed function')
 
             except cryption_tools.NotEncryptedError:
-                debug('encryption error when receiving')
                 self.send({'Error': 'NotEncryptedError'})
                 return
 
-    @catch_traceback
     def send(self, message: dict | list, message_type: str | None = 'function') -> None:
         message['type'] = message_type
         stringMes = json.dumps(message)

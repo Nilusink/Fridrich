@@ -559,7 +559,6 @@ class ClientFuncs:
         """
         get the vote of the logged-in user
         """
-        print(f'executing get_vote for {user}')
         if 'flag' in message:
             x = '2' if message['flag'] == 'double' else ''
         else:
