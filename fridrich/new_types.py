@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from fridrich import cryption_tools
+from struct import pack
 import contextlib
 import traceback
 import datetime
@@ -203,11 +204,13 @@ class User:
     @catch_traceback
     def send(self, message: dict | list, message_type: str | None = 'function') -> None:
         message['type'] = message_type
-        debug(f'sending data: {message}')
         stringMes = json.dumps(message)
-        mes = cryption_tools.MesCryp.encrypt(stringMes, key=self.key.encode())
 
-        self.client.send(mes)
+        mes = cryption_tools.MesCryp.encrypt(stringMes, key=self.key.encode())
+        length = pack('>Q', len(mes))   # get message length
+
+        self.client.sendall(length)
+        self.client.sendall(mes)
 
     def exec_func(self, message: dict):
         """

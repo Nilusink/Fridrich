@@ -1,11 +1,12 @@
-import typing
 from concurrent.futures import ThreadPoolExecutor
 from traceback import format_exc
+from struct import unpack
 from fridrich import *
+import typing
 import socket
 import json
-import os
 import time
+import os
 
 
 ############################################################################
@@ -133,8 +134,6 @@ class Connection:
         dictionary['time'] = time.time()
 
         if self.AuthKey:
-            # add AuthKey to the dictionary+
-            dictionary['AuthKey'] = self.AuthKey
             stringMes = json.dumps(dictionary, ensure_ascii=False)
             if any(c in stringMes.lower() for c in ('ö', 'ä', 'ü')):
                 raise InvalidRequest('non-ascii charters are not allowed')
@@ -157,13 +156,39 @@ class Connection:
         receive messages from server, decrypt them and raise incoming errors
         """
         while self.loop:
-            mes = cryption_tools.MesCryp.decrypt(self.Server.recv(2048), self.AuthKey.encode())
+            bs = self.Server.recv(8)    # receive message length
+            (length,) = unpack('>Q', bs)
+            data = b''
+            no_rec = 0
+            to_read = 0
+            while len(data) < length:
+                # doing it in batches is generally better than trying
+                # to do it all in one go, so I believe.
+                o_to_read = to_read
+                to_read = length - len(data)
+                data += self.Server.recv(
+                                    4096 if to_read > 4096 else to_read
+                                    )
+
+                if to_read == o_to_read:    # check if new packages were received
+                    no_rec += 1
+                else:
+                    no_rec = 0
+
+                if no_rec >= 100:          # if for 100 loops no packages were received, raise connection loss
+                    raise socket.error('Failed receiving data - connection loss')
+
+            try:
+                mes = cryption_tools.MesCryp.decrypt(mes, self.AuthKey.encode()).replace('\\', '')
+            except cryption_tools.InvalidToken:
+                self.messages["Error"] = f"cant decrypt: {mes}"
             try:
                 mes = json.loads(mes)
-            except json.decoder.JSONDecodeError:
-                raise Error(f"cant decode: {mes}, type: {type(mes)}")
 
-            print(mes)
+            except json.decoder.JSONDecodeError:
+                self.messages["Error"] = f"cant decode: {mes}, type: {type(mes)}"
+                continue
+
             if mes["type"] == "function":
                 self.messages[mes["time"]] = mes["content"]
             else:
@@ -177,18 +202,22 @@ class Connection:
         :return: message(dict)
         """
         start = time.time()
-        print(f'waiting for message: {time_sent}')
+        if self.debug_mode in ('full', 'normal'):
+            print(f'waiting for message: {time_sent}')
         while time_sent not in self.messages:  # wait for server message
-            print(self.messages)
+            if self.debug_mode == 'full':
+                print(self.messages)
             if timeout is not ... and time.time()-start >= timeout:
                 raise NetworkError("no message was received from server before timeout")
+            if "Error" in self.messages:
+                raise Error(self.messages["Error"])
 
         out = self.messages[time_sent]
         del self.messages[time_sent]
         if "Error" in out:
             self.error_handler(out["Error"], out)
-
-        print(f"found message: {out}")
+        if self.debug_mode in ('all', 'normal'):
+            print(f"found message: {out}")
         return out
 
     def reconnect(self) -> None:
