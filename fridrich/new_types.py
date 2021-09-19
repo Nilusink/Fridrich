@@ -157,6 +157,7 @@ class User:
         while self.loop:
             try:
                 mes = cryption_tools.MesCryp.decrypt(self.client.recv(2048), self.key.encode())
+                print(mes)
 
                 if not mes or mes is None:
                     self.send({'Error': 'MessageError', 'info': 'Invalid Message/AuthKey'})
@@ -179,6 +180,8 @@ class User:
         """
         execute functions for the client
         """
+
+        print(f'executing function: {message}')
         self.manager.exec(message, self)
 
     def end(self) -> None:

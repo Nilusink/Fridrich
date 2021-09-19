@@ -325,6 +325,7 @@ class FunctionManager:
         """
         execute the requested function or return error
         """
+        print(f'got function to execute: {message} from user: {user}')
         if user.sec in self.switch:
             if message['type'] in self.switch[user.sec]:
                 self.switch[user.sec][message['type']](message, user)
