@@ -185,7 +185,7 @@ class User:
         """
         error, info = self.manager.exec(message, self)
         if error:
-            self.send({"Error": error, "info": info})
+            self.send({"Error": error, "info": info}, message_type='Error')
 
     def end(self) -> None:
         self.disconnect = True

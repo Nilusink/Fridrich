@@ -151,7 +151,7 @@ class Connection:
             print(ConsoleColors.OKCYAN+stringMes+ConsoleColors.ENDC)
 
     @debug
-    def receive(self, length: int | None = 2048):
+    def receive(self):
         """
         receive messages from server, decrypt them and raise incoming errors
         """
@@ -177,7 +177,7 @@ class Connection:
                     raise socket.error('Failed receiving data - connection loss')
 
             try:
-                mes = cryption_tools.MesCryp.decrypt(data, self.AuthKey.encode()).replace('\\', '')
+                mes = cryption_tools.MesCryp.decrypt(data, self.AuthKey.encode())
             except cryption_tools.InvalidToken:
                 self.messages["Error"] = f"cant decrypt: {data}"
                 continue
@@ -189,10 +189,15 @@ class Connection:
                 self.messages["Error"] = f"cant decode: {mes}, type: {type(mes)}"
                 continue
 
-            if mes["type"] == "function":
-                self.messages[mes["time"]] = mes["content"]
-            else:
-                raise ServerError(f"server send message: {mes}")
+            match mes["type"]:
+                case "function":
+                    self.messages[mes["time"]] = mes["content"]
+
+                case "Error":
+                    self.messages["Error"] = f"{mes['Error']} - {mes['info']}"
+
+                case _:
+                    raise ServerError(f"server send message: {mes}")
 
     def wait_for_message(self, time_sent: float, timeout: int | None = ...) -> dict | list:
         """
@@ -255,7 +260,7 @@ class Connection:
 
         self.AuthKey = mes['AuthKey']
         
-        self.executor.submit(self.receive, length=64000000)  # start thread for receiving
+        self.executor.submit(self.receive)  # start thread for receiving
         return mes['Auth']  # return True or False
 
     def get_sec_clearance(self) -> str:
@@ -549,7 +554,7 @@ class Connection:
         self.send(msg)
         self.wait_for_message(msg["time"])
     
-    def admin_ser_username(self, old_username: str, new_username: str) -> None:
+    def admin_set_username(self, old_username: str, new_username: str) -> None:
         """
         change username of given user
         """
