@@ -6,14 +6,12 @@ import json
 import os
 
 
-def get_list(directory: str | None = ...) -> list:
+def get_list() -> list:
     """
-    :param directory: the directory where the apps are saved
     :return: a list of available apps with versions
     """
-    if directory is ...:
-        with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
-            directory = json.load(inp)["AppStoreDirectory"]
+    with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
+        directory = json.load(inp)["AppStoreDirectory"]
 
     apps = list()
     for app in os.listdir(directory):
@@ -43,3 +41,26 @@ def send_apps(message: dict, user: new_types.User) -> None:
         "time": message["time"]
     }
     user.send(msg)
+
+
+def download_app(message: dict, user: new_types.User) -> None:
+    """
+    :param message: the message received from the client (for the timestamp)
+    :param user: the user to send the answer to
+    :return: None
+    """
+    with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
+        directory = json.load(inp)["AppStoreDirectory"]
+
+    files = (file for file in os.listdir(directory+message["app"]) if file.endswith(".zip"))
+    msg = {
+        "content": files,
+        "time": message["time"]
+    }
+    user.send(msg)
+    for file in files:
+        msg = {
+            "content": open(directory+message["app"]+'/'+file, 'r').read(),
+            "time": message["time"]
+        }
+        user.send(msg)

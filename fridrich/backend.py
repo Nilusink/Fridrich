@@ -1,9 +1,9 @@
 from concurrent.futures import ThreadPoolExecutor, Future
 from traceback import format_exc
-from struct import unpack
 from fridrich import *
 import typing
 import socket
+import struct
 import json
 import time
 import os
@@ -159,8 +159,13 @@ class Connection:
         receive messages from server, decrypt them and raise incoming errors
         """
         while self.loop:
-            bs = self.Server.recv(8)    # receive message length
-            (length,) = unpack('>Q', bs)
+            try:
+                bs = self.Server.recv(8)    # receive message length
+                (length,) = struct.unpack('>Q', bs)
+
+            except (ConnectionResetError, struct.error):
+                continue
+
             data = b''
             no_rec = 0
             to_read = 0
@@ -644,6 +649,26 @@ class Connection:
         }
         self.send(msg)
         return self.wait_for_message(msg["time"])
+
+    def download_app(self, app: str) -> None:
+        """
+        :param app: which app to download
+        """
+        msg = {
+            "type": "download_app",
+            "app": app,
+            "time": time.time()
+        }
+        self.send(msg)
+        meta = self.wait_for_message(msg["time"])
+        data = dict()
+        for file in meta:
+            data[file] = self.wait_for_message(msg["time"])
+        print(meta)
+        print(data)
+        for file in data:
+            with open(meta["filename"], 'w') as out:
+                out.write(data[file]["file_content"])
 
     # magical functions
     def __repr__(self) -> str:

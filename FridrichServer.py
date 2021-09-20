@@ -335,7 +335,8 @@ class FunctionManager:
                 'end': ClientFuncs.end
             },
             'appstore': {
-                'get_apps': AppStore.send_apps
+                'get_apps': AppStore.send_apps,
+                "download_app": AppStore.download_app
             }
         }
 
