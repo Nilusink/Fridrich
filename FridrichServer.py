@@ -14,6 +14,7 @@ from fridrich.FanController import CPUHeatHandler
 from fridrich.Accounts import Manager
 from fridrich.ServerFuncs import *
 from fridrich.new_types import *
+from fridrich import AppStore
 
 Const = Constants()
 debug = Debug(Const.SerlogFile, Const.errFile)
@@ -87,7 +88,6 @@ def client_handler() -> None:
     """
     Handles communication with all clients
     """
-
     try:
         cl, address = server.accept()
         debug.debug(f'Connected to {address}')
@@ -105,10 +105,21 @@ def client_handler() -> None:
     mes = json.loads(t_mes)
     debug.debug(mes)
     if mes['type'] == 'auth':   # authorization function
-        verify(mes['Name'], mes['pwd'], cl)
+        if mes["name"] == "AppStore":
+            key = key_func((element.key for element in Users), length=10)
+            new_user = User(name="AppStore"+time.strftime("%H:%M:%S"), sec="AppStore", key=key, cl=cl, function_manager=FunManager)
+            Users.append(new_user)
+            debug.debug(f'{new_user}, Auth: True')   # print out username, if connected successfully or not and if it is a bot
+            mes = cryption_tools.MesCryp.encrypt(json.dumps({'Auth': True, 'AuthKey': key}))
+            cl.send(mes)
+            return
+        else:
+            verify(mes['Name'], mes['pwd'], cl)
+            return
 
     else:
         Communication.send(cl, {'error': 'AuthError', 'info': 'user must be logged in to user functions'}, encryption=MesCryp.encrypt)
+        return
 
 
 @debug.catch_traceback
@@ -322,6 +333,9 @@ class FunctionManager:
                 'setVersion': ClientFuncs.set_version,
                 'getVersion': ClientFuncs.get_version,
                 'end': ClientFuncs.end
+            },
+            'appstore': {
+                'get_apps': AppStore.send_apps
             }
         }
     

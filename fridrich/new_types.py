@@ -183,7 +183,15 @@ class User:
         """
         execute functions for the client
         """
-        error, info = self.manager.exec(message, self)
+        if message["type"] == "seqReq":
+            msg = {
+                "content": {"sec": self.sec},
+                "time": message["time"]
+            }
+            self.send(msg)
+            return
+        else:
+            error, info = self.manager.exec(message, self)
         if error:
             self.send({"Error": error, "info": info}, message_type='Error')
 
