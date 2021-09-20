@@ -306,8 +306,8 @@ class Window:
         global w, c
         ans = messagebox.askyesno('Confirm', 'Clear all users (logout)')
         if ans:
-            c.admin_reset_logins()
-            c.AuthKey = None
+            with suppress(ConnectionAbortedError):
+                c.admin_reset_logins()
             w.root.destroy()
             w = Window(c)
 

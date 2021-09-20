@@ -226,7 +226,7 @@ class Connection:
             if "Error" in self.messages:
                 raise Error(self.messages["Error"])
             if "disconnect" in self.messages:
-                raise ConnectionError("Server endet connection")
+                raise ConnectionAbortedError("Server ended connection")
 
         out = self.messages[time_sent]
         del self.messages[time_sent]

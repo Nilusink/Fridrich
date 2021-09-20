@@ -191,7 +191,6 @@ class User:
             self.send(msg)
             return
         else:
-            print(f"function '{message['type']}' type:{type(message['type'])} != 'secReq' type: str")
             error, info = self.manager.exec(message, self)
         if error:
             self.send({"Error": error, "info": info}, message_type='Error')
