@@ -12,7 +12,8 @@ def get_list(directory: str | None = ...) -> list:
     :return: a list of available apps with versions
     """
     if directory is ...:
-        directory = os.getcwd()+'\\Apps\\'
+        with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
+            directory = json.load(inp)["AppStoreDirectory"]
 
     apps = list()
     for app in os.listdir(directory):
