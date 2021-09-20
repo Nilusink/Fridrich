@@ -134,7 +134,7 @@ class FileVar:
 
 
 class User:
-    def __init__(self, name: str, sec: str, key: str, cl: socket.socket, function_manager) -> None:
+    def __init__(self, name: str, sec: str, key: str, cl: socket.socket, ip: str, function_manager) -> None:
         """
         ´´name´´: Name of the client
         ´´sec´´: security clearance
@@ -145,6 +145,7 @@ class User:
         self.key = key
 
         self.client = cl
+        self.ip = ip
         self.manager = function_manager
 
         self.disconnect = False

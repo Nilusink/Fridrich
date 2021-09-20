@@ -1,4 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, Future
+from fridrich.AppStore import send_receive
 from traceback import format_exc
 from fridrich import *
 import typing
@@ -661,14 +662,8 @@ class Connection:
         }
         self.send(msg)
         meta = self.wait_for_message(msg["time"])
-        data = dict()
         for file in meta:
-            data[file] = self.wait_for_message(msg["time"])
-        print(meta)
-        print(data)
-        for file in data:
-            with open(meta["filename"], 'w') as out:
-                out.write(data[file]["file_content"])
+            send_receive(mode='receive', print_steps=True)
 
     # magical functions
     def __repr__(self) -> str:
