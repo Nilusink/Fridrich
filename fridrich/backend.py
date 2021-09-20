@@ -631,6 +631,18 @@ class Connection:
         self.send(msg)
         self.wait_for_message(msg["time"])
 
+    # AppStore functions
+    def get_apps(self) -> list:
+        """
+        get all available apps and versions
+        """
+        msg = {
+            "type": "get_apps",
+            "time": time.time()
+        }
+        self.send(msg)
+        return self.wait_for_message(msg["time"])
+
     # magical functions
     def __repr__(self) -> str:
         return f'Backend instance (debug_mode: {self.debug_mode}, user: {self.userN}, authkey: {self.AuthKey})'

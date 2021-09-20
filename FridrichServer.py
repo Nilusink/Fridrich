@@ -434,12 +434,12 @@ class AdminFuncs:
         Users.reset()
 
     @staticmethod
-    def end(message: dict, *args) -> None:
+    def end(message: dict, user: User, *args) -> None:
         """
         log-out user
         """
         with suppress(Exception):
-            Users.remove_by(key=message['AuthKey'])
+            Users.remove(user)
 
 
 class ClientFuncs:
@@ -579,7 +579,7 @@ class ClientFuncs:
         else:
             x = ''
 
-        name = Users.get_user(message['AuthKey']).name + x
+        name = user.name + x
         if not message['voting'] in Vote.get():
             mes = {
                 "content": {'Error': 'NotVoted'},
@@ -629,7 +629,7 @@ class ClientFuncs:
         """
         double vote
         """
-        name = Users.get_user(message['AuthKey']).name
+        name = user.name
         resp = check_if(message['vote'], Vote.get(), message['voting'])     
         resp = DV.vote(resp, name)
         if resp:
@@ -647,7 +647,7 @@ class ClientFuncs:
         double unvote
         """
         global DV
-        name = Users.get_user(message['AuthKey']).name
+        name = user.name
         DV.unvote(name, message['voting'])
         send_success(user, message)
 
@@ -657,7 +657,7 @@ class ClientFuncs:
         get free double votes of logged in user
         """
         global DV
-        name = Users.get_user(message['AuthKey']).name
+        name = user.name
         frees = DV.get_frees(name)
 
         if frees is False and frees != 0:
