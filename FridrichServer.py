@@ -105,7 +105,7 @@ def client_handler() -> None:
     mes = json.loads(t_mes)
     debug.debug(mes)
     if mes['type'] == 'auth':   # authorization function
-        if mes["name"] == "AppStore":
+        if mes["Name"] == "AppStore":
             key = key_func((element.key for element in Users), length=10)
             new_user = User(name="AppStore"+time.strftime("%H:%M:%S"), sec="AppStore", key=key, cl=cl, function_manager=FunManager)
             Users.append(new_user)

@@ -1,7 +1,7 @@
 """
 Handler for the AppStore  (server)
 """
-import new_types
+from fridrich import new_types
 import json
 import os
 

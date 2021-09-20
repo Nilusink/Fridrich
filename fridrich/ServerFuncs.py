@@ -134,7 +134,7 @@ class Debug:
             try:
                 return func(*args, **kw)
             except Exception as e:
-                err = f'######## - Exception "{e}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")} - ########\n\n{traceback.format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n'
+                err = f'\n\n\n######## - Exception "{e}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")} - ########\n\n{traceback.format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n'
                 self.debug(err)
         return wrapper
 
