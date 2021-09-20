@@ -184,7 +184,6 @@ class Connection:
 
             try:
                 mes = json.loads(mes)
-
             except json.decoder.JSONDecodeError:
                 self.messages["Error"] = f"cant decode: {mes}, type: {type(mes)}"
                 continue
@@ -196,6 +195,10 @@ class Connection:
 
                     case "Error":
                         self.messages["Error"] = f"{mes['Error']} - {mes['info']}"
+
+                    case "disconnect":
+                        self.messages["disconnect"] = True
+                        self.end()
 
                     case _:
                         raise ServerError(f"server send message: {mes}")
@@ -222,6 +225,8 @@ class Connection:
                 raise NetworkError("no message was received from server before timeout")
             if "Error" in self.messages:
                 raise Error(self.messages["Error"])
+            if "disconnect" in self.messages:
+                raise ConnectionError("Server endet connection")
 
         out = self.messages[time_sent]
         del self.messages[time_sent]
@@ -670,3 +675,6 @@ class Connection:
 
         self.executor.shutdown(wait=False)
         self.loop = False
+
+        self.executor = ThreadPoolExecutor(max_workers=1)
+        self.loop = True

@@ -183,7 +183,7 @@ class User:
         """
         execute functions for the client
         """
-        if message["type"] == "seqReq":
+        if message["type"] == "secReq":
             msg = {
                 "content": {"sec": self.sec},
                 "time": message["time"]
@@ -191,6 +191,7 @@ class User:
             self.send(msg)
             return
         else:
+            print(f"function '{message['type']}' type:{type(message['type'])} != 'secReq' type: str")
             error, info = self.manager.exec(message, self)
         if error:
             self.send({"Error": error, "info": info}, message_type='Error')
@@ -287,7 +288,7 @@ class UserList:
         reset all users (clear self.users)
         """
         for user in self.users:
-            user.send({'warning': 'server_logout'})
+            user.send({'warning': 'server_logout'}, message_type="disconnect")
             user.end()
         self.users = list()
 
