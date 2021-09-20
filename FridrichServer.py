@@ -107,7 +107,7 @@ def client_handler() -> None:
     if mes['type'] == 'auth':   # authorization function
         if mes["Name"] == "AppStore":
             key = key_func((element.key for element in Users), length=10)
-            new_user = User(name="AppStore"+time.strftime("%H:%M:%S"), sec="AppStore", key=key, cl=cl, function_manager=FunManager)
+            new_user = User(name="AppStore"+time.strftime("%H:%M:%S"), sec="appstore", key=key, cl=cl, function_manager=FunManager)
             Users.append(new_user)
             debug.debug(f'{new_user}, Auth: True')   # print out username, if connected successfully or not and if it is a bot
             mes = cryption_tools.MesCryp.encrypt(json.dumps({'Auth': True, 'AuthKey': key}))
