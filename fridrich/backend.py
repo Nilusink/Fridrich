@@ -211,11 +211,12 @@ class Connection:
                     out.write(format_exc()+f'message: {mes}')
                 raise
 
-    def wait_for_message(self, time_sent: float, timeout: int | None = ...) -> dict | list:
+    def wait_for_message(self, time_sent: float, timeout: int | None = ..., delay: int | None = .1) -> dict | list:
         """
         wait for the server message to be received.
         :param time_sent: the time the message was sent
         :param timeout: raise a error if no correct message was received (seconds)
+        :param delay: The delay for the while loop when checking self.messages
         :return: message(dict)
         """
         start = time.time()
@@ -230,6 +231,7 @@ class Connection:
                 raise Error(self.messages["Error"])
             if "disconnect" in self.messages:
                 raise ConnectionAbortedError("Server ended connection")
+            time.sleep(delay)
 
         out = self.messages[time_sent]
         del self.messages[time_sent]

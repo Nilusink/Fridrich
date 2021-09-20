@@ -149,7 +149,7 @@ class Window:
         """
         self.root.mainloop()
 
-    def login(self, *args) -> None:
+    def login(self, *_args) -> None:
         """
         try to login with username and password
         """
@@ -250,7 +250,7 @@ class Window:
 
         self.root.update()
     
-    def update(self, *args) -> None:
+    def update(self, *_args) -> None:
         """
         update the variables
         """
@@ -266,7 +266,7 @@ class Window:
         
                 try:
                     if name != o_name:
-                        self.c.admin_ser_username(o_name, name)
+                        self.c.admin_set_username(o_name, name)
                     
                     if pwd != o_pwd:
                         self.c.admin_set_password(name, pwd)
@@ -299,7 +299,7 @@ class Window:
             messagebox.showerror('Error', f'User with name "{""}" already exists')
 
     @staticmethod
-    def reset_logins(event=None) -> None:
+    def reset_logins(_event=None) -> None:
         """
         reset all logins
         """
@@ -311,11 +311,10 @@ class Window:
             w.root.destroy()
             w = Window(c)
 
-    def end(self, *args) -> None:
+    def end(self, *_args) -> None:
         """
         end connection to fridrich and destroy the tkinter.root
         """
-        del args
         self.c.end()
         self.root.destroy()
 

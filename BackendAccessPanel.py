@@ -37,9 +37,9 @@ if __name__ == '__main__':
                 x = eval(cmd)   # execute the code
                 print(ConsoleColors.OKGREEN+str(x)+ConsoleColors.ENDC)    # print it
 
-        except Exception:   # if error occurs, try to execute the command with exec and if that fails again, return both errors
+        except (Exception,):   # if error occurs, try to execute the command with exec and if that fails again, return both errors
             trace = format_exc()
             try:
                 exec(cmd)
-            except Exception:
+            except (Exception,):
                 print(ConsoleColors.FAIL+format_exc()+ConsoleColors.ENDC)

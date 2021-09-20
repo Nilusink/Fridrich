@@ -374,7 +374,7 @@ class AdminFuncs:
     Manages the Admin Functions
     """
     @staticmethod
-    def get_accounts(message: dict, user: User, *args) -> None:
+    def get_accounts(message: dict, user: User, *_args) -> None:
         """
         get all users | passwords | clearances
         """
@@ -386,7 +386,7 @@ class AdminFuncs:
         user.send(mes)  # sending list to client
     
     @staticmethod
-    def set_password(message: dict, user: User, *args) -> None:
+    def set_password(message: dict, user: User, *_args) -> None:
         """
         set a new password for the given user
         """
@@ -394,7 +394,7 @@ class AdminFuncs:
         send_success(user, message)  # send success
 
     @staticmethod
-    def set_username(message: dict, user: User, *args) -> None:
+    def set_username(message: dict, user: User, *_args) -> None:
         """
         change the username for the given user
         """
@@ -402,7 +402,7 @@ class AdminFuncs:
         send_success(user, message)  # send success
     
     @staticmethod
-    def set_security(message: dict, user: User, *args) -> None:
+    def set_security(message: dict, user: User, *_args) -> None:
         """
         change the clearance for the given user
         """
@@ -410,7 +410,7 @@ class AdminFuncs:
         send_success(user, message)
 
     @staticmethod
-    def add_user(message: dict, user: User, *args) -> None:
+    def add_user(message: dict, user: User, *_args) -> None:
         """
         add a new user with set name, password and clearance
         """
@@ -418,7 +418,7 @@ class AdminFuncs:
         send_success(user, message)
     
     @staticmethod
-    def remove_user(message: dict, user: User, *args) -> None:
+    def remove_user(message: dict, user: User, *_args) -> None:
         """
         remove user by username
         """
@@ -426,7 +426,7 @@ class AdminFuncs:
         send_success(user, message)
 
     @staticmethod
-    def reset_user_logins(message: dict, user: User, *args) -> None:
+    def reset_user_logins(*_args) -> None:
         """
         reset all current logins (clear the Users variable)
         """
@@ -434,7 +434,7 @@ class AdminFuncs:
         Users.reset()
 
     @staticmethod
-    def end(message: dict, user: User, *args) -> None:
+    def end(_message: dict, user: User, *_args) -> None:
         """
         log-out user
         """
@@ -447,7 +447,7 @@ class ClientFuncs:
     Manages the Client Functions
     """
     @staticmethod
-    def vote(message: dict, user: User, *args) -> None:
+    def vote(message: dict, user: User, *_args) -> None:
         """
         vote a name
         
@@ -466,7 +466,7 @@ class ClientFuncs:
         send_success(user, message)
 
     @staticmethod
-    def unvote(message: dict, user: User, *args) -> None:
+    def unvote(message: dict, user: User, *_args) -> None:
         """
         unvote a user
         """
@@ -478,7 +478,7 @@ class ClientFuncs:
         send_success(user, message)
 
     @staticmethod
-    def calendar_handler(message: dict, user: User, *args) -> None:
+    def calendar_handler(message: dict, user: User, *_args) -> None:
         """
         Handle the Calendar requests/write
         """
@@ -495,7 +495,7 @@ class ClientFuncs:
         send_success(user, message)
 
     @staticmethod
-    def req_handler(message: dict, user: User, *args) -> None:
+    def req_handler(message: dict, user: User, *_args) -> None:
         """
         Handle some default requests / logs
         """
@@ -553,7 +553,7 @@ class ClientFuncs:
             debug.debug(f'Invalid Request {message["reqType"]} from user {user.name}')
 
     @staticmethod
-    def change_pwd(message: dict, user: User,  *args) -> None:
+    def change_pwd(message: dict, user: User,  *_args) -> None:
         """
         change the password of the user (only for logged in user)
         """
@@ -570,7 +570,7 @@ class ClientFuncs:
         send_success(user, message)
 
     @staticmethod
-    def get_vote(message: dict, user: User, *args) -> None:
+    def get_vote(message: dict, user: User, *_args) -> None:
         """
         get the vote of the logged-in user
         """
@@ -603,7 +603,7 @@ class ClientFuncs:
         user.send(mes)
 
     @staticmethod
-    def get_version(message: dict, user: User, *args) -> None:
+    def get_version(message: dict, user: User, *_args) -> None:
         """
         read the Version variable
         """
@@ -615,7 +615,7 @@ class ClientFuncs:
         user.send(mes)
 
     @staticmethod
-    def set_version(message: dict, user: User, *args) -> None:
+    def set_version(message: dict, user: User, *_args) -> None:
         """
         set the version variable
         """
@@ -625,7 +625,7 @@ class ClientFuncs:
         send_success(user, message)
 
     @staticmethod
-    def double_vote(message: dict, user: User, *args) -> None:
+    def double_vote(message: dict, user: User, *_args) -> None:
         """
         double vote
         """
@@ -642,7 +642,7 @@ class ClientFuncs:
             user.send(mes)
 
     @staticmethod
-    def double_unvote(message: dict, user: User, *args) -> None:
+    def double_unvote(message: dict, user: User, *_args) -> None:
         """
         double unvote
         """
@@ -652,7 +652,7 @@ class ClientFuncs:
         send_success(user, message)
 
     @staticmethod
-    def get_free_votes(message: dict, user: User, *args) -> None:
+    def get_free_votes(message: dict, user: User, *_args) -> None:
         """
         get free double votes of logged in user
         """
@@ -674,7 +674,7 @@ class ClientFuncs:
         user.send(mes)
 
     @staticmethod
-    def get_online_users(message: dict, user: User, *args) -> None:
+    def get_online_users(message: dict, user: User, *_args) -> None:
         """
         get all logged in users
         """
@@ -685,7 +685,7 @@ class ClientFuncs:
         user.send(mes)
 
     @staticmethod
-    def append_chat(message: dict, user: User, *args) -> None:
+    def append_chat(message: dict, user: User, *_args) -> None:
         """
         Add message to chat
         """
@@ -693,7 +693,7 @@ class ClientFuncs:
         send_success(user, message)
 
     @staticmethod
-    def get_chat(message: dict, user: User, *args) -> None:
+    def get_chat(message: dict, user: User, *_args) -> None:
         """
         get Chat
         """
@@ -704,7 +704,7 @@ class ClientFuncs:
         user.send(mes)
 
     @staticmethod
-    def end(message: dict, user: User, *args) -> None:
+    def end(_message: dict, user: User, *_args) -> None:
         """
         clear logged in user
         """
