@@ -22,7 +22,7 @@ def get_list(directory: str | None = ...) -> list:
         for filename in filenames:
             size += os.path.getsize(directory+app+'/'+filename)
 
-        app_info = json.load(open(directory+app))
+        app_info = json.load(open(directory+app+'/AppInfo.json'))
         apps.append({
             "name": app,
             "version": app_info["version"],
