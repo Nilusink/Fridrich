@@ -338,7 +338,8 @@ class FunctionManager:
                 'get_apps': AppStore.send_apps
             }
         }
-    
+
+    @debug.catch_traceback
     def exec(self, message: dict, user: User) -> typing.Tuple[bool, typing.Any] | typing.Tuple[str, str]:
         """
         execute the requested function or return error

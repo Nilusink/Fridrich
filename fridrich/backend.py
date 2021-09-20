@@ -1,4 +1,4 @@
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, Future
 from traceback import format_exc
 from struct import unpack
 from fridrich import *
@@ -90,7 +90,8 @@ class Connection:
 
         self.loop = True
         
-        self.executor = ThreadPoolExecutor()
+        self.executor = ThreadPoolExecutor(max_workers=1)
+        self.receive_thread = Future
 
     # "local" functions
     @staticmethod
@@ -130,6 +131,8 @@ class Connection:
         """
         send messages to server
         """
+        if not self.__nonzero__():
+            raise AuthError("Not authenticated")
 
         dictionary['time'] = time.time()
 
@@ -271,7 +274,7 @@ class Connection:
 
         self.AuthKey = mes['AuthKey']
         
-        self.executor.submit(self.receive)  # start thread for receiving
+        self.receive_thread = self.executor.submit(self.receive)  # start thread for receiving
         return mes['Auth']  # return True or False
 
     def get_sec_clearance(self) -> str:
@@ -672,6 +675,7 @@ class Connection:
         }    # set message
         self.send(msg)  # send message
         self.AuthKey = None
+        self.userN = None
 
         self.executor.shutdown(wait=False)
         self.loop = False

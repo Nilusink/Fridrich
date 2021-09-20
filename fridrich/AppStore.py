@@ -6,11 +6,14 @@ import json
 import os
 
 
-def get_list(directory: str | None = "Apps/") -> list:
+def get_list(directory: str | None = ...) -> list:
     """
     :param directory: the directory where the apps are saved
     :return: a list of available apps with versions
     """
+    if directory is ...:
+        directory = os.getcwd()+'\\Apps\\'
+
     apps = list()
     for app in os.listdir(directory):
         size = float()
