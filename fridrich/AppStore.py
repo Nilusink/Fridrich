@@ -27,6 +27,7 @@ def get_list() -> list:
         apps.append({
             "name": app,
             "version": app_info["version"],
+            "info": app_info["info"],
             "files": filenames,
             "size": size
         })
@@ -116,7 +117,6 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
             print(f'receiving took {time.time()-start} sec.')
 
             filename = resp['filename']
-            print(f'Received "{filename}" (size={len(data)}) from "{address[0]}" ({socket.gethostbyaddr(address[0])[0]})')
 
             i = 0
             while os.path.isfile(filename):  # check if file with the same name already exists

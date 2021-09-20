@@ -337,7 +337,8 @@ class FunctionManager:
             },
             'appstore': {
                 'get_apps': AppStore.send_apps,
-                "download_app": AppStore.download_app
+                "download_app": AppStore.download_app,
+                "end": ClientFuncs.end
             }
         }
 
@@ -353,12 +354,11 @@ class FunctionManager:
             
             else:
                 isIn = False
-                req = str()
+                req = list()
                 for element in self.switch:
                     if message['type'] in self.switch[element]:
                         isIn = True
-                        req = element
-                        break
+                        req.append(element)
                 
                 if isIn:
                     debug.debug(f'user {user.sec} tried to use function {message["type"]} ({req})')
