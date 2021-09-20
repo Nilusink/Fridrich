@@ -662,7 +662,7 @@ class Connection:
         }
         self.send(msg)
         meta = self.wait_for_message(msg["time"])
-        for file in meta:
+        for _ in meta:
             send_receive(mode='receive', print_steps=True)
 
     # magical functions

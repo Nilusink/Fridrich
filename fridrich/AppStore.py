@@ -2,6 +2,9 @@
 Handler for the AppStore  (server)
 """
 from fridrich import new_types
+import socket
+import struct
+import time
 import json
 import os
 
@@ -74,8 +77,6 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
     """
 
     if mode in ('r', 'receive'):
-        hn = socket.gethostname()
-        print(f'IP: {get_local_ip()}, HOSTNAME: {hn}', end='\r')
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind(('0.0.0.0', 15151))
         server.listen()
@@ -88,7 +89,7 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
         if resp['type'] == "file":
             print(f'receiving {resp["filename"]}')
             bs = client.recv(8)
-            (length,) = unpack('>Q', bs)
+            (length,) = struct.unpack('>Q', bs)
             data = b''
             no_rec = 0
             to_read = 0
@@ -135,7 +136,7 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
     elif mode in ('s', 'send'):
         file_content = open(filename, 'rb').read()
 
-        length = pack('>Q', len(file_content))
+        length = struct.pack('>Q', len(file_content))
 
         msg = {
             "type": "file",
