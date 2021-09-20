@@ -52,7 +52,7 @@ def download_app(message: dict, user: new_types.User) -> None:
     with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
         directory = json.load(inp)["AppStoreDirectory"]
 
-    files = (file for file in os.listdir(directory+message["app"]) if file.endswith(".zip"))
+    files = tuple((file for file in os.listdir(directory+message["app"]) if file.endswith(".zip")))
     msg = {
         "content": files,
         "time": message["time"]
