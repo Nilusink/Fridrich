@@ -114,6 +114,7 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
 
                 if print_steps:
                     print(f'receiving [{len(data)}/{length}]                            ', end='\r')
+            client.send("done".encode())
             print(f'receiving took {time.time()-start} sec.')
 
             filename = resp['filename']
@@ -150,6 +151,7 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
         server.recv(1024)
         server.sendall(length)
         server.sendall(file_content)
+        server.recv(1024)
         print('done')
 
     else:

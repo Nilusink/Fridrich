@@ -362,13 +362,13 @@ class FunctionManager:
                 
                 if isIn:
                     debug.debug(f'user {user.sec} tried to use function {message["type"]} ({req})')
-                    return 'ClearanceIssue', f'Clearance required: "{req}"'
+                    return 'ClearanceIssue', f'Clearance required: {req}'
                 
                 else:
-                    return 'InvalidRequest', f'Invalid Request: "{message["type"]}"'
+                    return 'InvalidRequest', f'Invalid Request: {message["type"]}'
 
         else:
-            return 'ClearanceIssue', f'Clearance not set: "{user.sec}"'
+            return 'ClearanceIssue', f'Clearance not set: {user.sec}'
 
 
 class AdminFuncs:
