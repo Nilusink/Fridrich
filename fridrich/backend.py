@@ -528,7 +528,7 @@ class Connection:
             "type": "get_var",
             "var": variable
         }
-        return self.wait_for_message(self.send(msg))
+        return self.wait_for_message(self.send(msg))["var"]
 
     def set_var(self, variable: str, value) -> None:
         """
