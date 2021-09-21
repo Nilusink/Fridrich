@@ -209,7 +209,7 @@ class User:
             yield key, item
 
     def __repr__(self) -> str:
-        return f"<class User (name: {self.name}, sec: {self.sec}, key: {self.key})>"
+        return f"<class User (name: {self.name}, sec: {self.sec})>"
 
     def __contains__(self, item) -> bool:
         return item in self.name or item in self.key

@@ -321,7 +321,9 @@ class FunctionManager:
                 'getVersion': ClientFuncs.get_version,
                 'gOuser': ClientFuncs.get_online_users,
                 'appendChat': ClientFuncs.append_chat,
-                'getChat': ClientFuncs.get_chat
+                'getChat': ClientFuncs.get_chat,
+                'get_var': ClientFuncs.get_var,
+                'set_var': ClientFuncs.set_var
             },
             'guest': {                                  # instead of 5 billion if'S
                 'CalEntry': ClientFuncs.calendar_handler,
@@ -704,6 +706,34 @@ class ClientFuncs:
             "time": message["time"]
         }
         user.send(mes)
+
+    @staticmethod
+    def get_var(message: dict, user: User, *_args) -> None:
+        """
+        get a user managed variable
+        """
+        variables = json.load(open(Const.VarsFile, 'r'))
+        if message["var"] in variables:
+            msg = {
+                "content": {"var": variables[message["var"]]},
+                "time": message["time"]
+            }
+        else:
+            msg = {
+                "content": {"Error": "ValueError", "info": f"requested variable {message['var']} not there (initialize first)"},
+                "time": message["time"]
+            }
+        user.send(msg)
+
+    @staticmethod
+    def set_var(message: dict, user: User, *_args) -> None:
+        """
+        set a user managed variable
+        """
+        tmp = json.load(open(Const.VarsFile, 'r'))
+        tmp[message["var"]] = message["value"]
+        json.dump(tmp, open(Const.VarsFile, 'w'), indent=4)
+        send_success(user, message)
 
     @staticmethod
     def end(_message: dict, user: User, *_args) -> None:
