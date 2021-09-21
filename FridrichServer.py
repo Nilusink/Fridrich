@@ -323,7 +323,8 @@ class FunctionManager:
                 'appendChat': ClientFuncs.append_chat,
                 'getChat': ClientFuncs.get_chat,
                 'get_var': ClientFuncs.get_var,
-                'set_var': ClientFuncs.set_var
+                'set_var': ClientFuncs.set_var,
+                'del_var': ClientFuncs.del_var
             },
             'guest': {                                  # instead of 5 billion if'S
                 'CalEntry': ClientFuncs.calendar_handler,
@@ -339,8 +340,8 @@ class FunctionManager:
             },
             'appstore': {
                 'get_apps': AppStore.send_apps,
-                "download_app": AppStore.download_app,
-                "end": ClientFuncs.end
+                'download_app': AppStore.download_app,
+                'end': ClientFuncs.end
             }
         }
 
