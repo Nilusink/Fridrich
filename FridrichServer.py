@@ -710,7 +710,7 @@ class ClientFuncs:
     @staticmethod
     def get_var(message: dict, user: User, *_args) -> None:
         """
-        get a user managed variable
+        get a user controlled variable
         """
         variables = json.load(open(Const.VarsFile, 'r'))
         if message["var"] in variables:
@@ -728,13 +728,23 @@ class ClientFuncs:
     @staticmethod
     def set_var(message: dict, user: User, *_args) -> None:
         """
-        set a user managed variable
+        set a user controlled variable
         """
         try:
             tmp = json.load(open(Const.VarsFile, 'r'))
             tmp[message["var"]] = message["value"]
         except FileNotFoundError:
             tmp = dict()
+        json.dump(tmp, open(Const.VarsFile, 'w'), indent=4)
+        send_success(user, message)
+
+    @staticmethod
+    def del_var(message: dict, user: User, *_args) -> None:
+        """
+        delete a user controlled variable
+        """
+        tmp = json.load(open(Const.VarsFile, 'r'))
+        del tmp[message["var"]]
         json.dump(tmp, open(Const.VarsFile, 'w'), indent=4)
         send_success(user, message)
 

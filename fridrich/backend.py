@@ -522,7 +522,7 @@ class Connection:
     # user managed variables:
     def get_var(self, variable: str):
         """
-        get a user managed variable
+        get a user controlled variable
         """
         msg = {
             "type": "get_var",
@@ -532,7 +532,7 @@ class Connection:
 
     def set_var(self, variable: str, value) -> None:
         """
-        set a user managed variable
+        set a user controlled variable
         must be json valid!
         """
         msg = {
@@ -546,11 +546,24 @@ class Connection:
             raise TypeError("variable not json valid!")
         self.wait_for_message(t)
 
+    def del_var(self, variable: str) -> None:
+        """
+        delete a user controlled variable
+        """
+        msg = {
+            "type": "del_var",
+            "var": variable
+        }
+        self.wait_for_message(self.send(msg))
+
     def __getitem__(self, item: str):
         return self.get_var(item)
 
-    def __setitem__(self, key: str, value):
+    def __setitem__(self, key: str, value) -> None:
         return self.set_var(key, value)
+
+    def __delitem__(self, item: str) -> None:
+        return self.del_var(item)
 
     # Admin Functions
     def admin_get_users(self) -> list:
