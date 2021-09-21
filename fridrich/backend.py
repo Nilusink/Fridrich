@@ -520,6 +520,15 @@ class Connection:
         return out
 
     # user managed variables:
+    def get_all_vars(self) -> dict:
+        """
+        get all user controlled variables inside a dict
+        """
+        msg = {
+            "type": "get_all_vars"
+        }
+        return self.wait_for_message(self.send(msg))
+
     def get_var(self, variable: str):
         """
         get a user controlled variable
@@ -555,6 +564,14 @@ class Connection:
             "var": variable
         }
         self.wait_for_message(self.send(msg))
+
+    def __iter__(self) -> dict:
+        """
+        return dict of all User Controlled Variables when called
+        """
+        _d = self.get_all_vars()
+        for element in _d:
+            yield element, _d[element]
 
     def __getitem__(self, item: str):
         return self.get_var(item)
@@ -690,14 +707,6 @@ class Connection:
         return string of information when str() is called
         """
         return self.__repr__()
-
-    def __iter__(self) -> dict:
-        """
-        return dict of information when dict() is called
-        """
-        d = {'debug_mode': self.debug_mode, 'user': self.userN, 'authkey': self.AuthKey}
-        for element in d:
-            yield element, d[element]
 
     def __nonzero__(self) -> bool:
         """

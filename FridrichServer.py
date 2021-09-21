@@ -322,6 +322,7 @@ class FunctionManager:
                 'gOuser': ClientFuncs.get_online_users,
                 'appendChat': ClientFuncs.append_chat,
                 'getChat': ClientFuncs.get_chat,
+                'get_all_vars': ClientFuncs.get_all_vars,
                 'get_var': ClientFuncs.get_var,
                 'set_var': ClientFuncs.set_var,
                 'del_var': ClientFuncs.del_var
@@ -709,14 +710,33 @@ class ClientFuncs:
         user.send(mes)
 
     @staticmethod
+    def get_all_vars(message: dict, user: User, *_args) -> None:
+        """
+        get all user controlled variables
+        """
+        _variables = dict()
+        with suppress(FileNotFoundError):
+            _variables = json.load(open(Const.VarsFile, 'r'))
+
+        msg = {
+            "content": _variables,
+            "time": message["time"]
+        }
+
+        user.send(msg)
+
+    @staticmethod
     def get_var(message: dict, user: User, *_args) -> None:
         """
         get a user controlled variable
         """
-        variables = json.load(open(Const.VarsFile, 'r'))
-        if message["var"] in variables:
+        _variables = dict()
+        with suppress(FileNotFoundError):
+            _variables = json.load(open(Const.VarsFile, 'r'))
+
+        if message["var"] in _variables:
             msg = {
-                "content": {"var": variables[message["var"]]},
+                "content": {"var": _variables[message["var"]]},
                 "time": message["time"]
             }
         else:
