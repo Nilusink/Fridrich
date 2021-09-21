@@ -730,8 +730,11 @@ class ClientFuncs:
         """
         set a user managed variable
         """
-        tmp = json.load(open(Const.VarsFile, 'r'))
-        tmp[message["var"]] = message["value"]
+        try:
+            tmp = json.load(open(Const.VarsFile, 'r'))
+            tmp[message["var"]] = message["value"]
+        except FileNotFoundError:
+            tmp = dict()
         json.dump(tmp, open(Const.VarsFile, 'w'), indent=4)
         send_success(user, message)
 

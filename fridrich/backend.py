@@ -220,7 +220,7 @@ class Connection:
                     out.write(format_exc()+f'message: {mes}')
                 raise
 
-    def wait_for_message(self, time_sent: float, timeout: int | None = ..., delay: int | None = .1) -> dict | list:
+    def wait_for_message(self, time_sent: float, timeout: int | bool | None = 10, delay: int | None = .1) -> dict | list:
         """
         wait for the server message to be received.
         :param time_sent: the time the message was sent
@@ -234,7 +234,7 @@ class Connection:
         while time_sent not in self.messages:  # wait for server message
             if self.debug_mode == 'full':
                 print(self.messages)
-            if timeout is not ... and time.time()-start >= timeout:
+            if timeout and time.time()-start >= timeout:
                 raise NetworkError("no message was received from server before timeout")
             if "Error" in self.messages:
                 raise Error(self.messages["Error"])
@@ -525,6 +525,7 @@ class Connection:
         get a user managed variable
         """
         msg = {
+            "type": "get_var",
             "var": variable
         }
         return self.wait_for_message(self.send(msg))
@@ -535,6 +536,7 @@ class Connection:
         must be json valid!
         """
         msg = {
+            "type": "set_var",
             "var": variable,
             "value": value
         }
@@ -549,7 +551,7 @@ class Connection:
 
     def __setitem__(self, key: str, value):
         return self.set_var(key, value)
-    
+
     # Admin Functions
     def admin_get_users(self) -> list:
         """
@@ -683,9 +685,6 @@ class Connection:
         d = {'debug_mode': self.debug_mode, 'user': self.userN, 'authkey': self.AuthKey}
         for element in d:
             yield element, d[element]
-
-    # def __del__(self):  # end connection if class instance is deleted # caused some issues where it got called without actually calling it
-    #     self.end()
 
     def __nonzero__(self) -> bool:
         """
