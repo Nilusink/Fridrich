@@ -741,7 +741,7 @@ class ClientFuncs:
             }
         else:
             msg = {
-                "content": {"Error": "ValueError", "info": f"requested variable {message['var']} not there (initialize first)"},
+                "content": {"Error": "KeyError", "info": {message['var']}},
                 "time": message["time"]
             }
         user.send(msg)
@@ -765,7 +765,11 @@ class ClientFuncs:
         delete a user controlled variable
         """
         tmp = json.load(open(Const.VarsFile, 'r'))
-        del tmp[message["var"]]
+        if message["var"] in tmp:
+            del tmp[message["var"]]
+        else:   # if KeyError occurs
+            user.send({"content": {"Error": "KeyError", "info": message["var"]}, "time": message["time"]})
+
         json.dump(tmp, open(Const.VarsFile, 'w'), indent=4)
         send_success(user, message)
 
