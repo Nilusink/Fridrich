@@ -172,7 +172,9 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
         print("waiting for client to finish")
         resp = str()
         while resp != "done":
-            resp = server.recv(1024)
+            resp = server.recv(1024).decode()
+            if resp != "done":
+                print(f"invalid response: {resp}")
         print('done')
 
     else:
