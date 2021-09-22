@@ -171,8 +171,8 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
         server.sendall(file_content)
         print("waiting for client to finish")
         resp = str()
-        while resp is not "done":
-            server.recv(1024)
+        while resp != "done":
+            resp = server.recv(1024)
         print('done')
 
     else:
