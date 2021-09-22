@@ -1,12 +1,16 @@
 """
 Handler for the AppStore  (server)
 """
+from concurrent.futures import ThreadPoolExecutor, Future
 from fridrich import new_types
 import socket
 import struct
 import time
 import json
 import os
+
+download_progress = float()
+download_program = str()
 
 
 def get_list() -> list:
@@ -66,7 +70,7 @@ def download_app(message: dict, user: new_types.User) -> None:
         send_receive(mode="send", filename=directory+message["app"]+'/'+file, destination=user.ip, print_steps=False)
 
 
-def send_receive(mode: str, filename: str | None = ..., destination: str | None = ..., print_steps: bool | None = False) -> None:
+def send_receive(mode: str, filename: str | None = ..., destination: str | None = ..., print_steps: bool | None = False, download_directory: str | None = ..., thread: bool | None = False) -> None | Future:
     """
     send and receive files (function version)
 
@@ -74,8 +78,14 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
     :param filename: filename for sending files
     :param destination: ip/hostname of destination computer
     :param print_steps: enables print function when receiving
+    :param download_directory: where the downloaded files should end up
+    :param thread: if the program should be executed as a thread or not
     :return: None
     """
+    global download_progress, download_program
+    if thread:
+        executor = ThreadPoolExecutor(max_workers=1)
+        return executor.submit(send_receive, mode=mode, filename=filename, destination=destination, print_steps=print_steps, download_directory=download_directory, thread=False)
 
     if mode in ('r', 'receive'):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -84,6 +94,7 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
 
         client, address = server.accept()
         resp = json.loads(client.recv(1024).decode('utf-8'))
+        download_program = resp["filename"]
         client.send('received'.encode('utf-8'))
 
         # receiving data
@@ -104,6 +115,8 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
                                     4096 if to_read > 4096 else to_read
                                     )
 
+                download_progress = len(data)/length
+
                 if to_read == o_to_read:    # check if new packages were received
                     no_rec += 1
                 else:
@@ -113,8 +126,8 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
                     raise socket.error('Failed receiving data - connection loss')
 
                 if print_steps:
-                    print(f'receiving [{len(data)}/{length}]                            ', end='\r')
-            client.send("done".encode())
+                    print(f'\rreceiving [{len(data)}/{length}]')
+
             print(f'receiving took {time.time()-start} sec.')
 
             filename = resp['filename']
@@ -123,14 +136,19 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
             while os.path.isfile(filename):  # check if file with the same name already exists
                 i += 1
                 parts = filename.split('.')
-                filename = parts[0].rstrip(str(i-1))+str(i)+'.'+parts[1]
+                print(parts)
+                filename = parts[0].rstrip(str(i-1))+str(i)+'.'+'.'.join(parts[1::])
+                print(filename)
 
             if filename != resp['filename']:
                 print(f'renamed file from "{resp["filename"]}" to "{filename}"')
 
+            if download_directory is not ...:
+                filename = download_directory+'/'+filename
+
             with open(filename, 'wb') as out:
                 out.write(data)
-
+            client.send("done".encode())
         else:
             print(f'Cannot receive of type "{resp["type"]}"')
 
@@ -151,7 +169,10 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
         server.recv(1024)
         server.sendall(length)
         server.sendall(file_content)
-        server.recv(1024)
+        print("waiting for client to finish")
+        resp = str()
+        while resp is not "done":
+            server.recv(1024)
         print('done')
 
     else:

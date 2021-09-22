@@ -44,8 +44,6 @@ class CPUHeatHandler:
                 Trigger = True
             
             self.trigger[Trigger]()
-            
-            print(' CPU temp: ', currTemp, time.strftime('%H:%M'), ' | Fan: ', Trigger, end='\r')
             with open(self.const.logFile, 'w') as out:
                 out.write(f'CPU temp: {currTemp}, Room Temperature: {file["temp"]} - {time.strftime("%H:%M")} | Fan: {Trigger}')        
             return True

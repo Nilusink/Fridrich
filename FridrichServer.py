@@ -131,7 +131,7 @@ def temp_updater(start_time: float) -> None:
     global currTemp
     if time.time()-start_time >= 1:    # every 2 seconds
         start_time += 1
-        currTemp = cpu.temperature
+        currTemp = round(cpu.temperature, 2)
         room_temp, room_hum = read_temp()
         for element in (Const.tempLog, Const.varTempLog):
             with open(element, 'w') as output:

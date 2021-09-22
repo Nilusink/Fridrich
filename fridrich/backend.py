@@ -1,6 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor, Future
-from fridrich.AppStore import send_receive
 from traceback import format_exc
+from fridrich import AppStore
 from fridrich import *
 import typing
 import socket
@@ -93,6 +93,10 @@ class Connection:
         
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.receive_thread = Future
+
+        # for downloading
+        self.download_progress = float()
+        self.download_program = str()
 
     # "local" functions
     @staticmethod
@@ -519,7 +523,7 @@ class Connection:
         out = sorted(raw, key=date_for_sort)
         return out
 
-    # user managed variables:
+    # user controlled variables:
     def get_all_vars(self) -> dict:
         """
         get all user controlled variables inside a dict
@@ -684,9 +688,10 @@ class Connection:
         self.send(msg)
         return self.wait_for_message(self.send(msg))
 
-    def download_app(self, app: str) -> None:
+    def download_app(self, app: str, directory: str | None = ...) -> None:
         """
         :param app: which app to download
+        :param directory: where the program should be downloaded to
         """
         msg = {
             "type": "download_app",
@@ -696,7 +701,11 @@ class Connection:
         self.send(msg)
         meta = self.wait_for_message(self.send(msg))
         for _ in meta:
-            send_receive(mode='receive', print_steps=True)
+            thread = AppStore.send_receive(mode='receive', print_steps=True, download_directory=directory, thread=True)
+            while thread.running():
+                self.download_program = AppStore.download_program
+                self.download_progress = AppStore.download_progress
+            print("downloading next")
 
     # magical functions
     def __repr__(self) -> str:
