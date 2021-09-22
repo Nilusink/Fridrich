@@ -70,7 +70,8 @@ def download_app(message: dict, user: new_types.User) -> None:
         send_receive(mode="send", filename=directory+message["app"]+'/'+file, destination=user.ip, print_steps=False)
 
 
-def send_receive(mode: str, filename: str | None = ..., destination: str | None = ..., print_steps: bool | None = False, download_directory: str | None = ..., thread: bool | None = False) -> None | Future:
+def send_receive(mode: str, filename: str | None = ..., destination: str | None = ..., print_steps: bool | None = False,
+                 download_directory: str | None = ..., thread: bool | None = False, overwrite: bool | None = False) -> None | Future:
     """
     send and receive files (function version)
 
@@ -80,12 +81,14 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
     :param print_steps: enables print function when receiving
     :param download_directory: where the downloaded files should end up
     :param thread: if the program should be executed as a thread or not
+    :param overwrite: if true overwrites output file
     :return: None
     """
     global download_progress, download_program
     if thread:
         executor = ThreadPoolExecutor(max_workers=1)
-        return executor.submit(send_receive, mode=mode, filename=filename, destination=destination, print_steps=print_steps, download_directory=download_directory, thread=False)
+        return executor.submit(send_receive, mode=mode, filename=filename, destination=destination, print_steps=print_steps,
+                               download_directory=download_directory, thread=False, overwrite=overwrite)
 
     if mode in ('r', 'receive'):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -99,7 +102,6 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
 
         # receiving data
         if resp['type'] == "file":
-            print(f'receiving {resp["filename"]}')
             bs = client.recv(8)
             (length,) = struct.unpack('>Q', bs)
             data = b''
@@ -128,20 +130,21 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
                 if print_steps:
                     print(f'\rreceiving [{len(data)}/{length}]')
 
-            print(f'receiving took {time.time()-start} sec.')
+            if print_steps:
+                print(f'receiving took {time.time()-start} sec.')
 
             filename = resp['filename']
 
             i = 0
-            while os.path.isfile(filename):  # check if file with the same name already exists
-                i += 1
-                parts = filename.split('.')
-                print(parts)
-                filename = parts[0].rstrip(str(i-1))+str(i)+'.'+'.'.join(parts[1::])
-                print(filename)
+            if not overwrite:
+                print("not overwriting")
+                while os.path.isfile(filename):  # check if file with the same name already exists
+                    i += 1
+                    parts = filename.split('.')
+                    filename = (parts[0].rstrip(str(i-1))+str(i)+'.')+'.'.join(parts[1::])
 
-            if filename != resp['filename']:
-                print(f'renamed file from "{resp["filename"]}" to "{filename}"')
+                if filename != resp['filename']:
+                    print(f'renamed file from "{resp["filename"]}" to "{filename}"')
 
             if download_directory is not ...:
                 filename = download_directory+'/'+filename
@@ -169,13 +172,11 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
         server.recv(1024)
         server.sendall(length)
         server.sendall(file_content)
-        print("waiting for client to finish")
         resp = str()
         while resp != "done":
             resp = server.recv(1024).decode()
             if resp != "done":
                 print(f"invalid response: {resp}")
-        print('done')
 
     else:
         raise ValueError(f"invalid parameter 'mode' with value '{mode}'")

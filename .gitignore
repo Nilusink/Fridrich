@@ -148,7 +148,6 @@ testFile.py
 test.file
 test.txt
 ChatElement.pyw
-AppStore.pyw
 
 # didn't work for some reason
 setup.py
@@ -156,5 +155,3 @@ pyproject.toml
 
 *.bat
 *.lnk
-AppStore.pyw
-AppStore.pyw

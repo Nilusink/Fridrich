@@ -698,14 +698,12 @@ class Connection:
             "app": app,
             "time": time.time()
         }
-        self.send(msg)
         meta = self.wait_for_message(self.send(msg))
         for _ in meta:
-            thread = AppStore.send_receive(mode='receive', print_steps=True, download_directory=directory, thread=True)
+            thread = AppStore.send_receive(mode='receive', print_steps=False, download_directory=directory, thread=True, overwrite=True)
             while thread.running():
                 self.download_program = AppStore.download_program
                 self.download_progress = AppStore.download_progress
-            print("downloading next")
 
     # magical functions
     def __repr__(self) -> str:
