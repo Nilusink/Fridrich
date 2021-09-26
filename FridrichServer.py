@@ -106,17 +106,8 @@ def client_handler() -> None:
     mes = json.loads(t_mes)
     debug.debug(mes)
     if mes['type'] == 'auth':   # authorization function
-        if mes["Name"] == "AppStore":
-            key = key_func((element.key for element in Users), length=10)
-            new_user = User(name="AppStore"+time.strftime("%H:%M:%S"), sec="appstore", key=key, cl=cl, ip=address, function_manager=FunManager)
-            Users.append(new_user)
-            debug.debug(f'{new_user}, Auth: True')   # print out username, if connected successfully or not and if it is a bot
-            mes = cryption_tools.MesCryp.encrypt(json.dumps({'Auth': True, 'AuthKey': key}))
-            cl.send(mes)
-            return
-        else:
-            verify(mes['Name'], mes['pwd'], cl, address)
-            return
+        verify(mes['Name'], mes['pwd'], cl, address)
+        return
 
     else:
         Communication.send(cl, {'error': 'AuthError', 'info': 'user must be logged in to user functions'}, encryption=MesCryp.encrypt)
@@ -326,7 +317,10 @@ class FunctionManager:
                 'get_all_vars': ClientFuncs.get_all_vars,
                 'get_var': ClientFuncs.get_var,
                 'set_var': ClientFuncs.set_var,
-                'del_var': ClientFuncs.del_var
+                'del_var': ClientFuncs.del_var,
+
+                'get_apps': AppStore.send_apps,
+                'download_app': AppStore.download_app
             },
             'guest': {                                  # instead of 5 billion if'S
                 'CalEntry': ClientFuncs.calendar_handler,
@@ -338,11 +332,6 @@ class FunctionManager:
             'bot': {
                 'setVersion': ClientFuncs.set_version,
                 'getVersion': ClientFuncs.get_version,
-                'end': ClientFuncs.end
-            },
-            'appstore': {
-                'get_apps': AppStore.send_apps,
-                'download_app': AppStore.download_app,
                 'end': ClientFuncs.end
             }
         }
