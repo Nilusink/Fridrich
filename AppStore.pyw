@@ -1,8 +1,12 @@
+#! C:\users\Niclas\AppData\local\programs\Python\Python310\python.exe
 from concurrent.futures import ThreadPoolExecutor
 from fridrich.backend import Connection
+from fridrich.new_types import FileVar
 from tkinter import filedialog
 from tkinter import ttk
+from fridrich import *
 import tkinter as tk
+import json
 
 
 def bytes_to(value_in_bytes: float, rnd: int | None = ...) -> str:
@@ -14,7 +18,7 @@ def bytes_to(value_in_bytes: float, rnd: int | None = ...) -> str:
     sizes = ["bytes", "KB", "MB", "GB", "TB"]
     now = int()
     while len(str(value_in_bytes).split('.')[0]) > 3:
-        value_in_bytes /= 1000
+        value_in_bytes /= 1024
         now += 1
 
     if rnd is not ...:
@@ -58,12 +62,12 @@ class VerticalScrolledFrame(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kw)
 
         # create a canvas object and a vertical scrollbar for scrolling it
-        vscrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
-        vscrollbar.pack(fill=tk.Y, side=tk.RIGHT, expand=tk.FALSE)
+        v_scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
+        v_scrollbar.pack(fill=tk.Y, side=tk.RIGHT, expand=tk.FALSE)
         canvas = tk.Canvas(self, bd=0, highlightthickness=0,
-                           yscrollcommand=vscrollbar.set)
+                           yscrollcommand=v_scrollbar.set)
         canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.TRUE)
-        vscrollbar.config(command=canvas.yview)
+        v_scrollbar.config(command=canvas.yview)
 
         # reset the view
         canvas.xview_moveto(0)
@@ -76,7 +80,7 @@ class VerticalScrolledFrame(tk.Frame):
 
         # track changes to the canvas and frame width and sync them,
         # also updating the scrollbar
-        def _configure_interior(event):
+        def _configure_interior(_event):
             # update the scrollbars to match the size of the inner frame
             size = (interior.winfo_reqwidth(), interior.winfo_reqheight())
             canvas.config(scrollregion="0 0 %s %s" % size)
@@ -86,7 +90,7 @@ class VerticalScrolledFrame(tk.Frame):
 
         interior.bind('<Configure>', _configure_interior)
 
-        def _configure_canvas(event):
+        def _configure_canvas(_event):
             if interior.winfo_reqwidth() != canvas.winfo_width():
                 # update the inner frame's width to fill the canvas
                 canvas.itemconfigure(interior_id, width=canvas.winfo_width())
@@ -103,6 +107,11 @@ class Window:
         :return: None
         """
         self.info_line_length = 40
+        try:
+            temp = open("data/AppStore.config", 'r')
+        except FileNotFoundError:
+            temp = {}
+        self.settings = FileVar(json.load(temp), "data/AppStore.config")
 
         self.root = tk.Tk()
         self.root.configure(bg="gray")
@@ -117,8 +126,9 @@ class Window:
         self.root.grid_columnconfigure(2, weight=1)
 
         self.c = Connection()
-        self.c.auth("AppStore", "")
-
+        self.c.auth("Hurensohn3", "13102502")
+        if not self.c:
+            raise AuthError("Not Authenticated")
         self.side_menu = tk.Canvas(self.root, bg="black", width=300)
         self.downloading_name = self.side_menu.create_text(10, self.root.winfo_height()-80, text="Downloading: ", anchor=tk.NW, fill="white")
         self.pb = ttk.Progressbar(
@@ -181,12 +191,23 @@ class Window:
 
             i += 1
 
-    def download_app(self, app_name) -> None:
+    def upload_app(self) -> None:
+        """
+        upload an app to the appstore
+        """
+
+    def download_app(self, app_name, directory: str | None = ...) -> None:
         """
         download a app from the server
         :param app_name: the app to download
+        :param directory: if given, doesn't ask for directory to download
         """
-        directory = filedialog.askdirectory()
+        self.du_button["bg"] = "grey"
+        self.du_button["state"] = "disabled"
+        app = {app["name"]: app for app in self.c.get_apps()}[app_name]
+
+        if directory is ...:
+            directory = filedialog.askdirectory()
         ex = ThreadPoolExecutor(max_workers=1)
         x = ex.submit(self.c.download_app, app_name, directory)
 
@@ -197,14 +218,28 @@ class Window:
         self.pb["value"] = 0
         self.side_menu.itemconfig(self.downloading_name, text="Downloading:")
 
+        temp = self.settings["installed_programs"]
+        temp[app_name] = {
+            "version": app["version"],
+            "path": directory+'/'
+        }
+        self.settings["installed_programs"] = temp
+        self.select_app(app_name)
+
     def select_app(self, app_name) -> None:
         """
         :param app_name: the name of the app to be selected
         """
+        installed_apps = self.settings["installed_programs"]
         app = {app["name"]: app for app in self.c.get_apps()}[app_name]
+
+        app_version = None
+        if app["name"] in installed_apps:
+            app_version = installed_apps[app["name"]]["version"]
+
         newline = '\n'
         info_string = f"""Version:
-{app['version']}
+{app['version']}{newline+newline+"Installed:"+newline+app_version if app_version else ""}
 
 Size:
 {bytes_to(app['size'], 2)}
@@ -217,7 +252,20 @@ Info:
 """
         lines = info_string.count("\n")
         self.app_info.itemconfig(self.info, text=info_string)
+        self.du_button["state"] = "normal"
+        self.du_button["bg"] = "green"
+        self.du_button["text"] = "Download"
         self.du_button["command"] = lambda _e=None: self.download_app(app_name)
+
+        if app_version and app_version != app["version"]:
+            self.du_button["text"] = "Update"
+            self.du_button["command"] = lambda _e=None: self.download_app(app_name, directory=installed_apps[app["name"]]["path"])
+
+        elif app_version and app_version == app["version"]:
+            self.du_button["text"] = "Newest"
+            self.du_button["bg"] = "grey"
+            self.du_button["state"] = "disabled"
+
         self.du_button.place(x=80, y=lines*25, anchor=tk.NW)
 
 
