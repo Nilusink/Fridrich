@@ -30,7 +30,7 @@ def read_temp() -> typing.Tuple[float, float] | typing.Tuple[None, None]:
         result = instance.read()    # happens, don't know why
     except RuntimeError:
         return None, None
-
+    not_readable = False
     for _ in range(10):  # to get a more precise value, measure 10 times
         with contextlib.suppress(AttributeError):
             tmp1 = list()
@@ -42,9 +42,13 @@ def read_temp() -> typing.Tuple[float, float] | typing.Tuple[None, None]:
                 with contextlib.suppress(RuntimeError):
                     result = instance.read()
                 
-                if invalids > 50:  # if the value of the sensor is None for 50 times
+                if invalids > 5:  # if the value of the sensor is None for 5 times
+                    not_readable = True
                     break
-            
+
+            if not_readable:
+                break
+
             if result.temperature:
                 tmp1.append(result.temperature)  # only append values
             if result.humidity:
