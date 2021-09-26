@@ -728,7 +728,7 @@ class Connection:
         return self.__nonzero__()
 
     # the end
-    def end(self) -> None:
+    def end(self, revive: bool | None = False) -> None:
         """
         close connection with server and logout
         """
@@ -739,9 +739,9 @@ class Connection:
         self.send(msg)  # send message
         self.AuthKey = None
         self.userN = None
-
         self.executor.shutdown(wait=False)
         self.loop = False
 
-        self.executor = ThreadPoolExecutor(max_workers=1)
-        self.loop = True
+        if revive:
+            self.executor = ThreadPoolExecutor(max_workers=1)
+            self.loop = True

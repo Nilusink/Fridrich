@@ -7,6 +7,7 @@ from tkinter import ttk
 from fridrich import *
 import tkinter as tk
 import json
+import threading
 
 
 def bytes_to(value_in_bytes: float, rnd: int | None = ...) -> str:
@@ -125,8 +126,8 @@ class Window:
         self.root.grid_columnconfigure(1, weight=1)
         self.root.grid_columnconfigure(2, weight=1)
 
-        self.c = Connection()
-        self.c.auth("Hurensohn3", "13102502")
+        self.c = Connection(debug_mode=Off)
+        self.c.auth("Hurensohn2", "hurensohn")
         if not self.c:
             raise AuthError("Not Authenticated")
         self.side_menu = tk.Canvas(self.root, bg="black", width=300)
