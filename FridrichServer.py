@@ -877,6 +877,8 @@ if __name__ == '__main__':
         receive()
 
     except Exception as e:
+        with suppress(Exception):
+            Users.end()
         with open(Const.errFile, 'a') as out:   # debug to file because there may be an error before the debug class was initialized
             out.write(f'######## - Exception "{e}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")} - ########\n\n{format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n')
 
