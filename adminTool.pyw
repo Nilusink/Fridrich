@@ -292,7 +292,7 @@ class Window:
         """
         self.update()
         try:
-            self.c.admin_add_user('', '', '')
+            self.c.admin_add_user('new_user', 'new_password', 'None')
             self.update()
 
         except NameError:
