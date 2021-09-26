@@ -543,7 +543,7 @@ class ClientFuncs:
         elif message['reqType'] == 'temps':  # returns the temperatures
             global temps
             mes = {
-                "content": temps,
+                "content": {'Room': temps["temp"], 'CPU': temps["cptemp"], 'Hum': temps["hum"]},
                 "time": message["time"]
             }
             user.send(mes)
