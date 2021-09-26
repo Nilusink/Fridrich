@@ -1,3 +1,4 @@
+from threading import Thread
 from fridrich import *
 import json
 
@@ -6,39 +7,64 @@ class Manager:
     """
     account manager
     """
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        """
+        check if the class already exists
+        """
+        if cls._instance is None:
+            cls._instance = super().__new__(*args, **kwargs)
+        return cls._instance
+
     def __init__(self, account_file: str) -> None:
         """
         account_file - file to store encrypted account data in
         """
-        self.encryptionFile = account_file
-        self.ClientKeys = dict()
+        self.__encryptionFile = account_file
+        tmp = json.loads(cryption_tools.Low.decrypt(open(self.__encryptionFile, 'r').read()))
+        for element in tmp:
+            element["pwd"] = cryption_tools.High.decrypt(element["pwd"])
+        self.__accounts = tmp
+
+    def update_file(self) -> None:
+        """
+        write changed accounts to file
+        """
+        def inner():
+            tmp = list()
+            for element in self.__accounts:
+                element["pwd"] = cryption_tools.High.encrypt(element["pwd"])
+                tmp.append(element)
+                
+            crypt = cryption_tools.Low.encrypt(json.dumps(tmp))
+            with open(self.__encryptionFile, 'w') as out:
+                out.write(crypt)
+        Thread(target=inner)
 
     def get_accounts(self) -> list:
         """
         get account data
         """
-        accounts = json.loads(cryption_tools.Low.decrypt(open(self.encryptionFile, 'r').read()))
-        return accounts
+        return self.__accounts
 
-    def write_accounts(self, accounts: list) -> None:
+    def __write_accounts(self, accounts: list) -> None:
         """
         write account file
         """
-        crypt = cryption_tools.Low.encrypt(json.dumps(accounts))
-        with open(self.encryptionFile, 'w') as out:
-            out.write(crypt)
+        self.__accounts = accounts
 
-    def set_pwd(self, username: str, password: str) -> None:
+    def set_pwd(self, username: str, new_password: str) -> None:
         """
         set password of given user
         """
         account_list = self.get_accounts()  # getting and decrypting accounts list
         for element in account_list:
             if element['Name'] == username:
-                element['pwd'] = password  # if user is selected user, change its password
-                continue    # to not further iterate all users
+                element['pwd'] = new_password  # if user is selected user, change its password
+                break    # to not further iterate all users
 
-        self.write_accounts(account_list)    # write output to file
+        self.__write_accounts(account_list)    # write output to file
 
     def set_username(self, old_user: str, new_user: str) -> None:
         """
@@ -59,7 +85,7 @@ class Manager:
 
             account_list[i] = element    # make sure the new element is in list and on correct position
 
-            self.write_accounts(account_list)  # write output to file
+            self.__write_accounts(account_list)  # write output to file
             return
         raise NameError('Username already exists')
 
@@ -78,7 +104,7 @@ class Manager:
 
         account_list[i] = element    # make sure the new element is in list and on correct position
 
-        self.write_accounts(account_list)  # write output to file
+        self.__write_accounts(account_list)  # write output to file
 
     def new_user(self, username: str, password: str, security_clearance: str) -> None:
         """
@@ -91,7 +117,7 @@ class Manager:
             raise NameError('Username already exists')
 
         accounts.append({'Name': username, 'pwd': password, 'sec': security_clearance})  # create user
-        self.write_accounts(accounts)    # write user
+        self.__write_accounts(accounts)    # write user
     
     def remove_user(self, username: str) -> None:
         """
@@ -103,7 +129,7 @@ class Manager:
                 accounts.pop(i)  # remove user
                 break
         
-        self.write_accounts(accounts)    # update accounts
+        self.__write_accounts(accounts)    # update accounts
 
     def verify(self, username: str, password: str) -> None | str:
         """

@@ -71,7 +71,6 @@ class Low:
         except ValueError:
             raise DecryptionError('Not a valid encrypted string!')
 
-
 class High:
     @staticmethod
     def encrypt(string: str) -> str:

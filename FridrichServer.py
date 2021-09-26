@@ -815,6 +815,10 @@ def update() -> None:
             if resp is not True:
                 debug.debug('Fan Controller Error\n'+resp)
 
+        # --------- Accounts File ---------
+        if time.strftime("%S") == "10":  # update every minute
+            AccManager.update_file()
+
 
 ############################################################################
 #                              Main Program                                #
