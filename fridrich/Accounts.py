@@ -7,22 +7,22 @@ class Manager:
     """
     account manager
     """
-    _instance = None
+    # _instance = None
 
-    def __new__(cls, *args, **kwargs):
-        """
-        check if the class already exists
-        """
-        if cls._instance is None:
-            cls._instance = super().__new__(*args, **kwargs)
-        return cls._instance
+    # def __new__(cls, *args, **kw):
+        # """
+        # check if the class already exists
+        # """
+        # if cls._instance is None:
+        #     cls._instance = super(Manager, cls).__new__(cls)
+        # return cls._instance
 
     def __init__(self, account_file: str) -> None:
         """
         account_file - file to store encrypted account data in
         """
         self.__encryptionFile = account_file
-        tmp = json.loads(cryption_tools.Low.decrypt(open(self.__encryptionFile, 'r').read()))
+        tmp = json.load(open(self.__encryptionFile, 'r'))
         for element in tmp:
             element["pwd"] = cryption_tools.High.decrypt(element["pwd"])
         self.__accounts = tmp
@@ -33,13 +33,14 @@ class Manager:
         """
         def inner():
             tmp = list()
-            for element in self.__accounts:
-                element["pwd"] = cryption_tools.High.encrypt(element["pwd"])
-                tmp.append(element)
+            for account in self.__accounts:
+                temp = account.copy()
+                temp["pwd"] = cryption_tools.High.encrypt(temp["pwd"])
+                tmp.append(temp)
 
-            crypt = cryption_tools.Low.encrypt(json.dumps(tmp))
             with open(self.__encryptionFile, 'w') as out:
-                out.write(crypt)
+                json.dump(tmp, out)
+
         Thread(target=inner)
 
     def get_accounts(self) -> list:
