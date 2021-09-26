@@ -128,14 +128,15 @@ def temp_updater(start_time: float) -> None:
     """
     update the temperature
     """
-    global currTemp
+    global temps
     if time.time()-start_time >= 1:    # every 2 seconds
         start_time += 1
-        currTemp = round(cpu.temperature, 2)
+        curr_temp = round(cpu.temperature, 2)
         room_temp, room_hum = read_temp()
+        temps = {"temp": room_temp, "cptemp": curr_temp, "hum": room_hum}
         for element in (Const.tempLog, Const.varTempLog):
             with open(element, 'w') as output:
-                json.dump({"temp": room_temp, "cptemp": currTemp, "hum": room_hum}, output)
+                json.dump({"temp": room_temp, "cptemp": curr_temp, "hum": room_hum}, output)
         time.sleep(.8)
 
 
@@ -540,9 +541,9 @@ class ClientFuncs:
             user.send(mes)    # return standard users + new ones
                 
         elif message['reqType'] == 'temps':  # returns the temperatures
-            r_temp, r_hum = read_temp()
+            global temps
             mes = {
-                "content": {'Room': r_temp, 'CPU': currTemp, 'Hum': r_hum},
+                "content": temps,
                 "time": message["time"]
             }
             user.send(mes)
@@ -823,7 +824,11 @@ if __name__ == '__main__':
     try:
         reqCounter = 0
         cpu = CPUTemperature()
-        currTemp = cpu.temperature
+        temps = {
+                 "temp": float(),
+                 "cptemp": float(),
+                 "hum": float()
+        }
 
         FanC = CPUHeatHandler()
         

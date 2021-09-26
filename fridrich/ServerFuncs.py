@@ -55,7 +55,7 @@ def read_temp() -> typing.Tuple[float, float] | typing.Tuple[None, None]:
                 tmp2.append(result.humidity)  # only append values
 
     if len(tmp1) == 0 or len(tmp2) == 0:    # if either of the list has zero elements, return error
-        print('Failed to read sensor')
+        # print('Failed to read sensor')
         return None, None
 
     temp = round(sum(tmp1)/len(tmp1), 2)    # get average
