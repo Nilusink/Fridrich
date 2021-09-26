@@ -27,21 +27,24 @@ class Manager:
             element["pwd"] = cryption_tools.High.decrypt(element["pwd"])
         self.__accounts = tmp
 
-    def update_file(self) -> None:
+    def update_file(self, thread: bool | None = True) -> None:
         """
         write changed accounts to file
         """
-        def inner():
-            tmp = list()
-            for account in self.__accounts:
-                temp = account.copy()
-                temp["pwd"] = cryption_tools.High.encrypt(temp["pwd"])
-                tmp.append(temp)
+        if thread:
+            Thread(target=self.update_file, kwargs={"thread": False})
+            return
 
-            with open(self.__encryptionFile, 'w') as out:
-                json.dump(tmp, out)
-
-        Thread(target=inner)
+        tmp = list()
+        for account in self.__accounts:
+            print(f"encrypting: {account}")
+            temp = account.copy()
+            temp["pwd"] = cryption_tools.High.encrypt(temp["pwd"])
+            tmp.append(temp)
+        print("encrypted, writing...")
+        with open(self.__encryptionFile, 'w') as out:
+            json.dump(tmp, out)
+        print("done writing file")
 
     def get_accounts(self) -> list:
         """
