@@ -816,7 +816,7 @@ def update() -> None:
                 debug.debug('Fan Controller Error\n'+resp)
 
         # --------- Accounts File ---------
-        if time.strftime("%S") == "10":  # update every minute
+        if time.strftime("%M") in ("00", "15", "30", "45"):  # update every 15 minutes
             AccManager.update_file()
 
 

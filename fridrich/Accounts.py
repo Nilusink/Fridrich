@@ -36,7 +36,7 @@ class Manager:
             for element in self.__accounts:
                 element["pwd"] = cryption_tools.High.encrypt(element["pwd"])
                 tmp.append(element)
-                
+
             crypt = cryption_tools.Low.encrypt(json.dumps(tmp))
             with open(self.__encryptionFile, 'w') as out:
                 out.write(crypt)
