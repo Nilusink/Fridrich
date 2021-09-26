@@ -10,12 +10,12 @@ class Manager:
     # _instance = None
 
     # def __new__(cls, *args, **kw):
-        # """
-        # check if the class already exists
-        # """
-        # if cls._instance is None:
-        #     cls._instance = super(Manager, cls).__new__(cls)
-        # return cls._instance
+    # """
+    # check if the class already exists
+    # """
+    # if cls._instance is None:
+    #     cls._instance = super(Manager, cls).__new__(cls)
+    # return cls._instance
 
     def __init__(self, account_file: str) -> None:
         """
@@ -70,8 +70,7 @@ class Manager:
         """
         change username
         """
-        UsedNames = useful.List.get_inner_dict_values(self.__accounts, 'Name')  # so it doesnt matter if you don't change the username
-        UsedNames.remove(old_user)
+        UsedNames = useful.List.get_inner_dict_values(self.__accounts, 'Name')
 
         element = str()
         i = int()
@@ -107,10 +106,9 @@ class Manager:
         add new user
         """
         UsedNames = useful.List.get_inner_dict_values(self.__accounts, 'Name')
-        print(f"Used Names: {UsedNames} - Name: {username}")
 
         if username in UsedNames:
-            raise NameError('Username already exists')
+            return
 
         self.__accounts.append({'Name': username, 'pwd': password, 'sec': security_clearance})  # create user
     
