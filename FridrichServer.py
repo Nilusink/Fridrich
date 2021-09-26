@@ -219,7 +219,6 @@ class DoubleVote:
         """
         filePath: path to file where double votes are saved
         """
-        validUsers = json.loads(Low.decrypt(open(Const.crypFile, 'r').read()))
         self.filePath = file_path
 
         try:
@@ -227,6 +226,7 @@ class DoubleVote:
 
         except FileNotFoundError:
             value = dict()
+            validUsers = json.load(open(Const.crypFile, 'r'))
             for element in validUsers:
                 value[element['Name']] = 1
 
