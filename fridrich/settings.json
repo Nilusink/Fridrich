@@ -34,5 +34,5 @@
     "switchTime" : "00:00",
     "rebootTime" : "00:03",
 
-    "AppStoreDirectory": "/home/pi/Server/Apps/"
+    "AppStoreDirectory": "/home/pi/Server/USBApps/"
 }
