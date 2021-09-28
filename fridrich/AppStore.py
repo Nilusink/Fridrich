@@ -24,9 +24,9 @@ def get_list() -> list:
     for app in os.listdir(directory):
         size = float()
         filenames = [file for file in os.listdir(directory+app) if file.endswith(".zip")]
-        if "AppInfo.json" not in filenames:
+        if not os.path.isdir(directory+app+"/AppInfo.json"):
             continue
-            
+
         for filename in filenames:
             size += os.path.getsize(directory+app+'/'+filename)
 
