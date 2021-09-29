@@ -73,6 +73,41 @@ def download_app(message: dict, user: new_types.User) -> None:
         send_receive(mode="send", filename=directory+message["app"]+'/'+file, destination=user.ip, print_steps=False)
 
 
+def receive_app(message: dict, user: new_types.User) -> None:
+    """
+    :param message: the message received from the client (for the timestamp)
+    :param user: the user to send the answer to
+    :return: None
+    """
+    with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
+        directory = json.load(inp)["AppStoreDirectory"]+message["name"]
+
+    if os.path.isdir(directory):
+        if len(os.listdir(directory)) != 0:  # check if directory is empty, else send error
+            state = False
+        else:
+            state = True
+    else:
+        state = True
+        os.system(f"mkdir {directory}")
+
+    msg = {
+        "content": {"state": state},
+        "time": message["time"]
+    }
+    user.send(msg)
+
+    with open(directory+"AppInfo.json", 'w') as out:
+        json.dump({
+                   "version": message["version"],
+                   "info": message["info"],
+                   "publisher": user.name
+        }, out)
+
+    for _ in message["files"]:
+        send_receive(mode='receive', print_steps=False, download_directory=directory, thread=False, overwrite=True)
+
+
 def send_receive(mode: str, filename: str | None = ..., destination: str | None = ..., print_steps: bool | None = False,
                  download_directory: str | None = ..., thread: bool | None = False, overwrite: bool | None = False) -> None | Future:
     """

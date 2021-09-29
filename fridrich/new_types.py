@@ -140,17 +140,29 @@ class User:
         ´´sec´´: security clearance
         ´´key´´: encryption key of client
         """
-        self.name = name
-        self.sec = sec
-        self.key = key
+        self.__name = name
+        self.__sec = sec
+        self.__key = key
 
-        self.client = cl
-        self.ip = ip
+        self.__client = cl
+        self.__ip = ip
         self.manager = function_manager
 
         self.disconnect = False
 
         self.loop = True
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def sec(self):
+        return self.__sec
+
+    @property
+    def ip(self):
+        return self.__ip
 
     def receive(self) -> None:
         """
@@ -158,7 +170,7 @@ class User:
         """
         while self.loop:
             try:
-                mes = cryption_tools.MesCryp.decrypt(self.client.recv(2048), self.key.encode())
+                mes = cryption_tools.MesCryp.decrypt(self.__client.recv(2048), self.__key.encode())
 
                 if not mes or mes is None:
                     self.send({'Error': 'MessageError', 'info': 'Invalid Message/AuthKey'})
@@ -174,11 +186,11 @@ class User:
         message['type'] = message_type
         stringMes = json.dumps(message)
 
-        mes = cryption_tools.MesCryp.encrypt(stringMes, key=self.key.encode())
+        mes = cryption_tools.MesCryp.encrypt(stringMes, key=self.__key.encode())
         length = pack('>Q', len(mes))   # get message length
 
-        self.client.sendall(length)
-        self.client.sendall(mes)
+        self.__client.sendall(length)
+        self.__client.sendall(mes)
 
     def exec_func(self, message: dict):
         """
@@ -186,7 +198,7 @@ class User:
         """
         if message["type"] == "secReq":
             msg = {
-                "content": {"sec": self.sec},
+                "content": {"sec": self.__sec},
                 "time": message["time"]
             }
             self.send(msg)
@@ -199,20 +211,20 @@ class User:
     def end(self) -> None:
         self.disconnect = True
         self.loop = False
-        self.client.close()
+        self.__client.close()
 
     def __getitem__(self, item) -> str:
         return dict(self)[item]
 
     def __iter__(self) -> typing.Iterator:
-        for key, item in (('key', self.key), ('name', self.name), ('sec', self.sec)):
+        for key, item in (('key', self.__key), ('name', self.__name), ('sec', self.__sec)):
             yield key, item
 
     def __repr__(self) -> str:
-        return f"<class User (name: {self.name}, sec: {self.sec})>"
+        return f"<class User (name: {self.__name}, sec: {self.__sec})>"
 
     def __contains__(self, item) -> bool:
-        return item in self.name or item in self.key
+        return item in self.__name or item in self.__key
 
 
 class UserList:
@@ -236,13 +248,6 @@ class UserList:
         """
         for element in self.users:
             yield element.name
-
-    def keys(self) -> typing.Generator:
-        """
-        return the encryption keys of all users
-        """
-        for element in self.users:
-            yield element.key
 
     def append(self, obj: User) -> None:
         """

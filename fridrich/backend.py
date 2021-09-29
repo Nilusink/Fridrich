@@ -94,9 +94,10 @@ class Connection:
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.receive_thread = Future
 
-        # for downloading
-        self.download_progress = float()
-        self.download_program = str()
+        # for down-/uploading
+        self.load_state = str()
+        self.load_progress = float()
+        self.load_program = str()
 
     # "local" functions
     @staticmethod
@@ -699,11 +700,39 @@ class Connection:
             "time": time.time()
         }
         meta = self.wait_for_message(self.send(msg))
+
+        self.load_state = "Uploading"
         for _ in meta:
             thread = AppStore.send_receive(mode='receive', print_steps=False, download_directory=directory, thread=True, overwrite=True)
             while thread.running():
-                self.download_program = AppStore.download_program
-                self.download_progress = AppStore.download_progress
+                self.load_program = AppStore.download_program
+                self.load_progress = AppStore.download_progress
+        self.load_state = str()
+        self.load_program = str()
+        self.load_progress = float()
+
+    def create_app(self, app_name: str, app_version: str, app_info: str, files: list | tuple) -> None:
+        """
+        add a new app to the fridrich appstore
+        """
+        msg = {
+            "type": "create_app",
+            "name": app_name,
+            "version": app_version,
+            "info": app_info,
+            "files": [file.split["/"][-1] for file in files]
+        }
+        resp = self.wait_for_message(self.send(msg))
+        if not resp["state"]:
+            raise NameError(f"App with name {app_name} already exists!")
+
+        self.load_state = "Uploading"
+        for file in files:
+            thread = AppStore.send_receive(mode="send", filename=file, destination=self.ServerIp, print_steps=False, thread=True, overwrite=True)
+            while thread.running:
+                self.load_program = app_name
+        self.load_program = str()
+        self.load_state = str()
 
     # magical functions
     def __repr__(self) -> str:
