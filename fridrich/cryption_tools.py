@@ -1,5 +1,4 @@
 import contextlib
-import typing
 import random
 import math
 import json
@@ -189,11 +188,7 @@ def key_func(length=10) -> str:
     String = 'abcdefghijklmnopqrstuvwxyz'                               # string for creating auth Keys
     String += String.upper()+'1234567890ß´^°!"§$%&/()=?`+*#.:,;µ@€<>|'
 
-    s = ''.join(random.sample(String, length))  # try #1
-    while s in client_keys: 
-        s = ''.join(random.sample(String, length))  # if try #1 is already in client_keys, try again
-
-    password_provided = s  # This is input in the form of a string
+    password_provided = ''.join(random.sample(String, length))  # This is input in the form of a string
     password = password_provided.encode()  # Convert to type bytes
     salt = os.urandom(16)
     kdf = PBKDF2HMAC(
