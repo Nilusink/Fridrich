@@ -1,7 +1,6 @@
-#! C:\users\Niclas\AppData\local\programs\Python\Python310\python.exe
 from concurrent.futures import ThreadPoolExecutor, Future
-from contextlib import suppress
-from threading import enumerate
+from time import sleep
+
 from fridrich.backend import Connection
 from fridrich.new_types import FileVar
 from tkinter import filedialog
@@ -123,7 +122,6 @@ class Window:
 
         # for threads
         self.threads = ThreadPoolExecutor()
-        self.up_down_updater = self.update_update(thread=True)
 
         # tkinter
         self.root = tk.Tk()
@@ -214,6 +212,9 @@ class Window:
         self.__app_done = False
 
         self.update_apps()
+
+        # for updating progressbar
+        self.ud = self.up_down_updater = self.update_update(thread=True, loop=True)
 
     def __resize(self, _event=None) -> None:
         """
@@ -308,13 +309,14 @@ class Window:
         :param loop: if true runs in a endless loop
         """
         if thread:
-            return self.threads.submit(self.update_update, thread=False, loop=True)
-
+            return self.threads.submit(self.update_update, thread=False, loop=loop)
         self.pb["value"] = int(self.c.load_progress*100)
         self.side_menu.itemconfig(self.downloading_name, text=self.c.load_state+"\n"+self.c.load_program)
+
         while loop:
             self.pb["value"] = int(self.c.load_progress*100)
             self.side_menu.itemconfig(self.downloading_name, text=self.c.load_state+"\n"+self.c.load_program)
+            sleep(.1)
 
     def run(self) -> None:
         """
@@ -329,10 +331,8 @@ class Window:
         :return: None
         """
         self.threads.shutdown(wait=False)
-        with suppress(ConnectionResetError):
-            self.c.end()
+        self.c.end()
         self.root.destroy()
-        print(enumerate())
 
     def update_apps(self) -> None:
         """
@@ -369,7 +369,8 @@ class Window:
         """
         self.du_button["bg"] = "grey"
         self.du_button["state"] = "disabled"
-        app = {app["name"]: app for app in self.c.get_apps()}[app_name]
+        apps = self.c.get_apps()
+        app = {app["name"]: app for app in apps}[app_name]
 
         if directory is ...:
             directory = filedialog.askdirectory()
@@ -381,20 +382,24 @@ class Window:
             "path": directory+'/'
         }
         self.settings["installed_programs"] = temp
-        self.select_app(app_name)
+        self.select_app(app_name, apps)
 
-    def select_app(self, app_name) -> None:
+    def select_app(self, app_name, apps: list | None = ...) -> None:
         """
         :param app_name: the name of the app to be selected
+        :param apps: give alternative apps
         """
         installed_apps = self.settings["installed_programs"]
-        app = {app["name"]: app for app in self.c.get_apps()}[app_name]
+        if apps is ...:
+            apps = self.c.get_apps()
+        app = {app["name"]: app for app in apps}[app_name]
 
         app_version = None
         if app["name"] in installed_apps:
             app_version = installed_apps[app["name"]]["version"]
 
         newline = '\n'
+        rep = ("\\\\n", "\n")
         info_string = f"""Version:
 {app['version']}{newline+newline+"Installed:"+newline+app_version if app_version else ""}
 
@@ -405,7 +410,7 @@ Files:
 {newline.join(app['files'])}
 
 Info:
-{newline.join(split_string(app["info"], self.info_line_length)).lstrip(" ")}
+{newline.join(split_string(app["info"], self.info_line_length)).lstrip(" ").replace(*rep)}
 
 by {app["publisher"]}
 """
