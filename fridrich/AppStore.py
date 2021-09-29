@@ -12,6 +12,8 @@ import os
 download_progress = float()
 download_program = str()
 
+executor = ThreadPoolExecutor()
+
 
 def get_list() -> list:
     """
@@ -105,7 +107,7 @@ def receive_app(message: dict, user: new_types.User) -> None:
                    "version": message["version"],
                    "info": message["info"],
                    "publisher": user.name
-        }, out)
+        }, out, indent=4)
 
     for _ in message["files"]:
         send_receive(mode='receive', print_steps=False, download_directory=directory, thread=False, overwrite=True)
@@ -127,7 +129,6 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
     """
     global download_progress, download_program
     if thread:
-        executor = ThreadPoolExecutor(max_workers=1)
         return executor.submit(send_receive, mode=mode, filename=filename, destination=destination, print_steps=print_steps,
                                download_directory=download_directory, thread=False, overwrite=overwrite)
 

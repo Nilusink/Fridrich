@@ -1,4 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, Future
+from contextlib import suppress
 from traceback import format_exc
 from fridrich import AppStore
 from fridrich import *
@@ -728,7 +729,6 @@ class Connection:
             thread = AppStore.send_receive(mode="send", filename=file, destination=self.ServerIp, print_steps=False, thread=True, overwrite=True)
             while thread.running():
                 self.load_program = app_name
-
         self.load_program = str()
         self.load_state = str()
 
@@ -763,7 +763,9 @@ class Connection:
                'type': 'end',
                'time': time.time()
         }    # set message
-        self.send(msg)  # send message
+        with suppress(ConnectionResetError):
+            self.send(msg)  # send message
+        AppStore.executor.shutdown(wait=False)
         self.AuthKey = None
         self.userN = None
         self.executor.shutdown(wait=False)
@@ -771,4 +773,5 @@ class Connection:
 
         if revive:
             self.executor = ThreadPoolExecutor(max_workers=1)
+            AppStore.executor = ThreadPoolExecutor()
             self.loop = True
