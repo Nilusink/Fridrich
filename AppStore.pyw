@@ -1,5 +1,7 @@
 #! C:\users\Niclas\AppData\local\programs\Python\Python310\python.exe
 from concurrent.futures import ThreadPoolExecutor, Future
+from contextlib import suppress
+
 from fridrich.backend import Connection
 from fridrich.new_types import FileVar
 from tkinter import filedialog
@@ -324,7 +326,8 @@ class Window:
         :return: None
         """
         self.threads.shutdown(wait=False)
-        self.c.end()
+        with suppress(ConnectionResetError):
+            self.c.end()
         self.root.destroy()
 
     def update_apps(self) -> None:

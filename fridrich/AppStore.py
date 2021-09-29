@@ -19,11 +19,13 @@ def get_list() -> list:
     """
     with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
         directory = json.load(inp)["AppStoreDirectory"]
-
+    print(f"Scanning {directory}")
     apps = list()
     for app in os.listdir(directory):
+        print(f"App: {app}")
         size = float()
         filenames = [file for file in os.listdir(directory+app) if file.endswith(".zip")]
+        print(f"Apps: {filenames}")
         if not os.path.isdir(directory+app+"/AppInfo.json"):
             continue
 
@@ -31,13 +33,11 @@ def get_list() -> list:
             size += os.path.getsize(directory+app+'/'+filename)
 
         app_info = json.load(open(directory+app+'/AppInfo.json'))
-        apps.append({
-            "name": app,
-            "version": app_info["version"],
-            "info": app_info["info"],
-            "files": filenames,
-            "size": size
-        })
+        app_info["name"] = app
+        app_info["files"] = filenames
+        app_info["size"] = size
+        apps.append(app_info)
+    print(apps)
     return apps
 
 
