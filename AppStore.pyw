@@ -1,7 +1,7 @@
 #! C:\users\Niclas\AppData\local\programs\Python\Python310\python.exe
 from concurrent.futures import ThreadPoolExecutor, Future
 from contextlib import suppress
-
+from threading import enumerate
 from fridrich.backend import Connection
 from fridrich.new_types import FileVar
 from tkinter import filedialog
@@ -104,11 +104,16 @@ class Window:
     """
     main window of the Program
     """
-    def __init__(self) -> None:
+    def __init__(self, c: Connection) -> None:
         """
         initialise the window
         :return: None
         """
+        # check if connection is valid
+        if not c:
+            raise Error("Connection class must be authed before passing")
+        self.c = c
+
         self.info_line_length = 40
         try:
             temp = open("data/AppStore.config", 'r')
@@ -136,8 +141,6 @@ class Window:
         self.main_frame.grid_columnconfigure(1, weight=1)
         self.main_frame.grid_columnconfigure(2, weight=1)
 
-        self.c = Connection(debug_mode=Off)
-        self.c.auth("Hurensohn3", "13102502")
         if not self.c:
             raise AuthError("Not Authenticated")
         self.side_menu = tk.Canvas(self.main_frame, bg="black", width=300)
@@ -329,6 +332,7 @@ class Window:
         with suppress(ConnectionResetError):
             self.c.end()
         self.root.destroy()
+        print(enumerate())
 
     def update_apps(self) -> None:
         """
@@ -428,7 +432,9 @@ def main() -> None:
     """
     main program
     """
-    w = Window()
+    c = Connection(debug_mode=Off)
+    c.auth("Hurensohn3", "13102502")
+    w = Window(c)
     w.run()
 
 

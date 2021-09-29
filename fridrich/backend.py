@@ -722,14 +722,13 @@ class Connection:
             "info": app_info,
             "files": [file.split("/")[-1] for file in files]
         }
-        print(msg)
         self.wait_for_message(self.send(msg))
-
         self.load_state = "Uploading"
         for file in files:
             thread = AppStore.send_receive(mode="send", filename=file, destination=self.ServerIp, print_steps=False, thread=True, overwrite=True)
-            while thread.running:
+            while thread.running():
                 self.load_program = app_name
+
         self.load_program = str()
         self.load_state = str()
 

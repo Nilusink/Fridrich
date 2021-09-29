@@ -44,6 +44,7 @@ def verify(username: str, password: str, cl: socket.socket, address: str) -> Non
     key = None
     new_user = None
     if resp is None:
+        print(f"invalid auth from {address} ({username})")
         Communication.send(cl, {'Error': 'SecurityNotSet', 'info': f'no information about security clearance for user {username}'}, encryption=MesCryp.encrypt)
         return
 
@@ -53,7 +54,7 @@ def verify(username: str, password: str, cl: socket.socket, address: str) -> Non
         new_user = User(name=username, sec=resp, key=key, cl=cl, ip=address, function_manager=FunManager)
         Users.append(new_user)
         
-    debug.debug(f'{new_user}, Auth: {IsValid}')   # print out username, if connected successfully or not and if it is a bot
+    debug.debug(new_user)   # print out username, if connected successfully or not and if it is a bot
     mes = cryption_tools.MesCryp.encrypt(json.dumps({'Auth': IsValid, 'AuthKey': key}))
     cl.send(mes)
 
