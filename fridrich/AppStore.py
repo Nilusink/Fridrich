@@ -19,26 +19,23 @@ def get_list() -> list:
     """
     with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
         directory = json.load(inp)["AppStoreDirectory"]
-    print(f"Scanning {directory}")
+
     apps = list()
     for app in [dire for dire in os.listdir(directory) if os.path.isdir(directory + '/' + dire)]:
-        print(f"App: {app}")
         size = float()
         filenames = [file for file in os.listdir(directory+app) if file.endswith(".zip")]
-        print(f"files: {filenames}, {os.listdir(directory+app)}")
         if "AppInfo.json" not in os.listdir(directory+app):
             continue
-        print("got past AppInfo")
 
         for filename in filenames:
             size += os.path.getsize(directory+app+'/'+filename)
-        print(directory+app+'/AppInfo.json')
+
         app_info = json.load(open(directory+app+'/AppInfo.json'))
         app_info["name"] = app
         app_info["files"] = filenames
         app_info["size"] = size
         apps.append(app_info)
-    print(apps)
+
     return apps
 
 
@@ -91,13 +88,14 @@ def receive_app(message: dict, user: new_types.User) -> None:
                 "content": {"error": "ValueError", "info": f"App with name {message['name']} already exists"},
                 "time": message["time"]
             })
+            return
         else:
             if len(files) != 0:
                 for element in files:
                     os.remove(directory+'/'+element)
     else:
         os.system(f"mkdir {directory}")
-
+    print("Success, name valid")
     msg = {
         "content": {"success": True},
         "time": message["time"]
@@ -136,6 +134,7 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
 
     if mode in ('r', 'receive'):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind(('0.0.0.0', 15151))
         server.listen()
 
