@@ -97,7 +97,7 @@ def get_new_ones(flag: str, vote_instance: new_types.FileVar, last_file: str, vo
     
     for element in tmp[voting]:
         if not tmp[voting][element] in ['Lukas', 'Niclas', 'Melvin']+new_ones:
-            new_ones.append(tmp[element])
+            new_ones.append(tmp[voting][element])
     
     return new_ones
 
