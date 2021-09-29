@@ -99,7 +99,7 @@ def receive_app(message: dict, user: new_types.User) -> None:
     }
     user.send(msg)
     if not state:
-        break
+        return
     with open(directory+"AppInfo.json", 'w') as out:
         json.dump({
                    "version": message["version"],
