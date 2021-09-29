@@ -182,7 +182,7 @@ def try_decrypt(message: bytes, client_keys: dict | list, errors=True) -> str | 
     return jsonMes
 
 
-def key_func(client_keys: list | typing.Generator, length=10) -> str:
+def key_func(length=10) -> str:
     """
     generate random key
     """

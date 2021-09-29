@@ -49,7 +49,7 @@ def verify(username: str, password: str, cl: socket.socket, address: str) -> Non
 
     elif resp:
         IsValid = True
-        key = key_func((element.key for element in Users), length=30)
+        key = key_func(length=30)
         new_user = User(name=username, sec=resp, key=key, cl=cl, ip=address, function_manager=FunManager)
         Users.append(new_user)
         
