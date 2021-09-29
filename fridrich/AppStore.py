@@ -26,13 +26,13 @@ def get_list() -> list:
         size = float()
         filenames = [file for file in os.listdir(directory+app) if file.endswith(".zip")]
         print(f"files: {filenames}, {os.listdir(directory+app)}")
-        if not os.path.isdir(directory+app+"/AppInfo.json"):
+        if "AppInfo.json" not in os.listdir(directory+app):
             continue
         print("got past AppInfo")
 
         for filename in filenames:
             size += os.path.getsize(directory+app+'/'+filename)
-
+        print(directory+app+'/AppInfo.json')
         app_info = json.load(open(directory+app+'/AppInfo.json'))
         app_info["name"] = app
         app_info["files"] = filenames
