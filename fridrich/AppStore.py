@@ -37,7 +37,7 @@ def get_list() -> list:
         app_info["files"] = filenames
         app_info["size"] = size
         apps.append(app_info)
-
+    print(apps)
     return apps
 
 
@@ -47,6 +47,7 @@ def send_apps(message: dict, user: new_types.User) -> None:
     :param user: the user to send the answer to
     :return: None
     """
+    print("called send apps")
     msg = {
         "content": get_list(),
         "time": message["time"]
