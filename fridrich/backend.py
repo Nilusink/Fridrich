@@ -720,11 +720,10 @@ class Connection:
             "name": app_name,
             "version": app_version,
             "info": app_info,
-            "files": [file.split["/"][-1] for file in files]
+            "files": [file.split("/")[-1] for file in files]
         }
-        resp = self.wait_for_message(self.send(msg))
-        if not resp["state"]:
-            raise NameError(f"App with name {app_name} already exists!")
+        print(msg)
+        self.wait_for_message(self.send(msg))
 
         self.load_state = "Uploading"
         for file in files:

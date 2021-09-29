@@ -21,7 +21,7 @@ def get_list() -> list:
         directory = json.load(inp)["AppStoreDirectory"]
     print(f"Scanning {directory}")
     apps = list()
-    for app in os.listdir(directory):
+    for app in [dire for dire in os.listdir(directory) if os.path.isdir(directory + '/' + dire)]:
         print(f"App: {app}")
         size = float()
         filenames = [file for file in os.listdir(directory+app) if file.endswith(".zip")]
@@ -80,26 +80,29 @@ def receive_app(message: dict, user: new_types.User) -> None:
     :param user: the user to send the answer to
     :return: None
     """
-    print("receiving app")
+    print(f"receiving app {message['name']}")
     with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
         directory = json.load(inp)["AppStoreDirectory"]+message["name"]
 
     if os.path.isdir(directory):
-        if len(os.listdir(directory)) != 0:  # check if directory is empty, else send error
-            state = False
+        files = os.listdir(directory)
+        if "AppInfo.json" in files:  # check if directory is empty, else send error
+            user.send({
+                "content": {"error": "ValueError", "info": f"App with name {message['name']} already exists"},
+                "time": message["time"]
+            })
         else:
-            state = True
+            if len(files) != 0:
+                for element in files:
+                    os.remove(directory+'/'+element)
     else:
-        state = True
         os.system(f"mkdir {directory}")
-    print(state)
+
     msg = {
-        "content": {"state": state},
+        "content": {"success": True},
         "time": message["time"]
     }
     user.send(msg)
-    if not state:
-        return
     with open(directory+"AppInfo.json", 'w') as out:
         json.dump({
                    "version": message["version"],

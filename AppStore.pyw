@@ -137,7 +137,7 @@ class Window:
         self.main_frame.grid_columnconfigure(2, weight=1)
 
         self.c = Connection(debug_mode=Off)
-        self.c.auth("Hurensohn2", "hurensohn")
+        self.c.auth("Hurensohn3", "13102502")
         if not self.c:
             raise AuthError("Not Authenticated")
         self.side_menu = tk.Canvas(self.main_frame, bg="black", width=300)
