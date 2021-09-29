@@ -97,14 +97,12 @@ def client_handler() -> None:
     # try to load the message, else ignore it and restart
     try:
         t_mes = cryption_tools.MesCryp.decrypt(cl.recv(2048))
-        debug.debug(t_mes)
 
     except InvalidToken:
         Communication.send(cl, {'error': 'MessageError', 'info': "Couldn'T decrypt message with default key"}, encryption=MesCryp.encrypt)
         return
 
     mes = json.loads(t_mes)
-    debug.debug(mes)
     if mes['type'] == 'auth':   # authorization function
         verify(mes['Name'], mes['pwd'], cl, address)
         return

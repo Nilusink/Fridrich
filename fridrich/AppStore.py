@@ -77,7 +77,6 @@ def receive_app(message: dict, user: new_types.User) -> None:
     :param user: the user to send the answer to
     :return: None
     """
-    print(f"receiving app {message['name']}")
     with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
         directory = json.load(inp)["AppStoreDirectory"]+message["name"]
 
@@ -95,13 +94,13 @@ def receive_app(message: dict, user: new_types.User) -> None:
                     os.remove(directory+'/'+element)
     else:
         os.system(f"mkdir {directory}")
-    print("Success, name valid")
+
     msg = {
         "content": {"success": True},
         "time": message["time"]
     }
     user.send(msg)
-    with open(directory+"AppInfo.json", 'w') as out:
+    with open(directory+"/AppInfo.json", 'w') as out:
         json.dump({
                    "version": message["version"],
                    "info": message["info"],
@@ -124,7 +123,7 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
     :param download_directory: where the downloaded files should end up
     :param thread: if the program should be executed as a thread or not
     :param overwrite: if true overwrites output file
-    :return: None
+    :return: None of Future instance of the Thread
     """
     global download_progress, download_program
     if thread:
