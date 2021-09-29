@@ -96,7 +96,7 @@ def get_new_ones(flag: str, vote_instance: new_types.FileVar, last_file: str, vo
             raise ValueError(f'"{flag}" is not an option')
     
     for element in tmp[voting]:
-        if not tmp[element] in ['Lukas', 'Niclas', 'Melvin']+new_ones:
+        if not tmp[voting][element] in ['Lukas', 'Niclas', 'Melvin']+new_ones:
             new_ones.append(tmp[element])
     
     return new_ones

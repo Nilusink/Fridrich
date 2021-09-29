@@ -25,9 +25,10 @@ def get_list() -> list:
         print(f"App: {app}")
         size = float()
         filenames = [file for file in os.listdir(directory+app) if file.endswith(".zip")]
-        print(f"Apps: {filenames}")
+        print(f"files: {filenames}, {os.listdir(directory+app)}")
         if not os.path.isdir(directory+app+"/AppInfo.json"):
             continue
+        print("got past AppInfo")
 
         for filename in filenames:
             size += os.path.getsize(directory+app+'/'+filename)
@@ -79,6 +80,7 @@ def receive_app(message: dict, user: new_types.User) -> None:
     :param user: the user to send the answer to
     :return: None
     """
+    print("receiving app")
     with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
         directory = json.load(inp)["AppStoreDirectory"]+message["name"]
 
@@ -90,13 +92,14 @@ def receive_app(message: dict, user: new_types.User) -> None:
     else:
         state = True
         os.system(f"mkdir {directory}")
-
+    print(state)
     msg = {
         "content": {"state": state},
         "time": message["time"]
     }
     user.send(msg)
-
+    if not state:
+        break
     with open(directory+"AppInfo.json", 'w') as out:
         json.dump({
                    "version": message["version"],
