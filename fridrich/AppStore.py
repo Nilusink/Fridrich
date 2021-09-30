@@ -113,6 +113,62 @@ def receive_app(message: dict, user: new_types.User) -> None:
         send_receive(mode='receive', print_steps=False, download_directory=directory, thread=False, overwrite=True)
 
 
+def modify_app(message: dict, user: new_types.User) -> None:
+    """
+            msg = {
+            "type": "modify_app",
+            "o_name": old_app_name,
+            "name": app_name,
+            "version": app_version,
+            "info": app_info,
+            "new": [file.split("/").split("\\")[-1] for file in files],
+            "to_delete": to_delete
+    """
+    try:
+        app = {app["name"]: app for app in get_list()}[message["o_name"]]
+    except KeyError:
+        user.send({
+            "content": {
+                "error": f"App {message['o_name']} doesn't exist"
+            },
+            "time": message['time']
+        })
+        return
+
+    if not app["publisher"] == user.name:
+        user.send({
+            "content": {
+                "error": f"App can only be modified by creator! {app['publisher']}"
+            },
+            "time": message['time']
+        })
+        return
+    print(f"modifying {app['name']}")
+    with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
+        directory = json.load(inp)["AppStoreDirectory"]
+
+    with open(directory+"/"+app["name"]+"/AppInfo.json", 'w') as out:
+        tmp = {
+            "version": app["version"],
+            "info": app["info"]
+        }
+        json.dump(tmp, out, indent=4)
+    print("AppInfo.json")
+    for file in message["to_remove"]:
+        os.remove(directory+'/'+app['name'+'/'+file])
+    print("removed files")
+    if message["name"] != app["name"]:
+        os.system(f"move {directory+'/'+app['name']+'/'} {directory+'/'+message['name']+'/'}")
+        print("renamed app")
+
+    user.send({
+            "content": {
+                "success": True
+            },
+            "time": message['time']
+        })
+
+
 def send_receive(mode: str, filename: str | None = ..., destination: str | None = ..., print_steps: bool | None = False,
                  download_directory: str | None = ..., thread: bool | None = False, overwrite: bool | None = False) -> None | Future:
     """

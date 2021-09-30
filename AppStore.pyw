@@ -1,3 +1,5 @@
+import os
+import threading
 from concurrent.futures import ThreadPoolExecutor, Future
 from time import sleep
 
@@ -9,6 +11,7 @@ from tkinter import ttk
 from fridrich import *
 import tkinter as tk
 import json
+import sys
 
 
 def bytes_to(value_in_bytes: float, rnd: int | None = ...) -> str:
@@ -157,17 +160,30 @@ class Window:
 
         self.app_info = tk.Canvas(self.main_frame, bg="white", width=400)
         self.info = self.app_info.create_text(10, 10, anchor=tk.NW, font="Helvetica 15")
-        self.du_button = tk.Button(self.app_info, text="Download", bg="green", font="Helvetica 30 bold", relief=tk.FLAT)
+        self.info_buttons = tk.Canvas(self.app_info)
+        self.info_buttons.columnconfigure(0, weight=1)
+        self.info_buttons.columnconfigure(1, weight=1)
+        self.du_button = tk.Button(self.info_buttons, text="Download", bg="green", font="Helvetica 30 bold", relief=tk.FLAT)
+        self.mod_button = tk.Button(self.info_buttons, text="Modify", bg="yellow", font="Helvetica 30 bold", relief=tk.FLAT)
+        self.du_button.grid(column=0, row=0, sticky=tk.SW)
         self.app_info.grid(row=0, column=3, sticky=tk.NSEW)
 
         self.apps_items = list()
 
         self.u_height = 450
         self.u_width = 800
-        self.u_place = False
 
-        self.window = tk.Canvas(self.root, width=self.u_width, height=self.u_height, bd=0, highlightthickness=0, relief=tk.RIDGE)
+        self.window = tk.Toplevel()
+        self.window.title("AppCreator")
+        self.window.minsize(width=self.u_width, height=self.u_height)
+        self.window.maxsize(width=self.u_width, height=self.u_height)
+        self.window.protocol("WM_DELETE_WINDOW", self.__new_app_reset)
+        self.window.bind("<Escape>", self.__new_app_reset)
 
+        self.window.withdraw()
+        self.root.focus_set()
+
+        # create app
         # meta info
         self.app_name_frame = tk.Canvas(self.window, width=self.u_width, height=self.u_height, bg="grey20", bd=0, highlightthickness=0, relief=tk.RIDGE)
         self.app_name_frame.pack()
@@ -203,13 +219,51 @@ class Window:
         self.upload_files = tk.Label(self.files_window, font=("Ink Free", 30), bg="grey20", fg="white")
         self.upload_files.place(x=self.u_width/2, y=250, anchor=tk.CENTER)
 
-        # new app variables
+        # configure app
+        self.configure_window = tk.Canvas(self.window, width=self.u_width, height=self.u_height, bg="grey20", bd=0, highlightthickness=0, relief=tk.RIDGE)
+
+        tk.Label(self.configure_window, text="Configure App", font=("Segoe Print", 50), bg="grey20", fg="white").place(x=self.u_width/2, y=60, anchor=tk.CENTER)
+
+        tk.Button(self.configure_window, text="Cancel", font="Helvetica 15 bold", bg="grey20", fg="red", relief=tk.FLAT, command=self.__new_app_reset).place(x=00, y=self.u_height, anchor=tk.SW)
+        tk.Button(self.configure_window, text="Done", font="Helvetica 15 bold", bg="grey20", fg="green", relief=tk.FLAT, command=self.__done_configure).place(x=self.u_width, y=self.u_height, anchor=tk.SE)
+
+        tk.Label(self.configure_window, text="Name", font="Helvetica 20", bg="grey20", fg="white").place(x=30, y=150, anchor=tk.W)
+        self.config_name_entry = ttk.Entry(self.configure_window, font=("Ink Free", 30), width=25)
+        self.config_name_entry.place(x=self.u_width/2+50, y=150, anchor=tk.CENTER)
+
+        tk.Label(self.configure_window, text="Version", font="Helvetica 20", bg="grey20", fg="white").place(x=30, y=200, anchor=tk.W)
+        self.config_version_entry = ttk.Entry(self.configure_window, font=("Ink Free", 30), width=25)
+        self.config_version_entry.place(x=self.u_width/2+50, y=200, anchor=tk.CENTER)
+
+        tk.Label(self.configure_window, text="Info", font="Helvetica 20", bg="grey20", fg="white").place(x=30, y=260, anchor=tk.W)
+        self.config_info_text = tk.Text(self.configure_window, font=("Ink Free", 30), width=25, height=3)
+        self.config_info_text.place(x=self.u_width/2+50, y=240, anchor=tk.N)
+
+        # Configure Files
+        self.configure_files = tk.Canvas(self.window, width=self.u_width, height=self.u_height, bg="grey20", bd=0, highlightthickness=0, relief=tk.RIDGE)
+
+        tk.Label(self.configure_files, text="Configure App", font=("Segoe Print", 50), bg="grey20", fg="white").place(x=self.u_width/2, y=60, anchor=tk.CENTER)
+
+        tk.Button(self.configure_files, text="Cancel", font="Helvetica 15 bold", bg="grey20", fg="red", relief=tk.FLAT, command=self.__new_app_reset).place(x=00, y=self.u_height, anchor=tk.SW)
+        tk.Button(self.configure_files, text="Done", font="Helvetica 15 bold", bg="grey20", fg="green", relief=tk.FLAT, command=self.__done_configure).place(x=self.u_width, y=self.u_height, anchor=tk.SE)
+
+        tk.Button(self.configure_files, text="Select Files", font="Helvetica 20 bold", bg="grey20", fg="white", relief=tk.FLAT, command=self.__configure_open_files).place(x=self.u_width/2, y=150, anchor=tk.CENTER)
+
+        self.configure_app_files = tk.Canvas(self.configure_files, bg="red")
+        self.configure_app_files.place(x=self.u_width/2, y=200, anchor=tk.N)
+
+        # new app
         self.__app_name = str()
         self.__app_version = None
         self.__app_info = None
         self.__upload_files = tuple()
 
         self.__app_done = False
+
+        # configure app
+        self.__configuring = dict()
+        self.__selected_files = False
+        self.__update_files = list()
 
         self.update_apps()
 
@@ -223,9 +277,6 @@ class Window:
         self.pb.place_forget()
         self.pb.place(x=10, y=self.main_frame.winfo_height()-30, anchor=tk.NW)
         self.side_menu.coords(self.downloading_name, 10, self.main_frame.winfo_height()-80)
-
-        if self.u_place:
-            self.window.place(x=self.root.winfo_width()/2, y=self.root.winfo_height()/2, anchor=tk.CENTER)
 
     def __new_app_iter(self, _event=None) -> None:
         """
@@ -276,7 +327,7 @@ class Window:
 
     def __new_app_reset(self, _event=None) -> None:
         """
-        cancel the app upload
+        reset all variables for App Configurer
         """
         self.__app_name = str()
         self.__app_version = str()
@@ -284,6 +335,7 @@ class Window:
         self.__upload_files = tuple()
 
         self.__app_done = False
+        self.__selected_files = False
 
         self.new_app_entry.delete(0, tk.END)
         self.new_app_text.delete("1.0", tk.END)
@@ -291,15 +343,108 @@ class Window:
         self.new_app_info_label["text"] = str()
         self.new_app_entry_title["text"] = "Name"
 
+        self.mod_button["state"] = tk.NORMAL
+        self.add_app["state"] = tk.NORMAL
+
+        self.__configuring = dict()
+
         self.new_app_text.place_forget()
         self.new_app_entry.place(x=self.u_width/2, y=(self.u_height/2)+25, anchor=tk.CENTER)
 
         self.files_window.pack_forget()
+        self.configure_window.pack_forget()
+        self.configure_files.pack_forget()
         self.app_name_frame.pack()
-        self.window.place_forget()
-        self.u_place = False
+        self.window.withdraw()
 
         self.add_app["state"] = tk.NORMAL
+
+    def __done_configure(self, _event=None) -> None:
+        """
+        called by a button when done configuring
+        """
+        if not self.__selected_files:
+            self.configure_window.pack_forget()
+            self.configure_files.pack()
+            self.__update_files = [{"name": file, "tag": "keep", "dir": None} for file in self.__configuring["files"]]
+            self.__selected_files = True
+            self.update_files_list()
+            return
+        print(self.__update_files)
+        self.mod_button["state"] = tk.NORMAL
+        self.__new_app_reset()
+
+    def __configure_open_files(self) -> None:
+        """
+        open files
+        """
+        files = list(filedialog.askopenfilenames(parent=self.window, title="Choose Archives to upload", filetypes=[('Archives', '*.zip')]))
+        filenames = [file.split("/")[-1] for file in files]
+
+        for file in self.__update_files:  # check if file is already in list
+            if file["name"] in filenames:
+                f_index = filenames.index(file["name"])
+                file["tag"] = "overwrite"
+                file["dir"] = files[f_index]
+
+                filenames.pop(f_index)
+                files.pop(f_index)
+            else:
+                print(file["name"], filenames)
+
+        for element in files:  # if not append as new element
+            self.__update_files.append({
+                "name": filenames[files.index(element)],
+                "tag": "new",
+                "dir": element
+            })
+        self.update_files_list()
+
+    def update_files_list(self) -> None:
+        """
+        update the files list when configuring app
+        """
+        for element in self.configure_app_files.winfo_children():
+            element.grid_forget()
+
+        for file in self.__update_files:
+            curr_row = self.__update_files.index(file)
+            tk.Label(self.configure_app_files, text=file["name"], font=("Ink Free", 20), bg="grey20", fg="white").grid(row=curr_row, column=0, sticky=tk.NSEW)
+            match file["tag"]:
+                case "keep":
+                    tmp = tk.Button(self.configure_app_files, text="keep", font=("Ink Free", 20), bg="grey20", fg="white", relief=tk.FLAT)
+                case "overwrite":
+                    tmp = tk.Button(self.configure_app_files, text="overwrite", font=("Ink Free", 20), bg="grey20", fg="yellow", relief=tk.FLAT)
+                case "new":
+                    tmp = tk.Button(self.configure_app_files, text="new", font=("Ink Free", 20), bg="grey20", fg="green", relief=tk.FLAT)
+                case "delete":
+                    tmp = tk.Button(self.configure_app_files, text="delete", font=("Ink Free", 20), bg="grey20", fg="red", relief=tk.FLAT)
+                case _:
+                    raise ValueError(f"Invalid tag: {file['tag']}")
+            tmp.grid(row=curr_row, column=1, sticky=tk.NSEW)
+
+    def configure_app(self, app: dict) -> None:
+        """
+        Configure an app
+        :param app: a dictionary with all app info (c.get_results())
+        :return: Nothing
+        """
+        self.__configuring = app
+
+        self.window.deiconify()
+        self.mod_button["state"] = tk.DISABLED
+        self.add_app["state"] = tk.DISABLED
+        self.app_name_frame.pack_forget()
+        self.configure_window.pack()
+
+        self.config_name_entry.delete(0, tk.END)
+        self.config_version_entry.delete(0, tk.END)
+        self.config_info_text.delete(0.0, tk.END)
+        self.config_name_entry.insert(0, app["name"])
+        self.config_version_entry.insert(0, app["version"])
+        self.config_info_text.insert(0.0, app["info"].lstrip(" ").replace("\\\\n", "\n"))
+
+        self.__resize()
 
     def update_update(self, _event=None, thread: bool | None = False, loop: bool | None = False) -> Future | None:
         """
@@ -333,6 +478,9 @@ class Window:
         self.threads.shutdown(wait=False)
         self.c.end()
         self.root.destroy()
+        if len(threading.enumerate()) > 1:
+            os.kill(os.getpid(), 9)  # if threads are running, terminate the process
+        sys.exit(0)
 
     def update_apps(self) -> None:
         """
@@ -357,8 +505,9 @@ class Window:
         """
         upload an app to the appstore
         """
-        self.u_place = True
+        self.window.deiconify()
         self.add_app["state"] = tk.DISABLED
+        self.mod_button["state"] = tk.DISABLED
         self.__resize()
 
     def download_app(self, app_name, directory: str | None = ...) -> None:
@@ -430,7 +579,13 @@ by {app["publisher"]}
             self.du_button["bg"] = "grey"
             self.du_button["state"] = "disabled"
 
-        self.du_button.place(x=80, y=lines*25, anchor=tk.NW)
+        if self.c.username == app["publisher"]:
+            self.mod_button["command"] = lambda _e=None: self.configure_app(app)
+            self.mod_button.grid(column=1, row=0, sticky=tk.SW)
+        else:
+            self.mod_button.grid_forget()
+
+        self.info_buttons.place(x=200, y=lines*25, anchor=tk.N)
 
 
 def main() -> None:

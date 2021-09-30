@@ -88,7 +88,7 @@ class Connection:
         self.port = 12345   # set communication port with server
 
         self.AuthKey = None 
-        self.userN = None
+        self._userN = None
 
         self.loop = True
         
@@ -99,6 +99,14 @@ class Connection:
         self.load_state = str()
         self.load_progress = float()
         self.load_program = str()
+
+    # properties
+    @property
+    def username(self) -> str:
+        """
+        get username
+        """
+        return self._userN
 
     # "local" functions
     @staticmethod
@@ -280,7 +288,7 @@ class Connection:
             'Name': username,
             'pwd': password
         }
-        self.userN = username
+        self._userN = username
         self.AuthKey = None  # reset AuthKey
         stringMes = json.dumps(msg, ensure_ascii=False)
 
@@ -732,9 +740,31 @@ class Connection:
         self.load_program = str()
         self.load_state = str()
 
+    def modify_app(self, old_app_name: str, app_name: str, app_version: str, app_info: str, files: list | tuple, to_delete: list | tuple) -> None:
+        """
+        configure an already existing app
+
+        :param old_app_name: the original name of the app
+        :param app_name: the name of the app
+        :param app_version: the version of the app
+        :param app_info: the info of the app
+        :param files: a list with files to update (full path, overwriting old files)
+        :param to_delete: a list with App-Files that should be deleted (if the exist!)
+        """
+        msg = {
+            "type": "modify_app",
+            "o_name": old_app_name,
+            "name": app_name,
+            "version": app_version,
+            "info": app_info,
+            "new": [file.split("/").split("\\")[-1] for file in files],
+            "to_delete": to_delete
+        }
+        self.wait_for_message(self.send(msg))
+
     # magical functions
     def __repr__(self) -> str:
-        return f'Backend instance (debug_mode: {self.debug_mode}, user: {self.userN}, authkey: {self.AuthKey})'
+        return f'Backend instance (debug_mode: {self.debug_mode}, user: {self._userN}, authkey: {self.AuthKey})'
     
     def __str__(self) -> str:
         """
@@ -763,11 +793,11 @@ class Connection:
                'type': 'end',
                'time': time.time()
         }    # set message
-        with suppress(ConnectionResetError):
+        with suppress(ConnectionResetError, ConnectionAbortedError):
             self.send(msg)  # send message
         AppStore.executor.shutdown(wait=False)
         self.AuthKey = None
-        self.userN = None
+        self._userN = None
         self.executor.shutdown(wait=False)
         self.loop = False
 

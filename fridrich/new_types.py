@@ -134,11 +134,14 @@ class FileVar:
 
 
 class User:
-    def __init__(self, name: str, sec: str, key: str, cl: socket.socket, ip: str, function_manager) -> None:
+    def __init__(self, name: str, sec: str, key: str, cl: socket.socket, ip: str, function_manager: typing.Callable) -> None:
         """
-        ´´name´´: Name of the client
-        ´´sec´´: security clearance
-        ´´key´´: encryption key of client
+        :param name: Name of the client
+        :param sec: security clearance
+        :param key: encryption key of client
+        :param cl: the users socket instance
+        :param ip: the users host ip
+        :param function_manager: the manager class for executing functions
         """
         self.__name = name
         self.__sec = sec
@@ -153,15 +156,24 @@ class User:
         self.loop = True
 
     @property
-    def name(self):
+    def name(self) -> str:
+        """
+        :return: the username of the user
+        """
         return self.__name
 
     @property
-    def sec(self):
+    def sec(self) -> str:
+        """
+        :return: the security clearance of the user
+        """
         return self.__sec
 
     @property
-    def ip(self):
+    def ip(self) -> str:
+        """
+        :return: the users host-ip
+        """
         return self.__ip
 
     def receive(self) -> None:
@@ -204,7 +216,7 @@ class User:
             self.send(msg)
             return
         else:
-            error, info = self.manager.exec(message, self)
+            error, info = self.manager(message, self)
         if error:
             self.send({"Error": error, "info": info}, message_type='Error')
 
@@ -234,7 +246,7 @@ class UserList:
 
         special: ´´get_user´´ function (gets a user by its name or encryption key)
         """
-        self.users = users if users is not ... else list()
+        self._users = users if users is not ... else list()
         self.client_threads = list()
 
         self.executor = ThreadPoolExecutor()
@@ -242,11 +254,12 @@ class UserList:
 
         self.loop = True
 
+    @property
     def names(self) -> typing.Generator:
         """
         return the names of all users
         """
-        for element in self.users:
+        for element in self._users:
             yield element.name
 
     def append(self, obj: User) -> None:
@@ -257,13 +270,13 @@ class UserList:
             self.remove_by(name=obj.name)
 
         self.client_threads.append(self.executor.submit(obj.receive))
-        self.users.append(obj)
+        self._users.append(obj)
 
     def get_user(self, key: str | None = ..., name: str | None = ...) -> User:
         """
         get a user by its name or encryption key
         """
-        for element in self.users:
+        for element in self._users:
             if key is not ...:
                 if key in element:
                     return element
@@ -278,7 +291,7 @@ class UserList:
         remove a user by its class
         """
         user.end()
-        self.users.remove(user)
+        self._users.remove(user)
 
     def remove_by(self, *args, **kw) -> None:
         """
@@ -290,22 +303,22 @@ class UserList:
 
     def reset(self) -> None:
         """
-        reset all users (clear self.users)
+        reset all users (clear self._users)
         """
-        for user in self.users:
+        for user in self._users:
             user.send({'warning': 'server_logout'}, message_type="disconnect")
             user.end()
-        self.users = list()
+        self._users = list()
 
     def _garbage_collector(self, time_between_loops: int | None = .5) -> None:
         """
         check if any of the clients is disconnected and if yes, remove it
         """
         while self.loop:
-            for element in self.users:
+            for element in self._users:
                 if element.disconnect:
                     element.end()
-                    self.users.remove(element)
+                    self._users.remove(element)
             time.sleep(time_between_loops)
 
     def end(self) -> None:
@@ -313,12 +326,12 @@ class UserList:
         shutdown all threads
         """
         self.loop = False
-        for user in self.users:
+        for user in self._users:
             user.end()
         self.executor.shutdown(wait=False)
 
     def __iter__(self) -> typing.Iterator:
-        for element in self.users:
+        for element in self._users:
             yield element
 
     def __contains__(self, other: str) -> bool:

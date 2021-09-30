@@ -51,7 +51,7 @@ def verify(username: str, password: str, cl: socket.socket, address: str) -> Non
     elif resp:
         IsValid = True
         key = key_func(length=30)
-        new_user = User(name=username, sec=resp, key=key, cl=cl, ip=address, function_manager=FunManager)
+        new_user = User(name=username, sec=resp, key=key, cl=cl, ip=address, function_manager=FunManager.exec)
         Users.append(new_user)
         
     debug.debug(new_user)   # print out username, if connected successfully or not and if it is a bot
