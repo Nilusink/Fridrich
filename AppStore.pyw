@@ -374,9 +374,6 @@ class Window:
             self.update_files_list()
             return
 
-        print(self.__app_info)
-        print(self.__app_version)
-        print(self.__app_name)
         self.c.modify_app(self.__configuring["name"], self.__app_name, self.__app_version, self.__app_info,
                           files=[file["dir"] for file in self.__update_files if file["tag"] in ("new", "overwrite")],
                           to_delete=[file["name"] for file in self.__update_files if file["tag"] == "delete"])
