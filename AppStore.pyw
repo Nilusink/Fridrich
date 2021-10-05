@@ -364,6 +364,9 @@ class Window:
         called by a button when done configuring
         """
         if not self.__selected_files:
+            self.__app_name = self.config_name_entry.get()
+            self.__app_version = self.config_version_entry.get()
+            self.__app_info = self.config_info_text.get(0.0, tk.END)
             self.configure_window.pack_forget()
             self.configure_files.pack()
             self.__update_files = [{"name": file, "tag": "keep", "dir": None} for file in self.__configuring["files"]]
@@ -371,7 +374,9 @@ class Window:
             self.update_files_list()
             return
 
-        print(self.__update_files)
+        print(self.__app_info)
+        print(self.__app_version)
+        print(self.__app_name)
         self.c.modify_app(self.__configuring["name"], self.__app_name, self.__app_version, self.__app_info,
                           files=[file["dir"] for file in self.__update_files if file["tag"] in ("new", "overwrite")],
                           to_delete=[file["name"] for file in self.__update_files if file["tag"] == "delete"])

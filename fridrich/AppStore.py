@@ -150,7 +150,8 @@ def modify_app(message: dict, user: new_types.User) -> None:
     with open(directory+"/"+app["name"]+"/AppInfo.json", 'w') as out:
         tmp = {
             "version": app["version"],
-            "info": app["info"]
+            "info": app["info"],
+            "publisher": user.name
         }
         json.dump(tmp, out, indent=4)
     print("modified AppInfo.json")
@@ -158,7 +159,7 @@ def modify_app(message: dict, user: new_types.User) -> None:
         os.remove(directory+'/'+app['name'+'/'+file])
     print("removed files")
     if message["name"] != app["name"]:
-        os.system(f"move {directory+'/'+app['name']+'/'} {directory+'/'+message['name']+'/'}")
+        os.system(f"mv {directory+'/'+app['name']+'/'} {directory+'/'+message['name']+'/'}")
         print("renamed app")
     user.send({
             "content": {
