@@ -320,7 +320,8 @@ class FunctionManager:
 
                 'get_apps': AppStore.send_apps,
                 'download_app': AppStore.download_app,
-                'create_app': AppStore.receive_app
+                'create_app': AppStore.receive_app,
+                "modify_app": AppStore.modify_app
             },
             'guest': {                                  # instead of 5 billion if'S
                 'CalEntry': ClientFuncs.calendar_handler,
