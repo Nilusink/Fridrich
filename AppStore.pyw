@@ -366,7 +366,7 @@ class Window:
         if not self.__selected_files:
             self.__app_name = self.config_name_entry.get()
             self.__app_version = self.config_version_entry.get()
-            self.__app_info = self.config_info_text.get(0.0, tk.END)
+            self.__app_info = self.config_info_text.get(0.0, tk.END).rstrip("\n")
             self.configure_window.pack_forget()
             self.configure_files.pack()
             self.__update_files = [{"name": file, "tag": "keep", "dir": None} for file in self.__configuring["files"]]
@@ -380,6 +380,8 @@ class Window:
 
         self.mod_button["state"] = tk.NORMAL
         self.__new_app_reset()
+        self.update_apps()
+        self.select_app("")
 
     def __configure_open_files(self) -> None:
         """
@@ -545,6 +547,11 @@ class Window:
         :param app_name: the name of the app to be selected
         :param apps: give alternative apps
         """
+        if app_name == "":
+            self.app_info.itemconfig(self.info, text="")
+            self.info_buttons.place_forget()
+            return
+
         installed_apps = self.settings["installed_programs"]
         if apps is ...:
             apps = self.c.get_apps()

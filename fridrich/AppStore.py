@@ -144,7 +144,6 @@ def modify_app(message: dict, user: new_types.User) -> None:
         })
         return
 
-    print(f"modifying {app['name']} with {message}")
     with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
         directory = json.load(inp)["AppStoreDirectory"]
 
@@ -156,13 +155,12 @@ def modify_app(message: dict, user: new_types.User) -> None:
         }
         json.dump(tmp, out, indent=4)
 
-    print("modified AppInfo.json")
     for file in message["to_remove"]:
         os.remove(directory+'/'+app['name'+'/'+file])
-    print("removed files")
+
     if message["name"] != app["name"]:
         os.system(f"mv {directory+'/'+app['name']+'/'} {directory+'/'+message['name']+'/'}")
-        print("renamed app")
+
     user.send({
             "content": {
                 "success": True
