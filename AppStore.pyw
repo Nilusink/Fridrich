@@ -132,6 +132,7 @@ class Window:
         self.root.title("Fridrich AppStore")
         self.root.minsize(width=1500, height=500)
         self.root.bind("<Escape>", self.end)
+        self.root.bind("<F5>", self.update_apps)
         self.root.protocol("WM_DELETE_WINDOW", self.end)
         self.root.bind("<Configure>", self.__resize)
 
@@ -491,7 +492,7 @@ class Window:
             os.kill(os.getpid(), 9)  # if threads are running, terminate the process
         sys.exit(0)
 
-    def update_apps(self) -> None:
+    def update_apps(self, _event=None) -> None:
         """
         update the app-list / versions
         """
