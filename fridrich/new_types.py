@@ -221,6 +221,7 @@ class User:
             self.send({"Error": error, "info": info}, message_type='Error')
 
     def end(self) -> None:
+        print(f"Disconnecting: {self}")
         self.disconnect = True
         self.loop = False
         self.__client.close()
