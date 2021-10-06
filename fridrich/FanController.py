@@ -5,7 +5,7 @@ import json
 
 
 # TemperatureReader import
-from gpiozero import CPUTemperature, LED
+from gpiozero import CPUTemperature
 
 
 class CPUHeatHandler:
@@ -18,10 +18,8 @@ class CPUHeatHandler:
 
         but can you trust them?
         """
-        self.On = LED(21)
         self.cpu = CPUTemperature()
         self.Trigger = False
-        self.trigger = {True: self.On.on, False: self.On.off}
         self.const = ServerFuncs.Constants()
     
     def iter(self) -> bool | str:
@@ -42,13 +40,12 @@ class CPUHeatHandler:
                 Trigger = False
             else:
                 Trigger = True
-            
-            self.trigger[Trigger]()
+
             with open(self.const.logFile, 'w') as out:
                 out.write(f'CPU temp: {currTemp}, Room Temperature: {file["temp"]} - {time.strftime("%H:%M")} | Fan: {Trigger}')        
             return True
 
-        except Exception:
+        except (Exception,):
             print(traceback.format_exc())
             with open(self.const.errFile, 'a') as out:
                 out.write(traceback.format_exc())

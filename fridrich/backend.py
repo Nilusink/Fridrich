@@ -282,7 +282,6 @@ class Connection:
         if not self.loop:
             raise Error("already called 'end'")
         self.reconnect()
-
         msg = {  # message
             'type': 'auth',
             'Name': username,

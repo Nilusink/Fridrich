@@ -6,7 +6,7 @@ from os import system
 import sys
 
 from cryptography.fernet import InvalidToken
-from gpiozero import CPUTemperature
+from gpiozero import CPUTemperature, LED
 
 # local imports
 from fridrich.cryption_tools import Low, key_func, MesCryp
@@ -18,6 +18,9 @@ from fridrich import AppStore
 
 Const = Constants()
 debug = Debug(Const.SerlogFile, Const.errFile)
+
+STATUS_LED = LED(Const.status_led_pin)
+STATUS_LED.off()
 
 client: socket.socket
 
@@ -867,10 +870,12 @@ if __name__ == '__main__':
         Updater = Thread(target=update, daemon=True)
 
         Updater.start()
-        
+
+        STATUS_LED.on()  # set the status lex to on
         receive()
 
     except Exception as e:
+        STATUS_LED.off()
         with suppress(Exception):
             Users.end()
         with open(Const.errFile, 'a') as out:   # debug to file because there may be an error before the debug class was initialized

@@ -8,7 +8,7 @@ if __name__ == '__main__':
     from traceback import format_exc    # imports for shell
     while True:
         try:
-            c = backend.Connection(debug_mode=Off, host='213.162.81.48')    # create connection instance
+            c = backend.Connection(debug_mode=Off, host='192.168.10.15')    # create connection instance
             break
 
         except socket.gaierror:
