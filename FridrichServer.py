@@ -812,6 +812,11 @@ def update() -> None:
         if time.strftime("%M") in ("00", "15", "30", "45"):  # update every 15 minutes
             AccManager.update_file()
 
+        if int(Const.status_led_sleep_time[0]) <= int(time.strftime("%H")) < int(Const.status_led_sleep_time[1]):
+            STATUS_LED.off()
+        else:
+            STATUS_LED.on()
+
 
 ############################################################################
 #                              Main Program                                #
