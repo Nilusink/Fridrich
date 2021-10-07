@@ -203,6 +203,7 @@ def auto_reboot(r_time: str | None = "03:00") -> None:
         time.sleep(55)
         system('sudo reboot')
 
+
 @debug.catch_traceback
 def led_auto_sleep() -> None:
     """
@@ -222,10 +223,23 @@ def led_auto_sleep() -> None:
     end_minute = int(parts[1])
     end_time = end_hour*60 + end_minute
 
-    if start_time <= now_time < end_time:
-        STATUS_LED.off()
-    else:
+    if start_time < end_time:
+        if start_time <= now_time < end_time:
+            STATUS_LED.off()
+            return
         STATUS_LED.on()
+        return
+
+    elif start_time > end_time:  # if the time range is for ex. 23:00 t0 06:30
+        if start_time < now_time or now_time < start_time:
+            STATUS_LED.off()
+            return
+        STATUS_LED.on()
+        return
+
+    # if start_time == end_tine alias the time_span == 0, always keep the led on
+    STATUS_LED.on()
+
 
 class DoubleVote:
     """
