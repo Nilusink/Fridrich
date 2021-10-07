@@ -203,6 +203,29 @@ def auto_reboot(r_time: str | None = "03:00") -> None:
         time.sleep(55)
         system('sudo reboot')
 
+@debug.catch_traceback
+def led_auto_sleep() -> None:
+    """
+    check if the led should be on or off
+    """
+    now_hour = int(time.strftime("%H"))
+    now_minute = int(time.strftime("%M"))
+    now_time = now_hour*60 + now_minute
+
+    parts = Const.status_led_sleep_time[0].split(":")
+    start_hour = int(parts[0])
+    start_minute = int(parts[1])
+    start_time = start_hour*60 + start_minute
+
+    parts = Const.status_led_sleep_time[1].split(":")
+    end_hour = int(parts[0])
+    end_minute = int(parts[1])
+    end_time = end_hour*60 + end_minute
+
+    if start_time <= now_time < end_time:
+        STATUS_LED.off()
+    else:
+        STATUS_LED.on()
 
 class DoubleVote:
     """
@@ -812,10 +835,8 @@ def update() -> None:
         if time.strftime("%M") in ("00", "15", "30", "45"):  # update every 15 minutes
             AccManager.update_file()
 
-        if int(Const.status_led_sleep_time[0]) <= int(time.strftime("%H")) < int(Const.status_led_sleep_time[1]):
-            STATUS_LED.off()
-        else:
-            STATUS_LED.on()
+        # ----------- Status LED -----------
+        led_auto_sleep()
 
 
 ############################################################################
