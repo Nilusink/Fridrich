@@ -209,15 +209,18 @@ def led_auto_sleep() -> None:
     """
     check if the led should be on or off
     """
+    # minutes since 00:00
     now_hour = int(time.strftime("%H"))
     now_minute = int(time.strftime("%M"))
     now_time = now_hour*60 + now_minute
 
+    # sleep_time start minutes to 00:00
     parts = Const.status_led_sleep_time[0].split(":")
     start_hour = int(parts[0])
     start_minute = int(parts[1])
     start_time = start_hour*60 + start_minute
 
+    # sleep_time end minutes to 00:00
     parts = Const.status_led_sleep_time[1].split(":")
     end_hour = int(parts[0])
     end_minute = int(parts[1])
@@ -231,13 +234,13 @@ def led_auto_sleep() -> None:
         return
 
     elif start_time > end_time:  # if the time range is for ex. 23:00 t0 06:30
-        if start_time < now_time or now_time < start_time:
+        if start_time <= now_time or now_time < end_time:
             STATUS_LED.off()
             return
         STATUS_LED.on()
         return
 
-    # if start_time == end_tine alias the time_span == 0, always keep the led on
+    # if start_time == end_time alias the time_span == 0, always keep the led on
     STATUS_LED.on()
 
 
