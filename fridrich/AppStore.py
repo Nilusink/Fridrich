@@ -152,7 +152,7 @@ def modify_app(message: dict, user: new_types.User) -> None:
 
     with open(directory+"/"+app["name"]+"/AppInfo.json", 'w') as out:
         tmp = {
-            "version": message["version"],
+            "version": "nAn",
             "info": message["info"],
             "publisher": user.name
         }
@@ -165,6 +165,14 @@ def modify_app(message: dict, user: new_types.User) -> None:
         os.system(f"mv {directory+'/'+app['name']+'/'} {directory+'/'+message['name']+'/'}")
 
     receive_app(message, user, modify=True)
+
+    with open(directory+"/"+app["name"]+"/AppInfo.json", 'w') as out:
+        tmp = {
+            "version": message["version"],
+            "info": message["info"],
+            "publisher": user.name
+        }
+        json.dump(tmp, out, indent=4)
 
 
 def send_receive(mode: str, filename: str | None = ..., destination: str | None = ..., print_steps: bool | None = False,
