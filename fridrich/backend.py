@@ -756,7 +756,7 @@ class Connection:
             "name": app_name,
             "version": app_version,
             "info": app_info,
-            "files": [file.split("/").split("\\")[-1] for file in files],
+            "files": [file.split("/")[-1].split("\\")[-1] for file in files],
             "to_remove": to_delete
         }
         self.wait_for_message(self.send(msg))

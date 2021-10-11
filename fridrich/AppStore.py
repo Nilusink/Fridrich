@@ -80,10 +80,10 @@ def receive_app(message: dict, user: new_types.User, modify: bool | None = False
     :param modify: if true used for modifying apps
     :return: None
     """
-    if not modify:
-        with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
-            directory = json.load(inp)["AppStoreDirectory"]+message["name"]
+    with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
+        directory = json.load(inp)["AppStoreDirectory"]+message["name"]
 
+    if not modify:
         if os.path.isdir(directory):
             files = os.listdir(directory)
             if "AppInfo.json" in files:  # check if directory is empty, else send error
