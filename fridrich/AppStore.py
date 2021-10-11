@@ -73,41 +73,44 @@ def download_app(message: dict, user: new_types.User) -> None:
         send_receive(mode="send", filename=directory+message["app"]+'/'+file, destination=user.ip, print_steps=False)
 
 
-def receive_app(message: dict, user: new_types.User) -> None:
+def receive_app(message: dict, user: new_types.User, modify: bool | None = False) -> None:
     """
     :param message: the message received from the client (for the timestamp)
     :param user: the user to send the answer to
+    :param modify: if true used for modifying apps
     :return: None
     """
-    with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
-        directory = json.load(inp)["AppStoreDirectory"]+message["name"]
+    if not modify:
+        with open("/home/pi/Server/fridrich/settings.json", 'r') as inp:
+            directory = json.load(inp)["AppStoreDirectory"]+message["name"]
 
-    if os.path.isdir(directory):
-        files = os.listdir(directory)
-        if "AppInfo.json" in files:  # check if directory is empty, else send error
-            user.send({
-                "content": {"error": "ValueError", "info": f"App with name {message['name']} already exists"},
-                "time": message["time"]
-            })
-            return
+        if os.path.isdir(directory):
+            files = os.listdir(directory)
+            if "AppInfo.json" in files:  # check if directory is empty, else send error
+                user.send({
+                    "content": {"error": "ValueError", "info": f"App with name {message['name']} already exists"},
+                    "time": message["time"]
+                })
+                return
+            else:
+                if len(files) != 0:
+                    for element in files:
+                        os.remove(directory+'/'+element)
         else:
-            if len(files) != 0:
-                for element in files:
-                    os.remove(directory+'/'+element)
-    else:
-        os.system(f"mkdir {directory}")
+            os.system(f"mkdir {directory}")
+
+        with open(directory+"/AppInfo.json", 'w') as out:
+            json.dump({
+                       "version": message["version"],
+                       "info": message["info"],
+                       "publisher": user.name
+            }, out, indent=4)
 
     msg = {
         "content": {"success": True},
         "time": message["time"]
     }
     user.send(msg)
-    with open(directory+"/AppInfo.json", 'w') as out:
-        json.dump({
-                   "version": message["version"],
-                   "info": message["info"],
-                   "publisher": user.name
-        }, out, indent=4)
 
     for _ in message["files"]:
         send_receive(mode='receive', print_steps=False, download_directory=directory, thread=False, overwrite=True)
@@ -161,12 +164,7 @@ def modify_app(message: dict, user: new_types.User) -> None:
     if message["name"] != app["name"]:
         os.system(f"mv {directory+'/'+app['name']+'/'} {directory+'/'+message['name']+'/'}")
 
-    user.send({
-            "content": {
-                "success": True
-            },
-            "time": message['time']
-        })
+    receive_app(message, user, modify=True)
 
 
 def send_receive(mode: str, filename: str | None = ..., destination: str | None = ..., print_steps: bool | None = False,

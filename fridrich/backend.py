@@ -756,10 +756,16 @@ class Connection:
             "name": app_name,
             "version": app_version,
             "info": app_info,
-            "new": [file.split("/").split("\\")[-1] for file in files],
+            "files": [file.split("/").split("\\")[-1] for file in files],
             "to_remove": to_delete
         }
         self.wait_for_message(self.send(msg))
+        for file in files:
+            thread = AppStore.send_receive(mode="send", filename=file, destination=self.ServerIp, print_steps=False, thread=True, overwrite=True)
+            while thread.running():
+                self.load_program = app_name
+        self.load_program = str()
+        self.load_state = str()
 
     # magical functions
     def __repr__(self) -> str:

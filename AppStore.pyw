@@ -384,6 +384,29 @@ class Window:
         self.update_apps()
         self.select_app("")
 
+    def __remove_open_file(self, element: dict) -> None:
+        """
+        removes a file if its new or else keeps in dict but with "remove"
+        :param element: the element to remove
+        """
+        match element["tag"]:
+            case "new":
+                self.__update_files.remove(element)
+                self.update_files_list()
+                return
+            case "delete":
+                element["tag"] = "keep"
+            case "overwrite":
+                element["tag"] = "keep"
+            case "keep":
+                element["tag"] = "delete"
+            case _:
+                raise ValueError(f"invalid tag for file: {element['tag']}")
+
+        index = self.__update_files.index(element)
+        self.__update_files[index] = element
+        self.update_files_list()
+
     def __configure_open_files(self) -> None:
         """
         open files
@@ -431,6 +454,8 @@ class Window:
                     tmp = tk.Button(self.configure_app_files, text="delete", font=("Ink Free", 20), bg="grey20", fg="red", relief=tk.FLAT)
                 case _:
                     raise ValueError(f"Invalid tag: {file['tag']}")
+
+            tmp["command"] = lambda _e=None: self.__remove_open_file(file)
             tmp.grid(row=curr_row, column=1, sticky=tk.NSEW)
 
     def configure_app(self, app: dict) -> None:
