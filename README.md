@@ -1,5 +1,5 @@
 # Fridrich
-Fridrich is a project by 3 stupid guys who were bored so they created a program on which they can vote who of them is the gayest. 
+Fridrich is a project by 3 stupid guys who were bored, so they created a program on which they can vote who of them is the gayest. 
 It mainly consists of three parts:
 * Fridrich Server
 * Fridrich Backend
@@ -25,11 +25,12 @@ The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It
 |---♦ fridrich  
 |   |---♦ __init__.py
 |   |---♦ Accounts.py
+|   |---♦ AppStore.py
 |   |---♦ cryption_tools.py
 |   |---♦ FanController.py
+|   |---♦ new_types.py
 |   |---♦ ServerFuncs.py
 |   |---♦ settings.json
-|   |---♦ types.py
 |   |---♦ useful.py
 |  
 |---♦ FridrichServer.py  
@@ -43,7 +44,7 @@ The **Calendar.json** file saves the configurations of the calendar in a dict:
 {'User1':1, 'User2':0}
 ```
 The **KeyFile.enc** is the default key if the client hasn't yet authenticated or sends errors. It is encrypted with the cryption_tools.low class.
-**KingLog.json** is the file where all the Gaykings are saved (basically a *log*):
+**KingLog.json** is the file where all the GayKings are saved (basically a *log*):
 ```Python
 {
     "00.00.0000": "jesus",
@@ -62,7 +63,8 @@ The file **now.json** is used to save all current Votes (in case of a server res
     },
     "BestBusDriver":
     {
-        "Tobi"
+        "Will": "Tobi",
+        "Margaret": "Simon"
     }
 }
 ```
@@ -70,7 +72,7 @@ The file **now.json** is used to save all current Votes (in case of a server res
 ```Python
 {"temp": 29.0, "cptemp": 38.628, "hum": 39.0}
 ```
-In **users.enc** is a fridrichcryption_tools.low encrypted dictionary with all users and passwords (low encryption because of speed)<br><br>
+In **users.enc** is a fridrich.cryption_tools.low encrypted dictionary with all users and passwords (low encryption because of speed)<br><br>
 The **Version** file stores information about the current version: *Version:0.3.7,MaxLen:20* (Managed by the GUI developer).
 **yes.json** is basically the same file as *now.json* but from yesterday.<br><br>
 All the files in the **fridrich** folder are just modules for the Server to run.
@@ -86,17 +88,20 @@ The File Layout is straightforward:
 |  
 |---♦ fridrich  
 |   |---♦ __init__.py
-|   |---♦ cryption_tools.py
+|   |---♦ AppStore.py
 |   |---♦ backend.py
-|   |---♦ types.py
+|   |---♦ cryption_tools.py
 |   |---♦ useful.py
 |  
-|---♦ YourProgramm.py  
+|---♦ YourProgram.py  
 </pre>  
 Optionally there also is the file **FridrichBackendOffline.py** which is for testing if you can't connect to a Fridrich Server.
 <br><br>
 ## Fridrich Dashboard
-As you may have noticed, this program is not actually included in this repository. The Programmer of it has made his own repository, but the code is not open-source and he only publishes .exe files of his program (I really don't know why). So sadly, you either have to use the .exe or create your own program.
+As you may have noticed, this program is not actually included in this repository. The Programmer of it
+doesn't want his code to be open-source, so unfortunately you have to make your own program.
+As an example of how to use the fridrich module, you can use **VersionChanger.py**, **AppStore.py**
+and **adminTool.py**.
 
 # **Attention!**
 This project uses Python-3.10 Syntax (Server and backend), so it won't run on anything else than Python-3.10 or Higher!
