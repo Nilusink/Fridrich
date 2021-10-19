@@ -1,3 +1,9 @@
+"""
+GUI program to change the
+Version variable
+
+Author: Nilusink
+"""
 from tkinter import messagebox
 import tkinter as tk
 
@@ -60,7 +66,7 @@ class Window:
         """
         self.root.mainloop()
 
-    def login(self, *args) -> None:
+    def login(self, *_args) -> None:
         """
         login
         """
@@ -86,7 +92,7 @@ class Window:
         if self.version != nv:
             self.c.set_version(nv)
 
-    def end(self, *args) -> None:
+    def end(self, *_args) -> None:
         """
         end the connection and close the window
         """

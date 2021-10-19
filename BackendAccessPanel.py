@@ -1,3 +1,9 @@
+"""
+basically just a python prompt with a connection
+already initialized (c)
+
+Author: Nilusink
+"""
 from fridrich import backend
 from fridrich import *
 import socket

@@ -1,5 +1,9 @@
 """
-Handler for the AppStore  (server)
+used for file-transfer and other AppStore
+functions like modifying and creating Apps
+(Server & Client)
+
+Author: Nilusink
 """
 from concurrent.futures import ThreadPoolExecutor, Future
 from fridrich import new_types

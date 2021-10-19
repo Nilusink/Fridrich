@@ -1,3 +1,11 @@
+"""
+module: useful
+defines generally useful functions / methods for
+all kinds of things
+(Server & Client)
+
+Author: Nilusink
+"""
 import typing
 import types
 import copy

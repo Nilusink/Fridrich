@@ -1,3 +1,8 @@
+"""
+GUI program used to manage Accounts
+
+Author: Nilusink
+"""
 from contextlib import suppress
 from tkinter import messagebox
 from os import popen, system

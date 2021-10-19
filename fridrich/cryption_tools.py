@@ -1,3 +1,12 @@
+"""
+used for any type on en/decryption
+for fridrich (ex. End to End encryption,
+password hashing, private config files
+for the Client, ...)
+(Server & Client)
+
+Author: Nilusink
+"""
 import contextlib
 import random
 import math

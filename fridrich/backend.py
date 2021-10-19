@@ -1,7 +1,13 @@
+"""
+used to interface with a Fridrich Server
+(Client)
+
+Author: Nilusink
+"""
 from concurrent.futures import ThreadPoolExecutor, Future
 from contextlib import suppress
 from traceback import format_exc
-from fridrich import AppStore
+from fridrich import app_store
 from fridrich import *
 import typing
 import socket
@@ -711,10 +717,10 @@ class Connection:
 
         self.load_state = "Uploading"
         for _ in meta:
-            thread = AppStore.send_receive(mode='receive', print_steps=False, download_directory=directory, thread=True, overwrite=True)
+            thread = app_store.send_receive(mode='receive', print_steps=False, download_directory=directory, thread=True, overwrite=True)
             while thread.running():
-                self.load_program = AppStore.download_program
-                self.load_progress = AppStore.download_progress
+                self.load_program = app_store.download_program
+                self.load_progress = app_store.download_progress
         self.load_state = str()
         self.load_program = str()
         self.load_progress = float()
@@ -733,7 +739,7 @@ class Connection:
         self.wait_for_message(self.send(msg))
         self.load_state = "Uploading"
         for file in files:
-            thread = AppStore.send_receive(mode="send", filename=file, destination=self.ServerIp, print_steps=False, thread=True, overwrite=True)
+            thread = app_store.send_receive(mode="send", filename=file, destination=self.ServerIp, print_steps=False, thread=True, overwrite=True)
             while thread.running():
                 self.load_program = app_name
         self.load_program = str()
@@ -761,7 +767,7 @@ class Connection:
         }
         self.wait_for_message(self.send(msg))
         for file in files:
-            thread = AppStore.send_receive(mode="send", filename=file, destination=self.ServerIp, print_steps=False, thread=True, overwrite=True)
+            thread = app_store.send_receive(mode="send", filename=file, destination=self.ServerIp, print_steps=False, thread=True, overwrite=True)
             while thread.running():
                 self.load_program = app_name
         self.load_program = str()
@@ -800,7 +806,7 @@ class Connection:
         }    # set message
         with suppress(ConnectionResetError, ConnectionAbortedError):
             self.send(msg)  # send message
-        AppStore.executor.shutdown(wait=False)
+        app_store.executor.shutdown(wait=False)
         self.AuthKey = None
         self._userN = None
         self.executor.shutdown(wait=False)
@@ -808,5 +814,5 @@ class Connection:
 
         if revive:
             self.executor = ThreadPoolExecutor(max_workers=1)
-            AppStore.executor = ThreadPoolExecutor()
+            app_store.executor = ThreadPoolExecutor()
             self.loop = True

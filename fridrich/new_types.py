@@ -1,3 +1,9 @@
+"""
+defines new types for Users, FileVar, ...
+(Server)
+
+Author: Nilusink
+"""
 from concurrent.futures import ThreadPoolExecutor
 from fridrich import cryption_tools
 from struct import pack

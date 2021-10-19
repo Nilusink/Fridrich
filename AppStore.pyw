@@ -1,7 +1,16 @@
-import os
-import threading
+"""
+AppStore is used to download Apps from
+the Fridrich server.
+The apps available are unique to
+every Fridrich server, since they are
+saved locally.
+
+Author: Nilusink
+"""
 from concurrent.futures import ThreadPoolExecutor, Future
 from time import sleep
+import threading
+import os
 
 from fridrich.backend import Connection
 from fridrich.new_types import FileVar

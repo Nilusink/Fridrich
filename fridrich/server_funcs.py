@@ -1,3 +1,9 @@
+"""
+defines functions for the Server
+(Server)
+
+Author: Nilusink
+"""
 from fridrich import new_types
 from fridrich import *
 import typing

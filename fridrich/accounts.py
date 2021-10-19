@@ -1,3 +1,9 @@
+"""
+used for managing user Accounts
+(Server)
+
+Author: Nilusink
+"""
 from threading import Thread
 from fridrich import *
 import json

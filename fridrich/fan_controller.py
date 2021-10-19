@@ -1,4 +1,10 @@
-from fridrich import ServerFuncs
+"""
+used to control a Fan connected to the RPI
+(Server)
+
+Author: Nilusink
+"""
+from fridrich import server_funcs
 import traceback
 import time
 import json
@@ -20,7 +26,7 @@ class CPUHeatHandler:
         """
         self.cpu = CPUTemperature()
         self.Trigger = False
-        self.const = ServerFuncs.Constants()
+        self.const = server_funcs.Constants()
     
     def iter(self) -> bool | str:
         """

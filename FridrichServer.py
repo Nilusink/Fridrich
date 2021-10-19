@@ -1,4 +1,9 @@
 #! /usr/bin/python3
+"""
+main program for the Server
+
+Author: Nilusink
+"""
 from traceback import format_exc
 from contextlib import suppress
 from threading import Thread
@@ -9,12 +14,11 @@ from cryptography.fernet import InvalidToken
 from gpiozero import CPUTemperature, LED
 
 # local imports
-from fridrich.cryption_tools import Low, key_func, MesCryp
-from fridrich.FanController import CPUHeatHandler
-from fridrich.Accounts import Manager
-from fridrich.ServerFuncs import *
+from fridrich.cryption_tools import key_func, MesCryp
+from fridrich.accounts import Manager
+from fridrich.server_funcs import *
 from fridrich.new_types import *
-from fridrich import AppStore
+from fridrich import app_store
 
 Const = Constants()
 debug = Debug(Const.SerlogFile, Const.errFile)
@@ -361,10 +365,10 @@ class FunctionManager:
                 'set_var': ClientFuncs.set_var,
                 'del_var': ClientFuncs.del_var,
 
-                'get_apps': AppStore.send_apps,
-                'download_app': AppStore.download_app,
-                'create_app': AppStore.receive_app,
-                "modify_app": AppStore.modify_app
+                'get_apps': app_store.send_apps,
+                'download_app': app_store.download_app,
+                'create_app': app_store.receive_app,
+                "modify_app": app_store.modify_app
             },
             'guest': {                                  # instead of 5 billion if'S
                 'CalEntry': ClientFuncs.calendar_handler,
@@ -828,9 +832,8 @@ def update() -> None:
     """
     updates every few seconds
     """
-    global reqCounter, FanC
+    global reqCounter
     start = time.time()
-    start1 = start
     while not Const.Terminate:
         # ----- Temperature updater ------
         temp_updater(start)
@@ -840,13 +843,6 @@ def update() -> None:
 
         # --------- daily reboot ---------
         auto_reboot(Const.rebootTime)
-
-        # -------- Fan Controller --------
-        if time.time()-start1 >= 10:
-            start1 += 10
-            resp = FanC.iter()
-            if resp is not True:
-                debug.debug('Fan Controller Error\n'+resp)
 
         # --------- Accounts File ---------
         if time.strftime("%M") in ("00", "15", "30", "45"):  # update every 15 minutes
@@ -869,8 +865,6 @@ if __name__ == '__main__':
                  "cptemp": float(),
                  "hum": float()
         }
-
-        FanC = CPUHeatHandler()
         
         AccManager = Manager(Const.crypFile)
         FunManager = FunctionManager()
