@@ -107,7 +107,7 @@ and **adminTool.py**.
 There are two docker-images available for Fridrich:
 
 - **Server**: 0a927ce7c3a644f32268cd65ea04b6354b94b98dbd484df36e2293bd9f09e790
-- **BackendAccessPanel**: 032042fd879e6d764a5bbc3dee5c07164d15ba6b5b2c7a1f723736a724733434
+- **BackendAccessPanel**: de59181f07041c59e53d8e90632576b40c127d58aa72491c99070508fe724941
 
 To run any of the above listed containers, you first need to [install Docker for your
 system](https://docs.docker.com/get-docker/). <br>
