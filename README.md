@@ -102,6 +102,23 @@ As you may have noticed, this program is not actually included in this repositor
 doesn't want his code to be open-source, so unfortunately you have to make your own program.
 As an example of how to use the fridrich module, you can use **VersionChanger.py**, **AppStore.py**
 and **adminTool.py**.
+<br><br>
+## Installation with Docker
+There are two docker-images available for Fridrich:
 
+- **Server**: 0a927ce7c3a644f32268cd65ea04b6354b94b98dbd484df36e2293bd9f09e790
+- **BackendAccessPanel**: 032042fd879e6d764a5bbc3dee5c07164d15ba6b5b2c7a1f723736a724733434
+
+To run any of the above listed containers, you first need to [install Docker for your
+system](https://docs.docker.com/get-docker/). <br>
+To then run the container, open a terminal and type:
+<pre>
+docker run --rm -it |sha256 value of container|
+</pre>
+For the server add 
+<pre>
+-p 12345:12345
+</pre>
+before the sha value (so you can access the port the server uses)
 # **Attention!**
 This project uses Python-3.10 Syntax (Server and backend), so it won't run on anything else than Python-3.10 or Higher!
