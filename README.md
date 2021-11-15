@@ -104,16 +104,17 @@ As an example of how to use the fridrich module, you can use **VersionChanger.py
 and **adminTool.py**.
 <br><br>
 ## Installation with Docker
-There are two docker-images available for Fridrich:
+There are three docker-images available for Fridrich:
 
-- **Server**: 0a927ce7c3a644f32268cd65ea04b6354b94b98dbd484df36e2293bd9f09e790
-- **BackendAccessPanel**: de59181f07041c59e53d8e90632576b40c127d58aa72491c99070508fe724941
+- **Server**: nilusink/fridrich_server
+- **BackendAccessPanel**: nilusink/fridrich_backend_access
+- **AppStore**: nilusink/fridrich_appstore
 
 To run any of the above listed containers, you first need to [install Docker for your
 system](https://docs.docker.com/get-docker/). <br>
 To then run the container, open a terminal and type:
 <pre>
-docker run --rm -it |sha256 value of container|
+docker run --rm -it |name of container|
 </pre>
 For the server add 
 <pre>

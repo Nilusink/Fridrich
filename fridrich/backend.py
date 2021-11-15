@@ -80,14 +80,8 @@ class Connection:
         self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # create socket instance
         self.debug_mode = debug_mode
 
-        sl = host.split('.')
-        if len(sl) == 4 and all([digit in '0123456789' for element in sl for digit in element]):
-            self.ServerIp = host
-        else:
-            self.ServerIp = socket.gethostbyname(host)    # get ip of fridrich
-        
-        if self.debug_mode == 'full':
-            print(self.ServerIp)
+        self.__ServerIp = ""
+        self.ServerIp = host
 
         if self.debug_mode in ('normal', 'full'):
             print(ConsoleColors.OKGREEN+'Server IP: '+self.ServerIp+ConsoleColors.ENDC)
@@ -113,6 +107,25 @@ class Connection:
         get username
         """
         return self._userN
+
+    @property
+    def ServerIp(self) -> str:
+        return self.__ServerIp
+
+    @ServerIp.setter
+    def ServerIp(self, value: str) -> None:
+        sl = value.split('.')
+        if len(sl) == 4 and all([digit in '0123456789' for element in sl for digit in element]):
+            try:
+                socket.gethostbyaddr(value)
+            except socket.herror:
+                print(ConsoleColors.WARNING+f"Hostname of {value} not found, may be unreachable"+ConsoleColors.ENDC)
+            self.__ServerIp = value
+        else:
+            self.__ServerIp = socket.gethostbyname(value)  # get ip of fridrich
+
+        if self.debug_mode == 'full':
+            print(self.ServerIp)
 
     # "local" functions
     @staticmethod

@@ -8,13 +8,13 @@ from fridrich import backend
 from fridrich import *
 import socket
 import os
-os.system('color')
 
 if __name__ == '__main__':
     from traceback import format_exc    # imports for shell
     while True:
+        hostname = input(ConsoleColors.ENDC+"host: ")
         try:
-            c = backend.Connection(debug_mode=Off, host='192.168.10.15')    # create connection instance
+            c = backend.Connection(debug_mode=Off, host=hostname)    # create connection instance
             break
 
         except socket.gaierror:
