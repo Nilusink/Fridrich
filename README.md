@@ -111,15 +111,31 @@ There are three docker-images available for Fridrich:
 - **AppStore**: nilusink/fridrich_appstore
 
 To run any of the above listed containers, you first need to [install Docker for your
-system](https://docs.docker.com/get-docker/). <br>
-To then run the container, open a terminal and type:
+system](https://docs.docker.com/get-docker/).
+
+Then you need to *pull* the container you want to run.<br>Open a terminal and type:
 <pre>
-docker run --rm -it |name of container|
+docker pull |name of container|:|container version|
+</pre>
+example:
+<pre>
+docker pull nilusink/fridrich_server:1.0
+</pre>
+To then *run* the container, type:
+<pre>
+docker run -it |name of container|:|container version|
 </pre>
 For the server add 
 <pre>
 -p 12345:12345
 </pre>
-before the sha value (so you can access the port the server uses)
+Before the docker name (so you can access the port the server uses)<br>
+To look up the newest version for each container, follow [this](https://hub.docker.com/u/nilusink) link and click  on the desired repository.
+
+example:
+<pre>
+docker run -it -p 12345:12345 nilusink/fridrich_server:1.0
+</pre>
+
 # **Attention!**
 This project uses Python-3.10 Syntax (Server and backend), so it won't run on anything else than Python-3.10 or Higher!
