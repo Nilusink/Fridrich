@@ -58,7 +58,7 @@ def verify(username: str, password: str, cl: socket.socket, address: str) -> Non
     elif resp:
         IsValid = True
         key = key_func(length=30)
-        new_user = User(name=username, sec=resp, key=key, cl=cl, ip=address, function_manager=FunManager.exec)
+        new_user = User(name=username, sec=resp, key=key, cl=cl, ip=address, function_manager=FunManager.exec, debugger=debug)
         Users.append(new_user)
         
     debug.debug(new_user)   # print out username, if connected successfully or not and if it is a bot
@@ -384,7 +384,6 @@ class FunctionManager:
             }
         }
 
-    @debug.catch_traceback
     def exec(self, message: dict, user: User) -> typing.Tuple[bool, typing.Any] | typing.Tuple[str, str]:
         """
         execute the requested function or return error
