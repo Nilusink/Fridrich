@@ -163,7 +163,7 @@ def modify_app(message: dict, user: new_types.User) -> None:
         json.dump(tmp, out, indent=4)
 
     for file in message["to_remove"]:
-        os.remove(directory+'/'+app['name']+'/'+file.replace(" ", "-"))
+        os.remove(directory+'/'+app['name']+'/'+file)
 
     if message["name"] != app["name"]:
         os.system(f"mv {directory+'/'+app['name']+'/'} {directory+'/'+message['name']+'/'}")
