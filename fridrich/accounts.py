@@ -133,19 +133,20 @@ class Manager:
         
         self.__write_accounts(accounts)    # update accounts
 
-    def verify(self, username: str, password: str) -> None | str:
+    def verify(self, username: str, password: str) -> (None | bool, dict):
         """
         return False or user security Clearance
         """
         users = self.get_accounts()  # get accounts
         Auth = False
+        user = {}
         for element in users:   # iterate users
             if username == element['Name'] and password == element['pwd']:  # if username is account name
                 if 'sec' in element:
-                    Auth = element['sec']   # set element 'sec' of user
-                    if Auth == '':
+                    if element['sec'] == '':
                         Auth = None
-                else:
-                    Auth = None
+                        continue
+                    user = element
+                    break
 
-        return Auth  # return result
+        return Auth, user  # return result

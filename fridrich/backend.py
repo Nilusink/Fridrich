@@ -390,7 +390,7 @@ class Connection:
         
         return out  # return total votes and dict
     
-    def get_log(self) -> list:
+    def get_log(self) -> dict:
         """
         get list of recent GayKings
         """

@@ -108,8 +108,6 @@ class FileVar:
         self.value = value
         self.type = type(value)
 
-        file = self.files[0]
-
         for file in self.files:
             for _ in range(5):  # check five times if a file is already opened, if failed then pass
                 try:
@@ -167,7 +165,7 @@ class FileVar:
 
 
 class User:
-    def __init__(self, name: str, sec: str, key: str, cl: socket.socket, ip: str, function_manager: typing.Callable, debugger) -> None:
+    def __init__(self, name: str, sec: str, key: str, user_id: int, cl: socket.socket, ip: str, function_manager: typing.Callable, debugger) -> None:
         """
         :param name: Name of the client
         :param sec: security clearance
@@ -180,6 +178,7 @@ class User:
         self.__name = name
         self.__sec = sec
         self.__key = key
+        self.__id = user_id
 
         self.__client = cl
         self.__ip = ip
@@ -210,6 +209,13 @@ class User:
         :return: the users host-ip
         """
         return self.__ip
+
+    @property
+    def id(self) -> int:
+        """
+        :return: the users id
+        """
+        return self.__id
 
     def receive(self) -> None:
         """

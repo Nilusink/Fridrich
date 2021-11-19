@@ -58,7 +58,7 @@ def verify(username: str, password: str, cl: socket.socket, address: str) -> Non
     elif resp:
         IsValid = True
         key = key_func(length=30)
-        new_user = User(name=username, sec=resp, key=key, cl=cl, ip=address, function_manager=FunManager.exec, debugger=debug)
+        new_user = User(name=resp["Name"], sec=resp["sec"], key=key, user_id=resp["id"], cl=cl, ip=address, function_manager=FunManager.exec, debugger=debug)
         Users.append(new_user)
         
     debug.debug(new_user)   # print out username, if connected successfully or not and if it is a bot
@@ -269,7 +269,7 @@ class DoubleVote:
 
         self.value = new_types.FileVar(value, self.filePath)
 
-    def vote(self, vote: str, user: str) -> bool:
+    def vote(self, vote: str, user_id: int) -> bool:
         """
         if the user has any double votes left,
 
@@ -279,46 +279,45 @@ class DoubleVote:
 
         value = self.value.get()
         tmp = Vote.get()
-        if user in value:
-            if value[user] < 1:
+        if user_id in value:
+            if value[user_id] < 1:
                 return False
             try:
-                tmp['GayKing'][user+'2'] = vote
+                tmp['GayKing'][int(str(user_id)+'2')] = vote
             except KeyError:
                 tmp['GayKing'] = dict()
-                tmp['GayKing'][user+'2'] = vote
+                tmp['GayKing'][int(str(user_id)+'2')] = vote
 
-            value[user] -= 1
+            value[user_id] -= 1
             self.value.set(value)
             Vote.set(tmp)
             return True
         
-        value[user] = 0
+        value[user_id] = 1
         self.value.set(value)
         return False
 
-    def unvote(self, user: str, voting: str) -> None:
+    def unvote(self, user_id: int, voting: str) -> None:
         """
         unvote DoubleVote
         """
         global Vote
         tmp = Vote.get()
         with suppress(KeyError):
-            tmp[voting].pop(user+'2')
+            tmp[voting].pop(int(str(user_id)+'2'))
         
             value = self.value.get()
-            value[user] += 1
+            value[user_id] += 1
             self.value.set(value)
         Vote.set(tmp)
 
-    def get_frees(self, user: str) -> int:
+    def get_frees(self, user_id: int) -> int:
         """
         returns the free double-votes for the given users
         """
         value = self.value.get()
-        if user in value:
-            return value[user]
-
+        if user_id in value:
+            return value[user_id]
         return False
 
 
@@ -502,7 +501,7 @@ class ClientFuncs:
             Vote.__setitem__(message['voting'], dict())
             
         tmp = Vote.get()
-        tmp[message['voting']][user.name] = resp
+        tmp[message['voting']][user.id] = resp
         Vote.set(tmp)    # set vote
         debug.debug(f'got vote: {message["vote"]}                     .')   # print that it received vote (debugging)
 
@@ -516,7 +515,7 @@ class ClientFuncs:
         global Vote
         tmp = Vote.get()
         with suppress(KeyError): 
-            del tmp[message['voting']][user.name]  # try to remove vote from client, if client hasn't voted yet, ignore it
+            del tmp[message['voting']][user.id]  # try to remove vote from client, if client hasn't voted yet, ignore it
         Vote.set(tmp)
         send_success(user, message)
 
@@ -602,7 +601,7 @@ class ClientFuncs:
         """
         validUsers = json.loads(cryption_tools.Low.decrypt(open(Const.crypFile, 'r').read()))
         for element in validUsers:
-            if element['Name'] == user.name:
+            if element['id'] == user.id:
                 element['pwd'] = message['newPwd']
         
         with open(Const.crypFile, 'w') as output:
@@ -622,7 +621,7 @@ class ClientFuncs:
         else:
             x = ''
 
-        name = user.name + x
+        name = int(str(user.id) + x)
         if not message['voting'] in Vote.get():
             mes = {
                 "content": {'Error': 'NotVoted'},
@@ -672,9 +671,9 @@ class ClientFuncs:
         """
         double vote
         """
-        name = user.name
+        user_id = user.id
         resp = check_if(message['vote'], Vote.get(), message['voting'])     
-        resp = DV.vote(resp, name)
+        resp = DV.vote(resp, user_id)
         if resp:
             send_success(user, message)
         else:
@@ -690,8 +689,8 @@ class ClientFuncs:
         double unvote
         """
         global DV
-        name = user.name
-        DV.unvote(name, message['voting'])
+        user_id = user.id
+        DV.unvote(user_id, message['voting'])
         send_success(user, message)
 
     @staticmethod
@@ -700,8 +699,8 @@ class ClientFuncs:
         get free double votes of logged in user
         """
         global DV
-        name = user.name
-        frees = DV.get_frees(name)
+        user_id = user.id
+        frees = DV.get_frees(user_id)
 
         if frees is False and frees != 0:
             mes = {
