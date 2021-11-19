@@ -116,10 +116,11 @@ class Connection:
     def ServerIp(self, value: str) -> None:
         sl = value.split('.')
         if len(sl) == 4 and all([digit in '0123456789' for element in sl for digit in element]):
-            try:
-                socket.gethostbyaddr(value)
-            except socket.herror:
-                print(ConsoleColors.WARNING+f"Hostname of {value} not found, may be unreachable"+ConsoleColors.ENDC)
+            if self.debug_mode in ("full", "normal"):
+                try:
+                    socket.gethostbyaddr(value)
+                except socket.herror:
+                    print(ConsoleColors.WARNING+f"Hostname of {value} not found, may be unreachable"+ConsoleColors.ENDC)
             self.__ServerIp = value
         else:
             self.__ServerIp = socket.gethostbyname(value)  # get ip of fridrich

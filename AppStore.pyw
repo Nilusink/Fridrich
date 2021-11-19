@@ -120,9 +120,6 @@ class Window:
         initialise the window
         :return: None
         """
-        # check if connection is valid
-        if not c:
-            raise Error("Connection class must be authed before passing")
         self.c = c
 
         self.info_line_length = 40
@@ -139,21 +136,47 @@ class Window:
         self.root = tk.Tk()
         self.root.configure(bg="gray")
         self.root.title("Fridrich AppStore")
-        self.root.minsize(width=1500, height=500)
         self.root.bind("<Escape>", self.end)
         self.root.bind("<F5>", self.update_apps)
         self.root.protocol("WM_DELETE_WINDOW", self.end)
         self.root.bind("<Configure>", self.__resize)
 
+        self.root.minsize(width=600, height=500)
+        self.root.maxsize(width=600, height=500)
+
+        #   login Frame
+        self.loginFrame = tk.Frame(self.root, bg='black', width=600, height=700)
+
+        # username label and button
+        tk.Label(self.loginFrame, text='Username', font="Helvetica 50 bold", bg='black', fg='white').place(x=137, y=50)  # Username Label
+        self.loginUsername = tk.Entry(self.loginFrame, width=20, font="Helvetica 25 bold")  # Username entry
+        self.loginUsername.place(x=115, y=150)
+
+        tk.Label(self.loginFrame, text='Password', font="Helvetica 50 bold", bg='black', fg='white').place(x=137, y=250)  # Password Label
+        self.loginPassword = tk.Entry(self.loginFrame, width=20, font="Helvetica 25 bold", show='*')  # Password entry
+        self.loginPassword.place(x=115, y=350)
+
+        self.loginButton = tk.Button(self.loginFrame,   # button for login
+                                     text='login', bg='black',
+                                     fg='white', activeforeground='green',
+                                     activebackground='black',
+                                     relief=tk.FLAT,
+                                     command=self.login,
+                                     font="Helvetica 30"
+                                     )
+        self.loginButton.place(x=230, y=400)
+
+        self.loginFrame.place(x=0, y=0, anchor='nw')
+
+        self.root.bind("<Return>", self.login)  # bind Return to login
+
+        # main frame
         self.main_frame = tk.Frame(self.root)
-        self.main_frame.pack(expand=1, fill=tk.BOTH)
 
         self.main_frame.grid_rowconfigure(0, weight=1)
         self.main_frame.grid_columnconfigure(1, weight=1)
         self.main_frame.grid_columnconfigure(2, weight=1)
 
-        if not self.c:
-            raise AuthError("Not Authenticated")
         self.side_menu = tk.Canvas(self.main_frame, bg="black", width=300)
         self.downloading_name = self.side_menu.create_text(10, self.main_frame.winfo_height()-80, text="Downloading: ", anchor=tk.NW, fill="white")
         self.pb = ttk.Progressbar(
@@ -275,10 +298,35 @@ class Window:
         self.__selected_files = False
         self.__update_files = list()
 
-        self.update_apps()
-
         # for updating progressbar
         self.ud = self.up_down_updater = self.update_update(thread=True, loop=True)
+
+    def login(self, *_args) -> None:
+        """
+        try to login with username and password
+        """
+        name = self.loginUsername.get()
+        pwd = self.loginPassword.get()
+
+        if not self.c.auth(name, pwd):
+            messagebox.showerror('Error', 'Invalid Username/Password')
+            return
+
+        print(self.c)
+        sec = self.c.get_sec_clearance()
+        print(sec)
+        if sec != 'user':
+            messagebox.showerror('Error', f'Account is not user ({sec})')
+            return
+
+        self.root.bind("<Return>", tk.DISABLED)
+
+        self.root.minsize(width=1500, height=500)
+        self.root.maxsize(width=60000, height=60000)  # "disable" the maxsize
+        self.loginFrame.place_forget()
+        self.main_frame.pack(expand=1, fill=tk.BOTH)
+
+        self.update_apps()
 
     def __resize(self, _event=None) -> None:
         """
@@ -641,8 +689,7 @@ def main() -> None:
     """
     main program
     """
-    c = Connection(debug_mode=Off)
-    c.auth("Hurensohn3", "13102502")
+    c = Connection(debug_mode=Off, host="192.168.10.15")
     w = Window(c)
     w.run()
 
