@@ -147,6 +147,7 @@ class Manager:
                         Auth = None
                         continue
                     user = element
+                    Auth = True
                     break
 
         return Auth, user  # return result
