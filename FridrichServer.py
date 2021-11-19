@@ -46,7 +46,7 @@ def verify(username: str, password: str, cl: socket.socket, address: str) -> Non
     """
     verify the client and send result
     """
-    resp = AccManager.verify(username, password)
+    resp, logged_in_user = AccManager.verify(username, password)
     IsValid = False
     key = None
     new_user = None
@@ -58,7 +58,7 @@ def verify(username: str, password: str, cl: socket.socket, address: str) -> Non
     elif resp:
         IsValid = True
         key = key_func(length=30)
-        new_user = User(name=resp["Name"], sec=resp["sec"], key=key, user_id=resp["id"], cl=cl, ip=address, function_manager=FunManager.exec, debugger=debug)
+        new_user = User(name=logged_in_user["Name"], sec=logged_in_user["sec"], key=key, user_id=logged_in_user["id"], cl=cl, ip=address, function_manager=FunManager.exec, debugger=debug)
         Users.append(new_user)
         
     debug.debug(new_user)   # print out username, if connected successfully or not and if it is a bot
