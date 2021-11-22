@@ -174,9 +174,20 @@ class Connection:
         dictionary['time'] = time.time()
 
         if self.AuthKey:
-            stringMes = json.dumps(dictionary, ensure_ascii=False)
-            if any(c in stringMes.lower() for c in ('ö', 'ä', 'ü')):
-                raise InvalidRequest('non-ascii charters are not allowed')
+            stringMes = json.dumps(dictionary, ensure_ascii=True)
+
+            # # replace every non ascii character with it's ord (later to be processed on receiving data)
+            # repeat = True
+            # while repeat:
+            #     for i, character in enumerate(stringMes):
+            #         if not 0 <= ord(character) <= 127:
+            #             stringMes = stringMes[:i]+str(ord(character))+stringMes[i+1::]
+            #             print(f"replaced {character} with {ord(character)}")
+            #             break
+            #     else:
+            #         repeat = False
+
+            # this is a non-ascii character. Do something.
             mes = cryption_tools.MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
             self.Server.send(mes)
             if self.debug_mode in ('normal', 'full'):
@@ -229,7 +240,12 @@ class Connection:
                 continue
 
             try:
+                print(mes)
+                for _ in range(2):
+                    mes = mes.replace("\\\\", "\\")
+                print(mes)
                 mes = json.loads(mes)
+
             except json.decoder.JSONDecodeError:
                 self.messages["Error"] = f"cant decode: {mes}, type: {type(mes)}"
                 continue

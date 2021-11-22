@@ -108,7 +108,7 @@ There are three docker-images available for Fridrich:
 
 - **Server**: nilusink/fridrich_server
 - **BackendAccessPanel**: nilusink/fridrich_backend_access
-- **AppStore**: nilusink/fridrich_appstore
+- ~~**AppStore**: nilusink/fridrich_appstore~~
 
 To run any of the above listed containers, you first need to [install Docker for your
 system](https://docs.docker.com/get-docker/).
@@ -117,13 +117,15 @@ Then you need to *pull* the container you want to run.<br>Open a terminal and ty
 <pre>
 docker pull |name of container|:|container version|
 </pre>
+Instead of *container version*, you can also use *latest* to ensure you have the latest updates of the container.
+
 example:
 <pre>
-docker pull nilusink/fridrich_server:1.0
+docker pull nilusink/fridrich_server:latest
 </pre>
 To then *run* the container, type:
 <pre>
-docker run -it |name of container|:|container version|
+docker run --rm -it |name of container|:|container version|
 </pre>
 For the server add 
 <pre>
@@ -134,7 +136,7 @@ To look up the newest version for each container, follow [this](https://hub.dock
 
 example:
 <pre>
-docker run -it -p 12345:12345 nilusink/fridrich_server:1.0
+docker run --rm -it -p 12345:12345 nilusink/fridrich_server:latest
 </pre>
 
 # **Attention!**

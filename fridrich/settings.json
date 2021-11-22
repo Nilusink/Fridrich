@@ -32,7 +32,7 @@
 
     "DoubleVoteResetDay": "Mon",
     "switchTime": "00:00",
-    "rebootTime": "00:03",
+    "rebootTime": "03:00",
     "status_led_pin": 21,
     "status_led_sleep_time": ["00:30", "07:00"],
 
