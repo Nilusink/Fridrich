@@ -1,10 +1,14 @@
+"""
+Program that creates Graphs and processes data for each gayking to analyze their behavior
+
+Author: Nilusink
+"""
 from typing import Dict, List, Tuple, Iterable
 import matplotlib.pyplot as plt
 from fridrich import backend
 from fridrich import *
 import tkinter as tk
 import numpy as np
-import json
 
 
 class Window:
@@ -90,7 +94,7 @@ def votes_per_month(values: Dict[str, List[str] | Tuple[str]]) -> Dict[str, Dict
     :param values: a dictionary formatted like: {month: list of votes}
     :returns: dictionary every person for every month
     """
-    all_persons = all_persons = set([person.lower().replace(" ", "") for element in values.values() for persons in element for person in persons.split("|")])
+    all_persons = set([person.lower().replace(" ", "") for element in values.values() for persons in element for person in persons.split("|")])
 
     out = {}
     for month in values:
@@ -104,25 +108,21 @@ def votes_per_month(values: Dict[str, List[str] | Tuple[str]]) -> Dict[str, Dict
     return out
 
 
-def per_month(values: Dict[str, List[str] | Tuple[str]]):
-    0
-
-
 def plot_3d(values: list) -> None:
     # Plotting
     # Data for three-dimensional scattered points
     ax = plt.axes(projection='3d')
-    zdata = np.array(list(av_streak_per_person(values).values()))
-    xdata = np.array(list(av_votes_per_person(values).values()))
-    ydata = np.array(list(av_shares_per_person(values).values()))
+    z_data = np.array(list(av_streak_per_person(values).values()))
+    x_data = np.array(list(av_votes_per_person(values).values()))
+    y_data = np.array(list(av_shares_per_person(values).values()))
 
-    ax.scatter3D(xdata, ydata, zdata, c=zdata, cmap="Accent", depthshade=False, alpha=1)
+    ax.scatter3D(x_data, y_data, z_data, c=z_data, cmap="Accent", depthshade=False, alpha=1)
 
     ax.set_xlabel("votes per person")
     ax.set_ylabel("shares per person")
     ax.set_zlabel("streak per person")
 
-    print("\n".join([xdata.__str__(), ydata.__str__(), zdata.__str__()]))
+    print("\n".join([x_data.__str__(), y_data.__str__(), z_data.__str__()]))
 
     plt.show()
 
@@ -158,12 +158,11 @@ def main() -> None:
     """
     main Function
     """
-    # c = backend.Connection(host="192.168.10.15")
-    # c.auth("Hurensohn3", "13102502")
+    c = backend.Connection(host="192.168.10.15")
+    c.auth("Fuehrer", "13102502")
 
-    # log = c.get_log()
-    # c.end()
-    log = {'00.00.0000': 'jesus', '30.05.2021': 'Lukas', '31.05.2021': 'Melvin|Lukas|Niclas', '01.06.2021': 'Niclas', '02.06.2021': 'Melvin', '07.06.2021': 'Niclas', '08.06.2021': 'Niclas', '09.06.2021': 'Melvin', '10.06.2021': 'Melvin|Pedo|Socken Typ', '11.06.2021': 'Melvin', '12.06.2021': 'Menschheit', '14.06.2021': 'Melvin', '15.06.2021': 'Tisch|Melvin|Golden Gay Bridge', '16.06.2021': 'Josef|Melvin|Golden Gay Bridge', '17.06.2021': 'Grif|Melvin', '18.06.2021': 'Grif', '21.06.2021': 'busfahrer', '22.06.2021': 'Busfahrer', '23.06.2021': 'Busfahrer', '24.06.2021': 'Melvin|Busfahrer', '25.06.2021': 'Busfahrer', '26.06.2021': 'Busfahrer|Lukas', '28.06.2021': 'Busfahrer', '29.06.2021': 'busfahrer|Melvin', '30.06.2021': 'Busfahrer', '01.07.2021': 'Busfahrer|Jesus|SockenTyp', '02.07.2021': 'Busfahrer|Melvin', '03.07.2021': 'Melvin|Busfahrer', '05.07.2021': 'Melvin|Busfahrer', '06.07.2021': 'Busfahrer', '07.07.2021': 'Busfahrer|Lukas', '08.07.2021': 'Lukas', '09.07.2021': 'Melvin', '14.09.2021': 'Niclas|Melvin', '15.09.2021': 'Melvin', '16.09.2021': 'Lukas|Busfahrer', '17.09.2021': 'Juden', '21.09.2021': 'Juden', '22.09.2021': 'Niclas|Juden', '23.09.2021': 'Melvin|Juden', '24.09.2021': 'Juden', '27.09.2021': 'Juden', '28.09.2021': 'Juden', '29.09.2021': 'Juden|Melvin', '30.09.2021': 'Juden|Melvin', '01.10.2021': 'Juden|Lukas|Melvin', '04.10.2021': 'Juden', '05.10.2021': 'Juden|Melvin', '06.10.2021': 'Juden', '07.10.2021': 'Juden|Melvin', '08.10.2021': 'Juden|Melvin', '11.10.2021': 'Juden|Lukas', '12.10.2021': 'Juden', '13.10.2021': 'Juden', '14.10.2021': 'Juden|Melvin', '15.10.2021': 'Juden', '18.10.2021': 'Juden', '19.10.2021': 'Juden', '20.10.2021': 'Juden', '21.10.2021': 'Juden|Lukas', '22.10.2021': 'Juden', '03.11.2021': 'Juden', '05.11.2021': 'Juden', '08.11.2021': 'Juden', '10.11.2021': 'Juden|Melvin', '11.11.2021': 'Juden|Melvin', '16.11.2021': 'Juden', '17.11.2021': 'Juden', '18.11.2021': 'Juden'}
+    log = c.get_log()
+    c.end()
 
     months = {}
     for element, kings in log.items():
@@ -175,7 +174,6 @@ def main() -> None:
     per_month = votes_per_month(months)
 
     plot_2d(list(months), per_month)
-
     # plot_3d(list(log.values()))
 
 

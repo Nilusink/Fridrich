@@ -5,8 +5,6 @@ Author: Nilusink
 """
 from contextlib import suppress
 from tkinter import messagebox
-from os import popen, system
-from socket import gaierror
 import tkinter as tk
 
 # local imports
@@ -27,17 +25,6 @@ def sort_user_list(lst: list, flag='sec') -> list:
 
     values = sorted(sorted(lst, key=lambda x: x['Name']), key=sorter)
     return list(values)
-
-
-def try_connect_wifi(wifi_name: str) -> bool:
-    """
-    try to connect to the given wifi
-    """
-    ret = system(f'netsh wlan connect {wifi_name}')
-
-    if ret == 1:
-        return False
-    return True
 
 
 class Window:
@@ -307,7 +294,7 @@ class Window:
 
 
 if __name__ == '__main__':
-    c = Connection(host='fridrich')
+    c = Connection(host='192.168.10.15')
 
     w = Window(c)
     w.run()
