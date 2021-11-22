@@ -29,24 +29,6 @@ def sort_user_list(lst: list, flag='sec') -> list:
     return list(values)
 
 
-def get_wifi_name() -> str:
-    """
-    return the name of the wifi currently connected to
-    """
-    ret = popen('Netsh WLAN show interfaces').readlines()
-    wifiDict = dict()
-    for element in ret:
-        tmp = element.split(':')
-        if len(tmp) > 1:
-            wifiDict[tmp[0].lstrip().rstrip()] = ':'.join(tmp[1::]).lstrip().rstrip().replace('\n', '')
-    
-    # if not wifiDict['SSID'] == 'Fridrich':
-    #     print('Not Connected to Fridrich')
-    #     print(f'Current Wifi: "{wifiDict["SSID"]}"')
-    
-    return wifiDict['SSID']
-
-
 def try_connect_wifi(wifi_name: str) -> bool:
     """
     try to connect to the given wifi
@@ -325,21 +307,7 @@ class Window:
 
 
 if __name__ == '__main__':
-    try:
-        c = Connection(host='fridrich')
-    except gaierror:    # if connection issue
-        WifiName = get_wifi_name()    # get wifi name
-        if not WifiName == 'Fridrich':  # if not connected to "Fridrich" wifi
-            resp = try_connect_wifi('Fridrich')   # try to connect
-            if resp:    # if connected Successfully
-                try:
-                    c = Connection()
-                except gaierror:    # if can't reach again
-                    c = 'ServerNotReachable'
-            else:   # if cant connect to Fridrich
-                c = 'CantConnect'
-        else:   # if Wifi is "Fridrich" but Still Can't Connect
-            c = 'ServerNotReachable'
+    c = Connection(host='fridrich')
 
     w = Window(c)
     w.run()

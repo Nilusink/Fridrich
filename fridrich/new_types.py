@@ -310,6 +310,13 @@ class UserList:
         for element in self._users:
             yield element.name
 
+    def sendall(self, message: dict | str) -> None:
+        for user in self._users:
+            user.send({
+                "time": time.time(),
+                "content": message
+            })
+
     def append(self, obj: User) -> None:
         """
         append object to the end of the list and start receive thread

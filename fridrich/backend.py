@@ -76,15 +76,16 @@ class Connection:
             
             ``host`` - name of the host, either IP or hostname / address
         """
-        self.messages = dict()
+        self._messages = dict()
+        self._server_messages = dict()
         self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # create socket instance
         self.debug_mode = debug_mode
 
         self.__ServerIp = ""
-        self.ServerIp = host
+        self.server_ip = host
 
         if self.debug_mode in ('normal', 'full'):
-            print(ConsoleColors.OKGREEN+'Server IP: '+self.ServerIp+ConsoleColors.ENDC)
+            print(ConsoleColors.OKGREEN + 'Server IP: ' + self.server_ip + ConsoleColors.ENDC)
         self.port = 12345   # set communication port with server
 
         self.AuthKey = None 
@@ -109,11 +110,11 @@ class Connection:
         return self._userN
 
     @property
-    def ServerIp(self) -> str:
+    def server_ip(self) -> str:
         return self.__ServerIp
 
-    @ServerIp.setter
-    def ServerIp(self, value: str) -> None:
+    @server_ip.setter
+    def server_ip(self, value: str) -> None:
         sl = value.split('.')
         if len(sl) == 4 and all([digit in '0123456789' for element in sl for digit in element]):
             if self.debug_mode in ("full", "normal"):
@@ -126,7 +127,7 @@ class Connection:
             self.__ServerIp = socket.gethostbyname(value)  # get ip of fridrich
 
         if self.debug_mode == 'full':
-            print(self.ServerIp)
+            print(self.server_ip)
 
     # "local" functions
     @staticmethod
@@ -236,7 +237,7 @@ class Connection:
             try:
                 mes = cryption_tools.MesCryp.decrypt(data, self.AuthKey.encode())
             except cryption_tools.InvalidToken:
-                self.messages["Error"] = f"cant decrypt: {data}"
+                self._messages["Error"] = f"cant decrypt: {data}"
                 continue
 
             try:
@@ -247,20 +248,23 @@ class Connection:
                 mes = json.loads(mes)
 
             except json.decoder.JSONDecodeError:
-                self.messages["Error"] = f"cant decode: {mes}, type: {type(mes)}"
+                self._messages["Error"] = f"cant decode: {mes}, type: {type(mes)}"
                 continue
 
             try:
                 match mes["type"]:
                     case "function":
-                        self.messages[mes["time"]] = mes["content"]
+                        self._messages[mes["time"]] = mes["content"]
 
                     case "Error":
-                        self.messages["Error"] = f"{mes['Error']} - {mes['info']}"
+                        self._messages["Error"] = f"{mes['Error']} - {mes['info']}"
 
                     case "disconnect":
-                        self.messages["disconnect"] = True
+                        self._messages["disconnect"] = True
                         self.end()
+
+                    case "ServerRequest":
+                        self._server_messages[mes['time']] = mes["content"]
 
                     case _:
                         raise ServerError(f"server send message: {mes}")
@@ -281,19 +285,19 @@ class Connection:
         start = time.time()
         if self.debug_mode in ('full', 'normal'):
             print(f'waiting for message: {time_sent}')
-        while time_sent not in self.messages:  # wait for server message
+        while time_sent not in self._messages:  # wait for server message
             if self.debug_mode == 'full':
-                print(self.messages)
+                print(self._messages)
             if timeout and time.time()-start >= timeout:
                 raise NetworkError("no message was received from server before timeout")
-            if "Error" in self.messages:
-                raise Error(self.messages["Error"])
-            if "disconnect" in self.messages:
+            if "Error" in self._messages:
+                raise Error(self._messages["Error"])
+            if "disconnect" in self._messages:
                 raise ConnectionAbortedError("Server ended connection")
             time.sleep(delay)
 
-        out = self.messages[time_sent]
-        del self.messages[time_sent]
+        out = self._messages[time_sent]
+        del self._messages[time_sent]
         if "Error" in out:
             self.error_handler(out["Error"], out)
         if self.debug_mode in ('all', 'normal'):
@@ -306,7 +310,7 @@ class Connection:
         """
         try:    # try to reconnect to the server
             self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.Server.connect((self.ServerIp, self.port))  # connect to server
+            self.Server.connect((self.server_ip, self.port))  # connect to server
         except socket.error:
             raise ConnectionError('Server not reachable')
 
@@ -755,6 +759,14 @@ class Connection:
         self.load_program = str()
         self.load_progress = float()
 
+    def _send_app(self, files: list | tuple, app_name: str) -> None:
+        for file in files:
+            thread = app_store.send_receive(mode="send", filename=file, destination=self.server_ip, print_steps=False, thread=True, overwrite=True)
+            while thread.running():
+                self.load_program = app_name
+        self.load_program = str()
+        self.load_state = str()
+
     def create_app(self, app_name: str, app_version: str, app_info: str, files: list | tuple) -> None:
         """
         add a new app to the fridrich appstore
@@ -768,12 +780,7 @@ class Connection:
         }
         self.wait_for_message(self.send(msg))
         self.load_state = "Uploading"
-        for file in files:
-            thread = app_store.send_receive(mode="send", filename=file, destination=self.ServerIp, print_steps=False, thread=True, overwrite=True)
-            while thread.running():
-                self.load_program = app_name
-        self.load_program = str()
-        self.load_state = str()
+        self._send_app(files, app_name)
 
     def modify_app(self, old_app_name: str, app_name: str, app_version: str, app_info: str, files: list | tuple, to_delete: list | tuple) -> None:
         """
@@ -796,12 +803,7 @@ class Connection:
             "to_remove": to_delete
         }
         self.wait_for_message(self.send(msg))
-        for file in files:
-            thread = app_store.send_receive(mode="send", filename=file, destination=self.ServerIp, print_steps=False, thread=True, overwrite=True)
-            while thread.running():
-                self.load_program = app_name
-        self.load_program = str()
-        self.load_state = str()
+        self._send_app(files, app_name)
 
     # magical functions
     def __repr__(self) -> str:

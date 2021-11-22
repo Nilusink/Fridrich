@@ -38,7 +38,7 @@ class Manager:
         write changed accounts to file
         """
         if thread:
-            Thread(target=self.update_file, kwargs={"thread": False})
+            Thread(target=self.update_file, kwargs={"thread": False}).start()
             return
 
         tmp = list()
