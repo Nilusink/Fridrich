@@ -38,7 +38,12 @@ class Manager:
 
         def decrypt_pwd(username: str, password: str) -> None:
             nonlocal users
-            users[username]["pwd"] = cryption_tools.High.decrypt(password)
+            try:
+                users[username] = cryption_tools.High.decrypt(password)
+
+            except ValueError:
+                print("no password for user", username)
+                users[username] = ""
 
         threads = []
         for user in tmp:
