@@ -28,10 +28,31 @@ class Manager:
         account_file - file to store encrypted account data in
         """
         self.__encryptionFile = account_file
-        tmp = json.load(open(self.__encryptionFile, 'r'))
+
+        self.__accounts = self.__get_file()
+
+    def __get_file(self) -> dict:
+        tmp: dict = json.load(open(self.__encryptionFile))
+
+        users = {}
+
+        def decrypt_pwd(username: str, password: str) -> None:
+            nonlocal users
+            users[username]["pwd"] = cryption_tools.High.decrypt(password)
+
+        threads = []
+        for user in tmp:
+            t = Thread(target=decrypt_pwd, args=[user["Name"], user["pwd"]])
+            threads.append(t)
+            t.start()
+
+        for thread in threads:
+            thread.join()
+
         for element in tmp:
-            element["pwd"] = cryption_tools.High.decrypt(element["pwd"])
-        self.__accounts = tmp
+            element["pwd"] = users[tmp[element]["name"]]
+
+        return tmp
 
     def update_file(self, thread: bool | None = True) -> None:
         """
@@ -47,6 +68,7 @@ class Manager:
             temp = account.copy()
             temp["pwd"] = cryption_tools.High.encrypt(temp["pwd"])
             tmp.append(temp)
+
         print("encrypted, writing...")
         with open(self.__encryptionFile, 'w') as out:
             json.dump(tmp, out)
