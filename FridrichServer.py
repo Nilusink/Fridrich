@@ -850,6 +850,7 @@ def update() -> None:
     """
     global reqCounter
     start = time.time()
+    last_time_done: str = ""
     while not Const.Terminate:
         # ----- Temperature updater ------
         temp_updater(start)
@@ -861,10 +862,9 @@ def update() -> None:
         auto_reboot(Const.rebootTime)
 
         # --------- Accounts File ---------
-        if time.strftime("%M") in ("00", "15", "30", "45"):  # update every 15 minutes
-            print("calling update file")
-            print(time.strftime("%M"))
+        if time.strftime("%M") in ("00", "15", "30", "45") and not time.strftime("%H%M") == last_time_done:  # update every 15 minutes
             AccManager.update_file()
+            last_time_done = time.strftime("%H%M")
 
         # ----------- Status LED -----------
         led_auto_sleep()
