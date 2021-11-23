@@ -32,24 +32,33 @@ class Manager:
         self.__accounts = self.__get_file()
 
     def __get_file(self) -> list:
+        """
+        decrypt the user passwords with threads
+        """
         tmp: list = json.load(open(self.__encryptionFile))
 
         users = {}
 
         def decrypt_pwd(username: str, password: str) -> None:
+            """
+            for the threads
+            """
             nonlocal users
             try:
                 users[username] = cryption_tools.High.decrypt(password)
+                return
 
             except ValueError:
                 print("no password for user", username)
                 users[username] = ""
+                return
 
         threads = []
         for user in tmp:
-            t = Thread(target=decrypt_pwd, args=[user["Name"], user["pwd"]])
-            threads.append(t)
-            t.start()
+            # t = Thread(target=decrypt_pwd, args=[user["Name"], user["pwd"]])
+            # threads.append(t)
+            # t.start()
+            decrypt_pwd(user["Name"], user["pwd"])
 
         for thread in threads:
             thread.join()
