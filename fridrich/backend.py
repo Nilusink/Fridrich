@@ -616,7 +616,7 @@ class Connection:
         }
         self.wait_for_message(self.send(msg))
 
-    def __iter__(self) -> dict:
+    def __iter__(self) -> typing.Iterable:
         """
         return dict of all User Controlled Variables when called
         """
@@ -732,7 +732,6 @@ class Connection:
             "type": "get_apps",
             "time": time.time()
         }
-        self.send(msg)
         return self.wait_for_message(self.send(msg))
 
     def download_app(self, app: str, directory: str | None = ...) -> None:
@@ -802,6 +801,19 @@ class Connection:
         }
         self.wait_for_message(self.send(msg))
         self._send_app(files, app_name)
+
+    # tools
+    def ping(self) -> float:
+        """
+        ping the server to check the connection time
+        :return: time in ms
+        """
+        msg = {
+            "type": "ping",
+            "time": time.time()
+        }
+        self.wait_for_message(self.send(msg))
+        return (time.time()-msg["time"]) * 1000
 
     # magical functions
     def __repr__(self) -> str:

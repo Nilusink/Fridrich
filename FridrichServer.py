@@ -342,7 +342,9 @@ class FunctionManager:
 
                 'setVersion': ClientFuncs.set_version,
                 'getVersion': ClientFuncs.set_version,
-                'gOuser': ClientFuncs.get_online_users
+                'gOuser': ClientFuncs.get_online_users,
+
+                "ping": UserTools.ping
             },
             'user': {                                  # instead of 5 billion if'S
                 'vote': ClientFuncs.vote,
@@ -367,19 +369,25 @@ class FunctionManager:
                 'get_apps': app_store.send_apps,
                 'download_app': app_store.download_app,
                 'create_app': app_store.receive_app,
-                "modify_app": app_store.modify_app
+                "modify_app": app_store.modify_app,
+                
+                "ping": UserTools.ping
             },
             'guest': {                                  # instead of 5 billion if'S
                 'CalEntry': ClientFuncs.calendar_handler,
                 'getVersion': ClientFuncs.get_version,
                 'getVote': ClientFuncs.get_vote,
                 'req': ClientFuncs.req_handler,
-                'end': ClientFuncs.end
+                'end': ClientFuncs.end,
+
+                "ping": UserTools.ping
             },
             'bot': {
                 'setVersion': ClientFuncs.set_version,
                 'getVersion': ClientFuncs.get_version,
-                'end': ClientFuncs.end
+                'end': ClientFuncs.end,
+
+                "ping": UserTools.ping
             }
         }
 
@@ -819,6 +827,15 @@ class ClientFuncs:
             Users.remove(user)
 
 
+class UserTools:
+    """
+    tools to use for the user
+    """
+    @staticmethod
+    def ping(message: dict, user: User, *_args) -> None:
+        send_success(user, message)
+
+
 def receive() -> None:
     """
     Basically the whole server
@@ -845,6 +862,8 @@ def update() -> None:
 
         # --------- Accounts File ---------
         if time.strftime("%M") in ("00", "15", "30", "45"):  # update every 15 minutes
+            print("calling update file")
+            print(time.strftime("%M"))
             AccManager.update_file()
 
         # ----------- Status LED -----------
