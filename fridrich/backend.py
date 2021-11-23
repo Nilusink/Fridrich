@@ -241,10 +241,8 @@ class Connection:
                 continue
 
             try:
-                print(mes)
                 for _ in range(2):
                     mes = mes.replace("\\\\", "\\")
-                print(mes)
                 mes = json.loads(mes)
 
             except json.decoder.JSONDecodeError:
