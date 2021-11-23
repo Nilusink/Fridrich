@@ -31,8 +31,8 @@ class Manager:
 
         self.__accounts = self.__get_file()
 
-    def __get_file(self) -> dict:
-        tmp: dict = json.load(open(self.__encryptionFile))
+    def __get_file(self) -> list:
+        tmp: list = json.load(open(self.__encryptionFile))
 
         users = {}
 
@@ -50,7 +50,7 @@ class Manager:
             thread.join()
 
         for element in tmp:
-            element["pwd"] = users[tmp[element]["name"]]
+            element["pwd"] = users[element["name"]]
 
         return tmp
 
