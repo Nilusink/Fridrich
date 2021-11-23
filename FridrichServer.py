@@ -501,7 +501,7 @@ class ClientFuncs:
             Vote.__setitem__(message['voting'], dict())
             
         tmp = Vote.get()
-        tmp[message['voting']][user.id] = resp
+        tmp[message['voting']][str(user.id)] = resp
         Vote.set(tmp)    # set vote
         debug.debug(f'got vote: {message["vote"]}                     .')   # print that it received vote (debugging)
 
@@ -514,8 +514,9 @@ class ClientFuncs:
         """
         global Vote
         tmp = Vote.get()
-        with suppress(KeyError): 
-            del tmp[message['voting']][user.id]  # try to remove vote from client, if client hasn't voted yet, ignore it
+        with suppress(KeyError):
+            debug.debug(f"voting: {tmp}, user id: {user.id}, userid in voting: {str(user.id) in tmp[message['voting']]}")
+            del tmp[message['voting']][str(user.id)]  # try to remove vote from client, if client hasn't voted yet, ignore it
         Vote.set(tmp)
         send_success(user, message)
 
@@ -599,7 +600,7 @@ class ClientFuncs:
         """
         change the password of the user (only for logged in user)
         """
-        validUsers = json.loads(cryption_tools.Low.decrypt(open(Const.crypFile, 'r').read()))
+        validUsers = AccManager.get_accounts()
         for element in validUsers:
             if element['id'] == user.id:
                 element['pwd'] = message['newPwd']
