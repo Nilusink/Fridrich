@@ -283,10 +283,10 @@ class DoubleVote:
             if value[user_id] < 1:
                 return False
             try:
-                tmp['GayKing'][int(str(user_id)+'2')] = vote
+                tmp['GayKing'][str(user_id)+'2'] = vote
             except KeyError:
                 tmp['GayKing'] = dict()
-                tmp['GayKing'][int(str(user_id)+'2')] = vote
+                tmp['GayKing'][str(user_id)+'2'] = vote
 
             value[user_id] -= 1
             self.value.set(value)
@@ -304,7 +304,7 @@ class DoubleVote:
         global Vote
         tmp = Vote.get()
         with suppress(KeyError):
-            tmp[voting].pop(int(str(user_id)+'2'))
+            tmp[voting].pop(str(user_id)+'2')
         
             value = self.value.get()
             value[user_id] += 1
@@ -622,7 +622,7 @@ class ClientFuncs:
         else:
             x = ''
 
-        name = int(str(user.id) + x)
+        name = str(user.id) + x
         if not message['voting'] in Vote.get():
             mes = {
                 "content": {'Error': 'NotVoted'},

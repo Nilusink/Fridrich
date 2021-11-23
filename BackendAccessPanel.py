@@ -51,3 +51,7 @@ if __name__ == '__main__':
                 exec(cmd)
             except (Exception,):
                 print(ConsoleColors.FAIL+format_exc()+ConsoleColors.ENDC)
+
+        except:
+            c.end()
+            exit()
