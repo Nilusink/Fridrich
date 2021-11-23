@@ -55,7 +55,7 @@ class Manager:
             thread.join()
 
         for element in tmp:
-            element["pwd"] = users[element["name"]]
+            element["pwd"] = users[element["Name"]]
 
         return tmp
 
