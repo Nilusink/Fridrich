@@ -44,7 +44,7 @@ class Manager:
         """
         self.__accounts = accounts
         with open(self.__encryptionFile, 'w') as out:
-            json.dump(self.__accounts, out)
+            json.dump(self.__accounts, out, indent=4)
 
     def get_accounts(self) -> list:
         """
