@@ -4,6 +4,8 @@ used for managing user Accounts
 
 Author: Nilusink
 """
+import random
+
 from fridrich import *
 import json
 
@@ -66,6 +68,7 @@ class Manager:
         change username
         """
         UsedNames = useful.List.get_inner_dict_values(self.__accounts, 'Name')
+        UsedNames.remove(old_user)
 
         element = str()
         i = int()
@@ -100,12 +103,34 @@ class Manager:
         """
         add new user
         """
+        # variables
+        new_acc: dict
+        ids: list
+        new_id: int
+
         UsedNames = useful.List.get_inner_dict_values(self.__accounts, 'Name')
-
         if username in UsedNames:
-            return
+            raise NameError('Username already exists')
 
-        self.__accounts.append({'Name': username, 'pwd': password, 'sec': security_clearance})  # create user
+        # create new id for user
+        ids = [user["id"] for user in self.__accounts]
+        new_id = random.randint(10000, 99999)
+
+        if len(ids) >= 90000:
+            raise NotImplementedError("Too many accounts registered!")
+
+        while new_id in ids:
+            new_id = random.randint(10000, 99999)
+
+        # add account
+        new_acc = {
+            'Name': username,
+            'pwd': password,
+            'sec': security_clearance,
+            "id": new_id
+        }
+
+        self.__accounts.append(new_acc)  # create user
     
     def remove_user(self, username: str) -> None:
         """
