@@ -48,7 +48,8 @@ class Window:
         self.root.minsize(width=600, height=500)
         self.root.maxsize(width=600, height=500)
 
-        self.root.bind('<Escape>', self.end)    # bin esc to exit
+        self.root.bind("WM_DELETE_WINDOW", self.end)  # bind to window exits
+        self.root.bind('<Escape>', self.end)
         self.root.bind('<F5>', self.update)
 
         #   login Frame
@@ -237,7 +238,7 @@ class Window:
                 o_name = self.users[i]['Name']
                 o_pwd = self.users[i]['pwd']
                 o_sec = self.users[i]['sec'] if 'sec' in self.users[i] else ''
-        
+
                 try:
                     if name != o_name:
                         self.c.admin_set_username(o_name, name)
@@ -289,12 +290,16 @@ class Window:
         """
         end connection to fridrich and destroy the tkinter.root
         """
+        print("called end")
         self.c.end()
-        self.root.destroy()
+        try:
+            self.root.destroy()
+        except (Exception,):
+            return
 
 
 if __name__ == '__main__':
-    c = Connection(host='192.168.10.15')
+    c = Connection(host='192.168.10.15', debug_mode="full")
 
     w = Window(c)
     w.run()

@@ -462,7 +462,12 @@ class AdminFuncs:
         """
         add a new user with set name, password and clearance
         """
-        AccManager.new_user(message['Name'], message['pwd'], message['sec'])
+        try:
+            AccManager.new_user(message['Name'], message['pwd'], message['sec'])
+
+        except NameError:
+            user.send({"Error": "NameError", "info": "user already exists"})
+
         send_success(user, message)
     
     @staticmethod

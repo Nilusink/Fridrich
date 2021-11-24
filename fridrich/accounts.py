@@ -110,7 +110,7 @@ class Manager:
 
         UsedNames = useful.List.get_inner_dict_values(self.__accounts, 'Name')
         if username in UsedNames:
-            raise NameError('Username already exists')
+            raise NameError(f'Username {username} already exists: {UsedNames}')
 
         # create new id for user
         ids = [user["id"] for user in self.__accounts]
