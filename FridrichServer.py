@@ -15,7 +15,7 @@ from cryptography.fernet import InvalidToken
 # local imports
 from fridrich.server.accounts import Manager
 from fridrich.server.server_funcs import *
-from new_types import *
+from fridrich.new_types import *
 
 from fridrich.server import WStationFuncs
 from fridrich.server import UserTools
