@@ -162,7 +162,8 @@ def modify_app(message: dict, user: new_types.User) -> None:
         tmp = {
             "version": "nAn",
             "info": message["info"],
-            "publisher": user.name
+            "publisher": user.name,
+            "publisher_id": app["publisher_id"]
         }
         json.dump(tmp, out, indent=4)
 
