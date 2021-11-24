@@ -299,7 +299,7 @@ class Window:
 
 
 if __name__ == '__main__':
-    c = Connection(host='192.168.10.15', debug_mode="normal")
+    c = Connection(host='192.168.10.15')
 
     w = Window(c)
     w.run()

@@ -23,14 +23,19 @@ The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It
 |   |---♦ yes.json
 |  
 |---♦ fridrich  
+|   |---♦ server
+|   |   |---♦ __init__.py
+|   |   |---♦ accounts.py
+|   |   |---♦ ClientFuncs.py
+|   |   |---♦ server_funcs.py
+|   |   |---♦ settings.json
+|   |   |---♦ UserTools.py
+|   |   |---♦ WStationFuncs.py
+|   |
 |   |---♦ __init__.py
-|   |---♦ Accounts.py
-|   |---♦ AppStore.py
+|   |---♦ app_store.py
 |   |---♦ cryption_tools.py
-|   |---♦ FanController.py
 |   |---♦ new_types.py
-|   |---♦ ServerFuncs.py
-|   |---♦ settings.json
 |   |---♦ useful.py
 |  
 |---♦ FridrichServer.py  
@@ -86,11 +91,12 @@ The File Layout is straightforward:
 |---♦ data  
 |   |---♦ KeyFile.enc  
 |  
-|---♦ fridrich  
+|---♦ fridrich
 |   |---♦ __init__.py
-|   |---♦ AppStore.py
+|   |---♦ app_store.py
 |   |---♦ backend.py
 |   |---♦ cryption_tools.py
+|   |---♦ new_types.py
 |   |---♦ useful.py
 |  
 |---♦ YourProgram.py  

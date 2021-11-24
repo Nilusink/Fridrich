@@ -5,7 +5,7 @@ used to interface with a Fridrich Server
 Author: Nilusink
 """
 from concurrent.futures import ThreadPoolExecutor, Future
-from typing import List, Dict, Callable, Iterable
+from typing import Dict, Callable, Iterable
 from contextlib import suppress
 from traceback import format_exc
 from fridrich import app_store
@@ -442,7 +442,7 @@ class Connection:
         
         return Name, max_num  # return results
 
-    def get_temps(self) -> List[Dict]:
+    def get_temps(self) -> Dict[str, dict]:
         """
         get room and cpu temperature in °C as well as humidity in %
         """

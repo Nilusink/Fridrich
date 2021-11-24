@@ -13,32 +13,24 @@ import sys
 from cryptography.fernet import InvalidToken
 
 # local imports
-from fridrich.cryption_tools import key_func, MesCryp
 from fridrich.server.accounts import Manager
 from fridrich.server.server_funcs import *
-from fridrich.server.new_types import *
+from new_types import *
+
+from fridrich.server import WStationFuncs
+from fridrich.server import UserTools
+from fridrich.server import *
+
+from fridrich.cryption_tools import key_func, MesCryp
 from fridrich import app_store
 
 COM_PROTOCOL_VERSIONS: set = {"1.0.0"}
 
-Const = Constants()
-debug = Debug(Const.SerlogFile, Const.errFile)
-
 client: socket.socket
-
 Users = UserList()
 
+debug = Debug(Const.SerlogFile, Const.errFile)
 
-def send_success(user: User, message: dict) -> None:
-    """
-    send the success message to the client
-    """
-    mes = {
-        "time": message['time'],
-        "content": {'Success': 'Done'}
-    }
-    user.send(mes)
-    
 
 def verify(username: str, password: str, cl: socket.socket, address: str) -> None:
     """
@@ -455,22 +447,23 @@ class ClientFuncs:
     """
     Manages the Client Functions
     """
+
     @staticmethod
     def vote(message: dict, user: User, *_args) -> None:
         """
         vote a name
-        
+
         votes user by username
         """
         resp = check_if(message['vote'], Vote.get(), message['voting'])
 
         if not message['voting'] in Vote.get():
             Vote.__setitem__(message['voting'], dict())
-            
+
         tmp = Vote.get()
         tmp[message['voting']][str(user.id)] = resp
-        Vote.set(tmp)    # set vote
-        debug.debug(f'got vote: {message["vote"]}                     .')   # print that it received vote (debugging)
+        Vote.set(tmp)  # set vote
+        debug.debug(f'got vote: {message["vote"]}                     .')  # print that it received vote (debugging)
 
         send_success(user, message)
 
@@ -482,8 +475,10 @@ class ClientFuncs:
         global Vote
         tmp = Vote.get()
         with suppress(KeyError):
-            debug.debug(f"voting: {tmp}, user id: {user.id}, userid in voting: {str(user.id) in tmp[message['voting']]}")
-            del tmp[message['voting']][str(user.id)]  # try to remove vote from client, if client hasn't voted yet, ignore it
+            debug.debug(
+                f"voting: {tmp}, user id: {user.id}, userid in voting: {str(user.id) in tmp[message['voting']]}")
+            del tmp[message['voting']][
+                str(user.id)]  # try to remove vote from client, if client hasn't voted yet, ignore it
         Vote.set(tmp)
         send_success(user, message)
 
@@ -493,15 +488,16 @@ class ClientFuncs:
         Handle the Calendar requests/write
         """
         calendar = json.load(open(Const.CalFile, 'r'))
-        if not message['event'] in calendar[message['date']]:    # if event is not there yet, create it
+        if not message['event'] in calendar[message['date']]:  # if event is not there yet, create it
             try:
                 calendar[message['date']].append(message['event'])
             except (KeyError, AttributeError):
                 calendar[message['date']] = [message['event']]
 
             json.dump(calendar, open(Const.CalFile, 'w'))  # update fil
-            debug.debug(f'got Calender: {message["date"]} - "{message["event"]}"')    # notify that there has been a calendar entry
-        
+            debug.debug(
+                f'got Calender: {message["date"]} - "{message["event"]}"')  # notify that there has been a calendar entry
+
         send_success(user, message)
 
     @staticmethod
@@ -511,7 +507,7 @@ class ClientFuncs:
         """
         global reqCounter, Vote
         reqCounter += 1
-        if message['reqType'] == 'now':   # now is for the current "votes" dictionary
+        if message['reqType'] == 'now':  # now is for the current "votes" dictionary
             with open(Const.nowFile, 'r') as inp:
                 mes = {
                     "content": json.load(inp),
@@ -526,36 +522,36 @@ class ClientFuncs:
                     "time": message["time"]
                 }
                 user.send(mes)
-                
-        elif message['reqType'] == 'log':   # returns the log of the GayKings
+
+        elif message['reqType'] == 'log':  # returns the log of the GayKings
             with open(Const.KingFile, 'r') as inp:
                 mes = {
                     "content": json.load(inp),
                     "time": message["time"]
                 }
                 user.send(mes)
-                
+
         elif message['reqType'] == 'attds':  # returns All attendants (also non standard users)
             new_ones = get_new_ones(message['atype'], Vote, Const.lastFile, message['voting'])
             mes = {
-                "content": {'Names': ['Lukas', 'Niclas', 'Melvin']+new_ones},
+                "content": {'Names': ['Lukas', 'Niclas', 'Melvin'] + new_ones},
                 "time": message["time"]
             }
-            user.send(mes)    # return standard users + new ones
+            user.send(mes)  # return standard users + new ones
 
-        elif message['reqType'] == 'cal':   # returns the calendar dictionary
+        elif message['reqType'] == 'cal':  # returns the calendar dictionary
             with open(Const.CalFile, 'r') as inp:
                 mes = {
                     "content": json.load(inp),
                     "time": message["time"]
                 }
                 user.send(mes)
-                
-        else:   # notify if an invalid request has been sent
+
+        else:  # notify if an invalid request has been sent
             debug.debug(f'Invalid Request {message["reqType"]} from user {user.name}')
 
     @staticmethod
-    def change_pwd(message: dict, user: User,  *_args) -> None:
+    def change_pwd(message: dict, user: User, *_args) -> None:
         """
         change the password of the user (only for logged in user)
         """
@@ -563,12 +559,12 @@ class ClientFuncs:
         for element in validUsers:
             if element['id'] == user.id:
                 element['pwd'] = message['newPwd']
-        
+
         with open(Const.crypFile, 'w') as output:
             fstring = json.dumps(validUsers, ensure_ascii=False)
             c_string = cryption_tools.Low.encrypt(fstring)
             output.write(c_string)
-        
+
         send_success(user, message)
 
     @staticmethod
@@ -632,7 +628,7 @@ class ClientFuncs:
         double vote
         """
         user_id = user.id
-        resp = check_if(message['vote'], Vote.get(), message['voting'])     
+        resp = check_if(message['vote'], Vote.get(), message['voting'])
         resp = DV.vote(resp, user_id)
         if resp:
             send_success(user, message)
@@ -763,7 +759,7 @@ class ClientFuncs:
         tmp = json.load(open(Const.VarsFile, 'r'))
         if message["var"] in tmp:
             del tmp[message["var"]]
-        else:   # if KeyError occurs
+        else:  # if KeyError occurs
             user.send({"content": {"Error": "KeyError", "info": message["var"]}, "time": message["time"]})
 
         json.dump(tmp, open(Const.VarsFile, 'w'), indent=4)
@@ -776,132 +772,6 @@ class ClientFuncs:
         """
         with suppress(Exception):
             Users.remove(user)
-
-
-class WStationFuncs:
-    """
-    for weather-stations to commit data to the pool
-    """
-    @staticmethod
-    def register(message: dict, user: User, *_args) -> None:
-        """
-        register a new weather-station
-        """
-        tmp: list
-        try:
-            tmp = json.load(open(Const.WeatherDir+"all.json", "r"))
-
-        except json.JSONDecodeError:
-            tmp = []
-
-        for element in tmp:
-            if message["station_name"] == element["station_name"]:
-                mes = {
-                    "content": {
-                        'Error': 'RegistryError',
-                        "info": "weather-station is already registered"
-                    },
-                    "time": message['time']
-                }
-                user.send(mes)
-                return
-
-        tmp.append({
-            "station_name": message["station_name"],
-            "location": message["location"]
-        })
-
-        with open(Const.WeatherDir+"all.json", "w") as out_file:
-            json.dump(tmp, out_file, indent=4)
-
-        with open(Const.WeatherDir+message["station_name"], "w") as out_file:
-            out_file.write("[]")
-
-        send_success(user, message)
-
-    @staticmethod
-    def commit_data(message: dict, user: User, *_args) -> None:
-        """
-        commit data for already registered stations
-        """
-        now_data: dict
-        station_data: dict
-        if not WStationFuncs.check_if_registered(message, user, *_args):
-            mes = {
-                "content": {
-                    'Error': 'RegistryError',
-                    "info": "weather-station is not registered yet"
-                },
-                "time": message['time']
-            }
-            user.send(mes)
-            return
-
-        try:
-            now_data = json.load(open(Const.WeatherDir+"now.json", "r"))
-
-        except json.JSONDecodeError:
-            now_data = {}
-
-        now_data[message["station_name"]] = {
-            "time": message["time"],
-            "temp": message["temp"],
-            "hum": message["hum"],
-            "press": message["press"]
-        }
-
-        with open(Const.WeatherDir+"now.json", "w") as out_file:
-            json.dump(now_data, out_file, indent=4)
-
-        try:
-            station_data = json.load(open(Const.WeatherDir+message["station_name"], "r"))
-
-        except json.JSONEncoder:
-            station_data = {}
-
-        station_data[message["time"]] = {
-            "temp": message["temp"],
-            "hum": message["hum"],
-            "press": message["press"]
-        }
-
-        with open(Const.WeatherDir + message["station_name"], "w") as out_file:
-            json.dump(station_data, out_file, indent=4)
-
-        send_success(user, message)
-
-    @staticmethod
-    def check_if_registered(message: dict, _user: User, *_args) -> bool:
-        """
-        check if a weather-station is already registered
-        """
-        return message["station_name"] in json.load(open(Const.WeatherDir+"all.json", "r"))
-
-    @staticmethod
-    def get_all(message: dict, user: User, *_args) -> None:
-        """
-        send a dict of all weather-stations with their current measurement
-        """
-        tmp_data: str
-        try:
-            now_data = json.load(open(Const.WeatherDir+"now.json", "r"))
-
-        except json.JSONDecodeError:
-            now_data = {}
-
-        user.send(({
-            "content": now_data,
-            "time": message["time"]
-        }))
-
-
-class UserTools:
-    """
-    tools to use for the user
-    """
-    @staticmethod
-    def ping(message: dict, user: User, *_args) -> None:
-        send_success(user, message)
 
 
 def receive() -> None:
