@@ -18,6 +18,7 @@
     "SerUpLogFile": "/home/pi/Server/data/Server.up.log",
     "ChatFile": "/home/pi/Server/data/chat.json",
     "VarsFile": "/home/pi/Server/data/vars.json",
+    "WeatherDir": "/home/pi/Server/weather/",
 
     "varTempLog": "/var/www/html/json/tempData.json",
     "varKingLogFile": "/var/www/html/KingLog.log",

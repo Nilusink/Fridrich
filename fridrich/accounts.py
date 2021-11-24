@@ -4,7 +4,6 @@ used for managing user Accounts
 
 Author: Nilusink
 """
-from threading import Thread
 from fridrich import *
 import json
 
@@ -35,70 +34,21 @@ class Manager:
         """
         decrypt the user passwords with threads
         """
-        tmp: list = json.load(open(self.__encryptionFile))
-
-        users = {}
-
-        def decrypt_pwd(username: str, password: str) -> None:
-            """
-            for the threads
-            """
-            nonlocal users
-            try:
-                users[username] = cryption_tools.High.decrypt(password)
-                return
-
-            except ValueError:
-                print("no password for user", username)
-                users[username] = ""
-                return
-
-        threads = []
-        for user in tmp:
-            # t = Thread(target=decrypt_pwd, args=[user["Name"], user["pwd"]])
-            # threads.append(t)
-            # t.start()
-            decrypt_pwd(user["Name"], user["pwd"])
-
-        for thread in threads:
-            thread.join()
-
-        for element in tmp:
-            element["pwd"] = users[element["Name"]]
-
-        return tmp
-
-    def update_file(self, thread: bool | None = True) -> None:
-        """
-        write changed accounts to file
-        """
-        if thread:
-            Thread(target=self.update_file, kwargs={"thread": False}).start()
-            return
-
-        tmp = list()
-        for account in self.__accounts:
-            print(f"encrypting: {account}")
-            temp = account.copy()
-            temp["pwd"] = cryption_tools.High.encrypt(temp["pwd"])
-            tmp.append(temp)
-
-        print("encrypted, writing...")
-        with open(self.__encryptionFile, 'w') as out:
-            json.dump(tmp, out)
-        print("done writing file")
-
-    def get_accounts(self) -> list:
-        """
-        get account data
-        """
-        return self.__accounts
+        return json.load(open(self.__encryptionFile))
 
     def __write_accounts(self, accounts: list) -> None:
         """
         write account file
         """
         self.__accounts = accounts
+        with open(self.__encryptionFile, 'w') as out:
+            json.dump(self.__accounts, out)
+
+    def get_accounts(self) -> list:
+        """
+        get account data
+        """
+        return self.__accounts
 
     def set_pwd(self, username: str, new_password: str) -> None:
         """

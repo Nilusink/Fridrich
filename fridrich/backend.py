@@ -5,16 +5,20 @@ used to interface with a Fridrich Server
 Author: Nilusink
 """
 from concurrent.futures import ThreadPoolExecutor, Future
+from typing import List, Dict, Callable, Iterable
 from contextlib import suppress
 from traceback import format_exc
 from fridrich import app_store
+from hashlib import sha512
 from fridrich import *
-import typing
 import socket
 import struct
 import json
 import time
-import os
+
+
+# for information if the Server has updated the communication but the client hasn't yet
+COMM_PROTOCOL_VERSION = "1.0.0"
 
 
 ############################################################################
@@ -30,20 +34,6 @@ def json_repair(string: str) -> str:
     return string
 
 
-def get_wifi_name() -> str:
-    """
-    get the name of the wifi currently connected to
-    """
-    ret = os.popen('Netsh WLAN show interfaces').readlines()   # read interface info
-    wifiDict = dict()
-    for element in ret:
-        tmp = element.split(':')
-        if len(tmp) > 1:  # if element is separated with ":" then make it dict
-            wifiDict[tmp[0].lstrip().rstrip()] = ':'.join(tmp[1::]).lstrip().rstrip().replace('\n', '')
-    
-    return wifiDict['SSID']
-
-
 def date_for_sort(message) -> str:
     """
     go from format "hour:minute:second:millisecond - day.month.year" to "year.month.day - hour:minute:second:millisecond"
@@ -52,7 +42,7 @@ def date_for_sort(message) -> str:
     return '.'.join(reversed(y[1].split('.')))+' - '+y[0]   # reverse date and place time at end
 
 
-def debug(func: typing.Callable) -> typing.Callable:
+def debug(func: Callable) -> Callable:
     def wrapper(*args, **kw):
         try:
             return func(*args, **kw)
@@ -160,6 +150,7 @@ class Connection:
 
                 try:
                     exec(st)
+
                 except NameError:
                     raise ServerError(f'{error}:\n{st.lstrip(f"raise {error}(").rstrip(")")}')
 
@@ -323,7 +314,8 @@ class Connection:
         msg = {  # message
             'type': 'auth',
             'Name': username,
-            'pwd': password
+            'pwd': sha512(password.encode()).hexdigest(),
+            "com_protocol_version": COMM_PROTOCOL_VERSION
         }
         self._userN = username
         self.AuthKey = None  # reset AuthKey
@@ -333,7 +325,8 @@ class Connection:
         self.Server.send(mes)
 
         mes = json.loads(cryption_tools.MesCryp.decrypt(self.Server.recv(2048)))
-
+        if "Error" in mes:
+            self.error_handler(mes["Error"], mes)
         self.AuthKey = mes['AuthKey']
         
         self.receive_thread = self.executor.submit(self.receive)  # start thread for receiving
@@ -449,17 +442,17 @@ class Connection:
         
         return Name, max_num  # return results
 
-    def get_temps(self) -> tuple[float, float, float]:
+    def get_temps(self) -> List[Dict]:
         """
         get room and cpu temperature in °C as well as humidity in %
         """
         msg = {
-               'type': 'req',
-               'reqType': 'temps'
+               'type': 'get_temps',
+               'time': time.time()
         }  # set message
         res = self.wait_for_message(self.send(msg))    # send request and get response
 
-        return res['Room'], res['CPU'], res['Hum']  # return room and cpu temperature
+        return res  # return room and cpu temperature
     
     def get_cal(self) -> dict:
         """
@@ -489,7 +482,7 @@ class Connection:
         """
         msg = {
                'type': 'changePwd',
-               'newPwd': new_password
+               'newPwd': sha512(new_password.encode()).hexdigest()
         }    # set message
         self.wait_for_message(self.send(msg))  # send request and get response (success, error)
 
@@ -616,7 +609,7 @@ class Connection:
         }
         self.wait_for_message(self.send(msg))
 
-    def __iter__(self) -> typing.Iterable:
+    def __iter__(self) -> Iterable:
         """
         return dict of all User Controlled Variables when called
         """
@@ -654,7 +647,7 @@ class Connection:
         msg = {
                'type': 'setPwd',
                'User': user,
-               'newPwd': password,
+               'newPwd': sha512(password.encode()).hexdigest(),
                'time': time.time()
         }
         self.send(msg)
@@ -693,7 +686,7 @@ class Connection:
         msg = {
                'type': 'newUser',
                'Name': username,
-               'pwd': password,
+               'pwd': sha512(password.encode()).hexdigest(),
                'sec': clearance,
                'time': time.time()
         }

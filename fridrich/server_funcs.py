@@ -16,59 +16,6 @@ import traceback
 import socket
 import os
 
-import RPi.GPIO as GPIO
-import dht11
-
-# initialize GPIO
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
-GPIO.cleanup()
-
-# read data using pin 18
-instance = dht11.DHT11(pin=18)
-
-
-def read_temp() -> typing.Tuple[float, float] | typing.Tuple[None, None]:
-    """
-    returns Temperature in °C and humidity in %
-    """
-    try:
-        result = instance.read()    # happens, don't know why
-    except RuntimeError:
-        return None, None
-    not_readable = False
-    for _ in range(10):  # to get a more precise value, measure 10 times
-        with contextlib.suppress(AttributeError):
-            tmp1 = list()
-            tmp2 = list()
-            invalids = int()
-
-            while not result.is_valid():    # only if result is valid
-                invalids += 1
-                with contextlib.suppress(RuntimeError):
-                    result = instance.read()
-                
-                if invalids > 5:  # if the value of the sensor is None for 5 times
-                    not_readable = True
-                    break
-
-            if not_readable:
-                break
-
-            if result.temperature:
-                tmp1.append(result.temperature)  # only append values
-            if result.humidity:
-                tmp2.append(result.humidity)  # only append values
-
-    if len(tmp1) == 0 or len(tmp2) == 0:    # if either of the list has zero elements, return error
-        # print('Failed to read sensor')
-        return None, None
-
-    temp = round(sum(tmp1)/len(tmp1), 2)    # get average
-    hum = round(sum(tmp2)/len(tmp2), 2)
-
-    return temp, hum
-
 
 def check_if(s: str, d: dict, voting: str) -> str:
     """
@@ -261,6 +208,7 @@ class Constants:
         self.SerUpLogFile: str | None = ...
         self.ChatFile: str | None = ...
         self.VarsFile: str | None = ...
+        self.WeatherDir: str | None = ...
 
         self.varTempLog: str | None = ...
         self.varKingLogFile: str | None = ...

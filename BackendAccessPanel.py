@@ -5,11 +5,13 @@ already initialized (c)
 Author: Nilusink
 """
 from fridrich import backend
+from sys import platform
 from fridrich import *
 import socket
 import os
 
-os.system("color")  # only for windows
+if platform == "win32":
+    os.system("color")  # only for windows
 
 if __name__ == '__main__':
     from traceback import format_exc    # imports for shell

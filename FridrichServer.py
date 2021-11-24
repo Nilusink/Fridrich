@@ -20,6 +20,8 @@ from fridrich.server_funcs import *
 from fridrich.new_types import *
 from fridrich import app_store
 
+COM_PROTOCOL_VERSIONS = tuple(["1.0.0"])
+
 Const = Constants()
 debug = Debug(Const.SerlogFile, Const.errFile)
 
@@ -112,29 +114,19 @@ def client_handler() -> None:
 
     mes = json.loads(t_mes)
     if mes['type'] == 'auth':   # authorization function
+        # instantly raise an error if the COM_PROTOCOL_VERSION is not compatible
+        if mes["com_protocol_version"] not in COM_PROTOCOL_VERSIONS:
+            Communication.send(cl, {
+                "Error": "RuntimeError",
+                "info": f"Invalid COM_PROTOCOL_VERSION, allowed: {COM_PROTOCOL_VERSIONS}"
+            }, encryption=MesCryp.encrypt)
+
         verify(mes['Name'], mes['pwd'], cl, address)
         return
 
     else:
-        Communication.send(cl, {'error': 'AuthError', 'info': 'user must be logged in to user functions'}, encryption=MesCryp.encrypt)
+        Communication.send(cl, {'Error': 'AuthError', 'info': 'user must be logged in to user functions'}, encryption=MesCryp.encrypt)
         return
-
-
-@debug.catch_traceback
-def temp_updater(start_time: float) -> None:
-    """
-    update the temperature
-    """
-    global temps
-    if time.time()-start_time >= 1:    # every 2 seconds
-        start_time += 1
-        curr_temp = round(cpu.temperature, 2)
-        room_temp, room_hum = read_temp()
-        temps = {"temp": room_temp, "cptemp": curr_temp, "hum": room_hum}
-        for element in (Const.tempLog, Const.varTempLog):
-            with open(element, 'w') as output:
-                json.dump({"temp": room_temp, "cptemp": curr_temp, "hum": room_hum}, output)
-        time.sleep(.8)
 
 
 @debug.catch_traceback
@@ -371,7 +363,9 @@ class FunctionManager:
                 'create_app': app_store.receive_app,
                 "modify_app": app_store.modify_app,
                 
-                "ping": UserTools.ping
+                "ping": UserTools.ping,
+
+                "get_temps": WStationFuncs.get_all
             },
             'guest': {                                  # instead of 5 billion if'S
                 'CalEntry': ClientFuncs.calendar_handler,
@@ -388,6 +382,10 @@ class FunctionManager:
                 'end': ClientFuncs.end,
 
                 "ping": UserTools.ping
+            },
+            'w_station': {
+                "register": WStationFuncs.register,
+                "commit": WStationFuncs.commit_data
             }
         }
 
@@ -827,6 +825,123 @@ class ClientFuncs:
             Users.remove(user)
 
 
+class WStationFuncs:
+    """
+    for weather-stations to commit data to the pool
+    """
+    @staticmethod
+    def register(message: dict, user: User, *_args) -> None:
+        """
+        register a new weather-station
+        """
+        tmp: list
+        try:
+            tmp = json.load(open(Const.WeatherDir+"all.json", "r"))
+
+        except json.JSONDecodeError:
+            tmp = []
+
+        for element in tmp:
+            if message["station_name"] == element["station_name"]:
+                mes = {
+                    "content": {
+                        'Error': 'RegistryError',
+                        "info": "weather-station is already registered"
+                    },
+                    "time": message['time']
+                }
+                user.send(mes)
+                return
+
+        tmp.append({
+            "station_name": message["station_name"],
+            "location": message["location"]
+        })
+
+        with open(Const.WeatherDir+"all.json", "w") as out_file:
+            json.dump(tmp, out_file, indent=4)
+
+        with open(Const.WeatherDir+message["station_name"], "w") as out_file:
+            out_file.write("[]")
+
+        send_success(user, message)
+
+    @staticmethod
+    def commit_data(message: dict, user: User, *_args) -> None:
+        """
+        commit data for already registered stations
+        """
+        now_data: dict
+        station_data: dict
+        if not WStationFuncs.check_if_registered(message, user, *_args):
+            mes = {
+                "content": {
+                    'Error': 'RegistryError',
+                    "info": "weather-station is not registered yet"
+                },
+                "time": message['time']
+            }
+            user.send(mes)
+            return
+
+        try:
+            now_data = json.load(open(Const.WeatherDir+"now.json", "r"))
+
+        except json.JSONDecodeError:
+            now_data = {}
+
+        now_data[message["station_name"]] = {
+            "time": message["time"],
+            "temp": message["temp"],
+            "hum": message["hum"],
+            "press": message["press"]
+        }
+
+        with open(Const.WeatherDir+"now.json", "w") as out_file:
+            json.dump(now_data, out_file, indent=4)
+
+        try:
+            station_data = json.load(open(Const.WeatherDir+message["station_name"], "r"))
+
+        except json.JSONEncoder:
+            station_data = {}
+
+        station_data[message["time"]] = {
+            "temp": message["temp"],
+            "hum": message["hum"],
+            "press": message["press"]
+        }
+
+        with open(Const.WeatherDir + message["station_name"], "w") as out_file:
+            json.dump(station_data, out_file, indent=4)
+
+        send_success(user, message)
+
+    @staticmethod
+    def check_if_registered(message: dict, _user: User, *_args) -> bool:
+        """
+        check if a weather-station is already registered
+        """
+        return message["station_name"] in json.load(open(Const.WeatherDir+"all.json", "r"))
+
+    @staticmethod
+    def get_all(message: dict, user: User, *_args) -> None:
+        """
+        send a dict of all weather-stations with their current measurement
+        """
+        tmp_data: str
+        try:
+            now_data = json.load(open(Const.WeatherDir+"now.json", "r"))
+
+        except json.JSONDecodeError:
+            now_data = {}
+
+        user.send(({
+            "content": now_data,
+            "time": message["time"]
+        }))
+
+
 class UserTools:
     """
     tools to use for the user
@@ -849,25 +964,17 @@ def update() -> None:
     updates every few seconds
     """
     global reqCounter
-    start = time.time()
-    last_time_done: str = ""
     while not Const.Terminate:
-        # ----- Temperature updater ------
-        temp_updater(start)
-        
         # --------  00:00 switch ---------
         zero_switch(Const.switchTime)
 
         # --------- daily reboot ---------
         auto_reboot(Const.rebootTime)
 
-        # --------- Accounts File ---------
-        if time.strftime("%M") in ("00", "15", "30", "45") and not time.strftime("%H%M") == last_time_done:  # update every 15 minutes
-            AccManager.update_file()
-            last_time_done = time.strftime("%H%M")
-
         # ----------- Status LED -----------
         led_auto_sleep()
+
+        time.sleep(1)
 
 
 ############################################################################
