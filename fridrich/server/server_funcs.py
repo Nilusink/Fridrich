@@ -4,7 +4,7 @@ defines functions for the Server
 
 Author: Nilusink
 """
-from fridrich import new_types
+from server import new_types
 from fridrich import *
 import typing
 import contextlib
@@ -231,10 +231,10 @@ class Constants:
 
         # get variable values
         try:
-            self.dic = json.load(open(os.getcwd()+'/fridrich/settings.json', 'r'))
+            self.dic = json.load(open(os.getcwd()+'/fridrich/server/settings.json', 'r'))
 
         except FileNotFoundError:
-            self.dic = json.load(open('/home/pi/Server/fridrich/settings.json', 'r'))
+            self.dic = json.load(open('/home/pi/Server/fridrich/server/settings.json', 'r'))
         
         for Index, Value in self.dic.items():
             setattr(self, Index, Value)

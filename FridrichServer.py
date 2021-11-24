@@ -11,22 +11,18 @@ from os import system
 import sys
 
 from cryptography.fernet import InvalidToken
-from gpiozero import CPUTemperature, LED
 
 # local imports
 from fridrich.cryption_tools import key_func, MesCryp
-from fridrich.accounts import Manager
-from fridrich.server_funcs import *
-from fridrich.new_types import *
+from fridrich.server.accounts import Manager
+from fridrich.server.server_funcs import *
+from fridrich.server.new_types import *
 from fridrich import app_store
 
-COM_PROTOCOL_VERSIONS = tuple(["1.0.0"])
+COM_PROTOCOL_VERSIONS: set = {"1.0.0"}
 
 Const = Constants()
 debug = Debug(Const.SerlogFile, Const.errFile)
-
-STATUS_LED = LED(Const.status_led_pin)
-STATUS_LED.off()
 
 client: socket.socket
 
@@ -198,46 +194,6 @@ def auto_reboot(r_time: str | None = "03:00") -> None:
     if time.strftime('%H:%M') == r_time:
         time.sleep(55)
         system('sudo reboot')
-
-
-@debug.catch_traceback
-def led_auto_sleep() -> None:
-    """
-    check if the led should be on or off
-    """
-    # minutes since 00:00
-    now_hour = int(time.strftime("%H"))
-    now_minute = int(time.strftime("%M"))
-    now_time = now_hour*60 + now_minute
-
-    # sleep_time start minutes to 00:00
-    parts = Const.status_led_sleep_time[0].split(":")
-    start_hour = int(parts[0])
-    start_minute = int(parts[1])
-    start_time = start_hour*60 + start_minute
-
-    # sleep_time end minutes to 00:00
-    parts = Const.status_led_sleep_time[1].split(":")
-    end_hour = int(parts[0])
-    end_minute = int(parts[1])
-    end_time = end_hour*60 + end_minute
-
-    if start_time < end_time:
-        if start_time <= now_time < end_time:
-            STATUS_LED.off()
-            return
-        STATUS_LED.on()
-        return
-
-    elif start_time > end_time:  # if the time range is for ex. 23:00 t0 06:30
-        if start_time <= now_time or now_time < end_time:
-            STATUS_LED.off()
-            return
-        STATUS_LED.on()
-        return
-
-    # if start_time == end_time alias the time_span == 0, always keep the led on
-    STATUS_LED.on()
 
 
 class DoubleVote:
@@ -586,15 +542,7 @@ class ClientFuncs:
                 "time": message["time"]
             }
             user.send(mes)    # return standard users + new ones
-                
-        elif message['reqType'] == 'temps':  # returns the temperatures
-            global temps
-            mes = {
-                "content": {'Room': temps["temp"], 'CPU': temps["cptemp"], 'Hum': temps["hum"]},
-                "time": message["time"]
-            }
-            user.send(mes)
-                
+
         elif message['reqType'] == 'cal':   # returns the calendar dictionary
             with open(Const.CalFile, 'r') as inp:
                 mes = {
@@ -976,9 +924,6 @@ def update() -> None:
         # --------- daily reboot ---------
         auto_reboot(Const.rebootTime)
 
-        # ----------- Status LED -----------
-        led_auto_sleep()
-
         time.sleep(1)
 
 
@@ -989,13 +934,7 @@ if __name__ == '__main__':
     server = socket.socket()
     try:
         reqCounter = 0
-        cpu = CPUTemperature()
-        temps = {
-                 "temp": float(),
-                 "cptemp": float(),
-                 "hum": float()
-        }
-        
+
         AccManager = Manager(Const.crypFile)
         FunManager = FunctionManager()
 
@@ -1038,11 +977,9 @@ if __name__ == '__main__':
 
         Updater.start()
 
-        STATUS_LED.on()  # set the status lex to on
         receive()
 
     except Exception as e:
-        STATUS_LED.off()
         with suppress(Exception):
             Users.end()
         with open(Const.errFile, 'a') as out:   # debug to file because there may be an error before the debug class was initialized

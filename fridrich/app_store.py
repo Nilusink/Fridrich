@@ -6,7 +6,7 @@ functions like modifying and creating Apps
 Author: Nilusink
 """
 from concurrent.futures import ThreadPoolExecutor, Future
-from fridrich import new_types
+from fridrich.server import new_types
 import socket
 import struct
 import time
