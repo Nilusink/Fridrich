@@ -809,6 +809,16 @@ class Connection:
         self.wait_for_message(self.send(msg))
         return (time.time()-msg["time"]) * 1000
 
+    def get_server_time(self) -> dict:
+        """
+        get the current server time and voting time
+        """
+        msg = {
+            "type": "get_time",
+            "time": time.time()
+        }
+        return self.wait_for_message(self.send(msg))
+
     # magical functions
     def __repr__(self) -> str:
         return f'Backend instance (debug_mode: {self.debug_mode}, user: {self._userN}, authkey: {self.AuthKey})'

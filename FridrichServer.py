@@ -312,6 +312,7 @@ class FunctionManager:
                 "modify_app": app_store.modify_app,
                 
                 "ping": UserTools.ping,
+                "get_time":  UserTools.get_time,
 
                 "get_temps": WStationFuncs.get_all
             },
