@@ -118,57 +118,54 @@ def client_handler() -> None:
 
 
 @debug.catch_traceback
-def zero_switch(s_time: str | None = '00:00') -> None:
+def zero_switch() -> None:
     """
-    if time is s_time, execute the switch
+    execute the switch
     """
-    if time.strftime('%H:%M') == s_time:
-        with open(Const.lastFile, 'w') as output:    # get newest version of the "votes" dict and write it to the lastFile
-            with open(Const.nowFile, 'r') as inp:
-                last = inp.read()
-                output.write(last)
+    with open(Const.lastFile, 'w') as output:    # get newest version of the "votes" dict and write it to the lastFile
+        with open(Const.nowFile, 'r') as inp:
+            last = inp.read()
+            output.write(last)
 
-        Vote.set({'GayKing': {}})
-        
-        # ---- Log File (only for GayKing Voting)
-        last = json.loads(last)['GayKing']  # get last ones
+    Vote.set({'GayKing': {}})
 
-        votes1 = int()
-        attds = dict()
-        for element in last:    # create a dict with all names and a corresponding value of 0
-            attds[last[element]] = 0
+    # ---- Log File (only for GayKing Voting)
+    last = json.loads(last)['GayKing']  # get last ones
 
-        for element in last:    # if name has been voted, add a 1 to its sum
-            votes1 += 1
-            attds[last[element]] += 1
+    votes1 = int()
+    attds = dict()
+    for element in last:    # create a dict with all names and a corresponding value of 0
+        attds[last[element]] = 0
 
-        highest = str()
-        HighestInt = int()
-        for element in attds:   # gets the highest of the recently created dict
-            if attds[element] > HighestInt:
-                HighestInt = attds[element]
-                highest = element
+    for element in last:    # if name has been voted, add a 1 to its sum
+        votes1 += 1
+        attds[last[element]] += 1
 
-            elif attds[element] == HighestInt:
-                highest += '|'+element
-        
-        if HighestInt != 0:
-            KingVar[time.strftime('%d.%m.%Y')] = highest
-            
-            with open(Const.varKingLogFile, 'w') as output:
-                output.write(highest)
-            
-            debug.debug(f"backed up files and logged the GayKing ({time.strftime('%H:%M')})\nGayking: {highest}")
-        
-        else:
-            debug.debug('no votes received')
-        if time.strftime('%a') == Const.DoubleVoteResetDay:  # if Monday, reset double votes
-            dVotes = DV.value.get()
-            for element in dVotes:
-                dVotes[element] = Const.DoubleVotes
-            DV.value.set(dVotes)
+    highest = str()
+    HighestInt = int()
+    for element in attds:   # gets the highest of the recently created dict
+        if attds[element] > HighestInt:
+            HighestInt = attds[element]
+            highest = element
 
-        time.sleep(61)
+        elif attds[element] == HighestInt:
+            highest += '|'+element
+
+    if HighestInt != 0:
+        KingVar[time.strftime('%d.%m.%Y')] = highest
+
+        with open(Const.varKingLogFile, 'w') as output:
+            output.write(highest)
+
+        debug.debug(f"backed up files and logged the GayKing ({time.strftime('%H:%M')})\nGayking: {highest}")
+
+    else:
+        debug.debug('no votes received')
+    if time.strftime('%a') == Const.DoubleVoteResetDay:  # if Monday, reset double votes
+        dVotes = DV.value.get()
+        for element in dVotes:
+            dVotes[element] = Const.DoubleVotes
+        DV.value.set(dVotes)
 
 
 @debug.catch_traceback
@@ -217,16 +214,18 @@ class DoubleVote:
         """
         global Vote
 
+        user_id = str(user_id)
+
         value = self.value.get()
         tmp = Vote.get()
         if user_id in value:
             if value[user_id] < 1:
                 return False
             try:
-                tmp['GayKing'][str(user_id)+'2'] = vote
+                tmp['GayKing'][user_id+'2'] = vote
             except KeyError:
                 tmp['GayKing'] = dict()
-                tmp['GayKing'][str(user_id)+'2'] = vote
+                tmp['GayKing'][user_id+'2'] = vote
 
             value[user_id] -= 1
             self.value.set(value)
@@ -284,7 +283,8 @@ class FunctionManager:
                 'getVersion': ClientFuncs.set_version,
                 'gOuser': ClientFuncs.get_online_users,
 
-                "ping": UserTools.ping
+                "ping": UserTools.ping,
+                "trigger_voting": AdminFuncs.manual_voting
             },
             'user': {                                  # instead of 5 billion if'S
                 'vote': ClientFuncs.vote,
@@ -433,6 +433,14 @@ class AdminFuncs:
         """
         global Users
         Users.reset()
+
+    @staticmethod
+    def manual_voting(message: dict, user: User, *_args) -> None:
+        """
+        trigger a manual voting
+        """
+        zero_switch()
+        send_success(user, message)
 
     @staticmethod
     def end(_message: dict, user: User, *_args) -> None:
@@ -789,7 +797,9 @@ def update() -> None:
     global reqCounter
     while not Const.Terminate:
         # --------  00:00 switch ---------
-        zero_switch(Const.switchTime)
+        if time.strftime("%H:%M") == Const.switchTime:
+            zero_switch()
+            time.sleep(61)
 
         # --------- daily reboot ---------
         auto_reboot(Const.rebootTime)

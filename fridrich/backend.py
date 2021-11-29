@@ -166,18 +166,10 @@ class Connection:
         dictionary['time'] = time.time()
 
         if self.AuthKey:
-            stringMes = json.dumps(dictionary, ensure_ascii=True)
+            if "message" in dictionary:
+                dictionary["message"] = dictionary["message"].replace("'", "\'").replace('"', '\"')
 
-            # # replace every non ascii character with it's ord (later to be processed on receiving data)
-            # repeat = True
-            # while repeat:
-            #     for i, character in enumerate(stringMes):
-            #         if not 0 <= ord(character) <= 127:
-            #             stringMes = stringMes[:i]+str(ord(character))+stringMes[i+1::]
-            #             print(f"replaced {character} with {ord(character)}")
-            #             break
-            #     else:
-            #         repeat = False
+            stringMes = json.dumps(dictionary, ensure_ascii=True)
 
             # this is a non-ascii character. Do something.
             mes = cryption_tools.MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
@@ -713,7 +705,16 @@ class Connection:
                'type': 'rsLogins',
                'time': time.time()
         }
-        self.send(msg)
+        self.wait_for_message(self.send(msg))
+
+    def manual_voting(self) -> None:
+        """
+        trigger a voting manually
+        """
+        msg = {
+            "type": "trigger_voting",
+            "time": time.time()
+        }
         self.wait_for_message(self.send(msg))
 
     # AppStore functions
