@@ -91,6 +91,9 @@ class Connection:
         self.load_progress = float()
         self.load_program = str()
 
+        # message pool
+        self.__message_pool: list = []
+
     # properties
     @property
     def username(self) -> str:
@@ -154,37 +157,51 @@ class Connection:
                 except NameError:
                     raise ServerError(f'{error}:\n{st.lstrip(f"raise {error}(").rstrip(")")}')
 
-    def send(self, dictionary: dict) -> float:
+    def _send(self, dictionary: dict, wait: bool | None = False) -> float | None:
         """
         send messages to server
         :param dictionary: dict to send
+        :param wait: don't send the messages immediately and wait
         :return: time of sending
         """
+        self.__message_pool.append(dictionary)
+
+        if not wait:
+            return self.send()
+
+    def send(self):
         if not self.__nonzero__():
             raise AuthError("Not authenticated")
 
-        dictionary['time'] = time.time()
+        for element in self.__message_pool:
+            if "message" in element:
+                element["message"] = element["message"].replace("'", "\'").replace('"', '\"')
+
+        message = {
+            "time": time.time(),
+            "content": self.__message_pool
+        }
+
+        # reset message pool
+        self.__message_pool = []
 
         if self.AuthKey:
-            if "message" in dictionary:
-                dictionary["message"] = dictionary["message"].replace("'", "\'").replace('"', '\"')
-
-            stringMes = json.dumps(dictionary, ensure_ascii=True)
-
-            # this is a non-ascii character. Do something.
+            stringMes = json.dumps(message, ensure_ascii=True)
             mes = cryption_tools.MesCryp.encrypt(stringMes, key=self.AuthKey.encode())
             self.Server.send(mes)
             if self.debug_mode in ('normal', 'full'):
                 print(ConsoleColors.OKCYAN+stringMes+ConsoleColors.ENDC)
             if self.debug_mode == 'full':
                 print(ConsoleColors.WARNING+str(mes)+ConsoleColors.ENDC)
-            return dictionary["time"]
 
-        stringMes = json.dumps(dictionary, ensure_ascii=False)
+            return message["time"]
+
+        stringMes = json.dumps(message, ensure_ascii=False)
         self.Server.send(cryption_tools.MesCryp.encrypt(stringMes))
         if self.debug_mode in ('normal', 'full'):
             print(ConsoleColors.OKCYAN+stringMes+ConsoleColors.ENDC)
-        return dictionary["time"]
+
+        return message["time"]
 
     @debug
     def receive(self):
@@ -233,22 +250,27 @@ class Connection:
                 continue
 
             try:
-                match mes["type"]:
-                    case "function":
-                        self._messages[mes["time"]] = mes["content"]
+                # parse each message
+                for message in mes["content"]:
+                    match message["type"]:
+                        case "function":
+                            if mes["time"] not in self._messages:
+                                self._messages[mes["time"]] = []
 
-                    case "Error":
-                        self._messages["Error"] = f"{mes['Error']} - {mes['info']}"
+                            self._messages[mes["time"]].append(message)
 
-                    case "disconnect":
-                        self._messages["disconnect"] = True
-                        self.end()
+                        case "Error":
+                            self._messages["Error"] = f"{message['Error']} - {message['info']}"
 
-                    case "ServerRequest":
-                        self._server_messages[mes['time']] = mes["content"]
+                        case "disconnect":
+                            self._messages["disconnect"] = True
+                            self.end()
 
-                    case _:
-                        raise ServerError(f"server send message: {mes}")
+                        case "ServerRequest":
+                            self._server_messages[mes['time']] = message
+
+                        case _:
+                            raise ServerError(f"server send message: {mes}")
 
             except KeyError:
                 with open("backend.err.log", 'a') as out:
@@ -329,9 +351,9 @@ class Connection:
         if signed in, get security clearance
         """
         msg = {'type': 'secReq', 'time': time.time()}
-        self.send(msg)
+        self._send(msg)
         
-        resp = self.wait_for_message(self.send(msg))
+        resp = self.wait_for_message(self._send(msg))
         return resp['sec']
 
     def get_attendants(self, flag: str | None = 'now', voting: str | None = 'GayKing') -> list:
@@ -345,7 +367,7 @@ class Connection:
                'atype': flag, 
                'voting': voting
         }
-        resp = self.wait_for_message(self.send(msg))   # send and get response
+        resp = self.wait_for_message(self._send(msg))   # send and get response
 
         return resp['Names']    # return names
 
@@ -363,7 +385,7 @@ class Connection:
         if flag in ('vote', 'dvote'):
             msg['vote'] = args[0]  # if vote send vote
 
-        self.wait_for_message(self.send(msg))  # send vote and receive success or error
+        self.wait_for_message(self._send(msg))  # send vote and receive success or error
     
     def get_results(self, flag: str | None = 'now') -> dict:
         """
@@ -375,7 +397,7 @@ class Connection:
                'type': 'req',
                'reqType': flag
         }    # set message
-        res = self.wait_for_message(self.send(msg))    # send message and get response
+        res = self.wait_for_message(self._send(msg))    # send message and get response
 
         out = dict()
         for voting in res:
@@ -403,7 +425,7 @@ class Connection:
                'reqType': 'log',
                'time': time.time()
         }   # set message
-        res = self.wait_for_message(self.send(msg))    # send request and get response
+        res = self.wait_for_message(self._send(msg))    # send request and get response
         return res  # return response
 
     def get_streak(self) -> tuple[str, int]:
@@ -442,7 +464,7 @@ class Connection:
                'type': 'get_temps',
                'time': time.time()
         }  # set message
-        res = self.wait_for_message(self.send(msg))    # send request and get response
+        res = self.wait_for_message(self._send(msg))    # send request and get response
 
         return res  # return room and cpu temperature
     
@@ -454,7 +476,7 @@ class Connection:
                'type': 'req',
                'reqType': 'cal'
         }   # set message
-        res = self.wait_for_message(self.send(msg))    # send request and get response
+        res = self.wait_for_message(self._send(msg))    # send request and get response
         return res  # return response
 
     def send_cal(self, date: str, event: str) -> None:
@@ -466,7 +488,7 @@ class Connection:
                'date': date,
                'event': event
         }   # set message
-        self.wait_for_message(self.send(msg))  # send request and receive response (success, error)
+        self.wait_for_message(self._send(msg))  # send request and receive response (success, error)
 
     def change_pwd(self, new_password: str) -> None:
         """
@@ -476,7 +498,7 @@ class Connection:
                'type': 'changePwd',
                'newPwd': sha512(new_password.encode()).hexdigest()
         }    # set message
-        self.wait_for_message(self.send(msg))  # send request and get response (success, error)
+        self.wait_for_message(self._send(msg))  # send request and get response (success, error)
 
     def get_vote(self, flag: str | None = 'normal', voting: str | None = 'GayKing') -> str:
         """
@@ -488,9 +510,9 @@ class Connection:
                'flag': flag,
                'voting': voting
         }    # set message
-        resp = self.wait_for_message(self.send(msg))   # send request and get response
+        resp = self.wait_for_message(self._send(msg))   # send request and get response
 
-        return resp['Vote']  # return vote
+        return resp  # return vote
 
     def get_version(self) -> str:
         """
@@ -500,9 +522,9 @@ class Connection:
                'type': 'getVersion',
                'time': time.time()
         }  # set message
-        resp = self.wait_for_message(self.send(msg))   # send request and get response
+        resp = self.wait_for_message(self._send(msg))   # send request and get response
 
-        return resp['Version']  # return version
+        return resp  # return version
 
     def set_version(self, version: str) -> None:
         """
@@ -512,7 +534,7 @@ class Connection:
                'type': 'setVersion',
                'version': version
         }
-        self.wait_for_message(self.send(msg))  # send message and get response (success, error)
+        self.wait_for_message(self._send(msg))  # send message and get response (success, error)
 
     def get_frees(self) -> int:
         """
@@ -521,7 +543,7 @@ class Connection:
         msg = {
                'type': 'getFrees'
         }
-        resp = self.wait_for_message(self.send(msg))
+        resp = self.wait_for_message(self._send(msg))
         return resp['Value']
 
     def get_online_users(self) -> list:
@@ -531,7 +553,7 @@ class Connection:
         msg = {
                'type': 'gOuser'
         }
-        users = self.wait_for_message(self.send(msg))['users']
+        users = self.wait_for_message(self._send(msg))
         return users
 
     def send_chat(self, message: str) -> None:
@@ -542,7 +564,7 @@ class Connection:
                'type': 'appendChat',
                'message': message
         }
-        self.wait_for_message(self.send(msg))
+        self.wait_for_message(self._send(msg))
     
     def get_chat(self) -> list:
         """
@@ -551,7 +573,7 @@ class Connection:
         msg = {
                'type': 'getChat'
         }
-        raw = self.wait_for_message(self.send(msg))
+        raw = self.wait_for_message(self._send(msg))
         out = sorted(raw, key=date_for_sort)
         return out
 
@@ -563,7 +585,7 @@ class Connection:
         msg = {
             "type": "get_all_vars"
         }
-        return self.wait_for_message(self.send(msg))
+        return self.wait_for_message(self._send(msg))
 
     def get_var(self, variable: str):
         """
@@ -573,7 +595,7 @@ class Connection:
             "type": "get_var",
             "var": variable
         }
-        return self.wait_for_message(self.send(msg))["var"]
+        return self.wait_for_message(self._send(msg))["var"]
 
     def set_var(self, variable: str, value) -> None:
         """
@@ -586,7 +608,7 @@ class Connection:
             "value": value
         }
         try:
-            t = self.send(msg)
+            t = self._send(msg)
         except TypeError:
             raise TypeError("variable not json valid!")
         self.wait_for_message(t)
@@ -599,7 +621,7 @@ class Connection:
             "type": "del_var",
             "var": variable
         }
-        self.wait_for_message(self.send(msg))
+        self.wait_for_message(self._send(msg))
 
     def __iter__(self) -> Iterable:
         """
@@ -628,8 +650,8 @@ class Connection:
                'type': 'getUsers',
                'time': time.time()
         }
-        self.send(msg)
-        resp = self.wait_for_message(self.send(msg))
+        self._send(msg)
+        resp = self.wait_for_message(self._send(msg))
         return resp
     
     def admin_set_password(self, user: str, password: str) -> None:
@@ -642,8 +664,8 @@ class Connection:
                'newPwd': sha512(password.encode()).hexdigest(),
                'time': time.time()
         }
-        self.send(msg)
-        self.wait_for_message(self.send(msg))
+        self._send(msg)
+        self.wait_for_message(self._send(msg))
     
     def admin_set_username(self, old_username: str, new_username: str) -> None:
         """
@@ -655,8 +677,8 @@ class Connection:
                'NewUser': new_username,
                'time': time.time()
         }
-        self.send(msg)
-        self.wait_for_message(self.send(msg))
+        self._send(msg)
+        self.wait_for_message(self._send(msg))
 
     def admin_set_security(self, username: str, password: str) -> None:
         """
@@ -668,8 +690,8 @@ class Connection:
                'sec': password,
                'time': time.time()
         }
-        self.send(msg)
-        self.wait_for_message(self.send(msg))
+        self._send(msg)
+        self.wait_for_message(self._send(msg))
 
     def admin_add_user(self, username: str, password: str, clearance: str) -> None:
         """
@@ -682,8 +704,8 @@ class Connection:
                'sec': clearance,
                'time': time.time()
         }
-        self.send(msg)
-        self.wait_for_message(self.send(msg))
+        self._send(msg)
+        self.wait_for_message(self._send(msg))
 
     def admin_remove_user(self, username: str) -> None:
         """
@@ -694,8 +716,8 @@ class Connection:
                'Name': username,
                'time': time.time()
         }
-        self.send(msg)
-        self.wait_for_message(self.send(msg))
+        self._send(msg)
+        self.wait_for_message(self._send(msg))
 
     def admin_reset_logins(self) -> None:
         """
@@ -705,7 +727,7 @@ class Connection:
                'type': 'rsLogins',
                'time': time.time()
         }
-        self.wait_for_message(self.send(msg))
+        self.wait_for_message(self._send(msg))
 
     def manual_voting(self) -> None:
         """
@@ -715,7 +737,7 @@ class Connection:
             "type": "trigger_voting",
             "time": time.time()
         }
-        self.wait_for_message(self.send(msg))
+        self.wait_for_message(self._send(msg))
 
     # AppStore functions
     def get_apps(self) -> list:
@@ -726,7 +748,7 @@ class Connection:
             "type": "get_apps",
             "time": time.time()
         }
-        return self.wait_for_message(self.send(msg))
+        return self.wait_for_message(self._send(msg))
 
     def download_app(self, app: str, directory: str | None = ...) -> None:
         """
@@ -738,7 +760,7 @@ class Connection:
             "app": app,
             "time": time.time()
         }
-        meta = self.wait_for_message(self.send(msg))
+        meta = self.wait_for_message(self._send(msg))
 
         self.load_state = "Uploading"
         for _ in meta:
@@ -769,7 +791,7 @@ class Connection:
             "info": app_info,
             "files": [file.split("/")[-1] for file in files]
         }
-        self.wait_for_message(self.send(msg))
+        self.wait_for_message(self._send(msg))
         self.load_state = "Uploading"
         self._send_app(files, app_name)
 
@@ -793,7 +815,7 @@ class Connection:
             "files": [file.split("/")[-1].split("\\")[-1] for file in files],
             "to_remove": to_delete
         }
-        self.wait_for_message(self.send(msg))
+        self.wait_for_message(self._send(msg))
         self._send_app(files, app_name)
 
     # tools
@@ -806,7 +828,7 @@ class Connection:
             "type": "ping",
             "time": time.time()
         }
-        self.wait_for_message(self.send(msg))
+        self.wait_for_message(self._send(msg))
         return (time.time()-msg["time"]) * 1000
 
     def get_server_time(self) -> dict:
@@ -817,7 +839,7 @@ class Connection:
             "type": "get_time",
             "time": time.time()
         }
-        return self.wait_for_message(self.send(msg))
+        return self.wait_for_message(self._send(msg))
 
     # magical functions
     def __repr__(self) -> str:
@@ -851,7 +873,7 @@ class Connection:
                'time': time.time()
         }    # set message
         with suppress(ConnectionResetError, ConnectionAbortedError):
-            self.send(msg)  # send message
+            self._send(msg)  # send message
         app_store.executor.shutdown(wait=False)
         self.AuthKey = None
         self._userN = None

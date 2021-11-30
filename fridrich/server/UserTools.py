@@ -4,22 +4,18 @@ from fridrich.server import Const
 from time import strftime
 
 
-def ping(message: dict, user: User, *_args) -> None:
+def ping(_message: dict, user: User, *_args) -> None:
     """
     immediately send back a message (to measure latency)
     """
-    send_success(user, message)
+    send_success(user)
 
 
-def get_time(message: dict, user: User, *_args) -> None:
+def get_time(_message: dict, user: User, *_args) -> None:
     """
     get the current server time
     """
-    msg = {
-        "content": {
+    user.send({
             "now": strftime("%H:%M:%S"),
             "voting": Const.switchTime
-        },
-        "time": message["time"]
-    }
-    user.send(msg)
+        })

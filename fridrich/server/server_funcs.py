@@ -17,15 +17,11 @@ import traceback
 import socket
 
 
-def send_success(user: new_types.User, message: dict) -> None:
+def send_success(user: new_types.User) -> None:
     """
     send the success message to the client
     """
-    mes = {
-        "time": message['time'],
-        "content": {'Success': 'Done'}
-    }
-    user.send(mes)
+    user.send({'Success': 'Done'})
 
 
 def check_if(s: str, d: dict, voting: str) -> str:

@@ -23,12 +23,9 @@ def register(message: dict, user: User, *_args) -> None:
     for element in tmp:
         if message["station_name"] == element["station_name"]:
             mes = {
-                "content": {
                     'Error': 'RegistryError',
                     "info": "weather-station is already registered"
-                },
-                "time": message['time']
-            }
+                }
             user.send(mes)
             return
 
@@ -43,7 +40,7 @@ def register(message: dict, user: User, *_args) -> None:
     with open(Const.WeatherDir+message["station_name"], "w") as out_file:
         out_file.write("[]")
 
-    send_success(user, message)
+    send_success(user)
 
 
 def commit_data(message: dict, user: User, *_args) -> None:
@@ -54,12 +51,9 @@ def commit_data(message: dict, user: User, *_args) -> None:
     station_data: dict
     if not check_if_registered(message, user, *_args):
         mes = {
-            "content": {
                 'Error': 'RegistryError',
                 "info": "weather-station is not registered yet"
-            },
-            "time": message['time']
-        }
+            }
         user.send(mes)
         return
 
@@ -94,7 +88,7 @@ def commit_data(message: dict, user: User, *_args) -> None:
     with open(Const.WeatherDir + message["station_name"], "w") as out_file:
         json.dump(station_data, out_file, indent=4)
 
-    send_success(user, message)
+    send_success(user)
 
 
 def check_if_registered(message: dict, _user: User, *_args) -> bool:
@@ -104,7 +98,7 @@ def check_if_registered(message: dict, _user: User, *_args) -> bool:
     return message["station_name"] in json.load(open(Const.WeatherDir+"all.json", "r"))
 
 
-def get_all(message: dict, user: User, *_args) -> None:
+def get_all(_message: dict, user: User, *_args) -> None:
     """
     send a dict of all weather-stations with their current measurement
     """
@@ -115,7 +109,4 @@ def get_all(message: dict, user: User, *_args) -> None:
     except json.JSONDecodeError:
         now_data = {}
 
-    user.send(({
-        "content": now_data,
-        "time": message["time"]
-    }))
+    user.send(now_data)

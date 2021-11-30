@@ -101,7 +101,7 @@ def client_handler() -> None:
         return
 
     mes = json.loads(t_mes)
-    if mes['type'] == 'auth':   # authorization function
+    if "type" in mes and mes['type'] == 'auth':   # authorization function
         # instantly raise an error if the COM_PROTOCOL_VERSION is not compatible
         if mes["com_protocol_version"] not in COM_PROTOCOL_VERSIONS:
             Communication.send(cl, {
@@ -371,16 +371,11 @@ class AdminFuncs:
     Manages the Admin Functions
     """
     @staticmethod
-    def get_accounts(message: dict, user: User, *_args) -> None:
+    def get_accounts(_message: dict, user: User, *_args) -> None:
         """
         get all users | passwords | clearances
         """
-        mes = {
-            "time": message["time"],
-            "content": AccManager.get_accounts()  # getting and decrypting accounts list
-        }
-
-        user.send(mes)  # sending list to client
+        user.send(AccManager.get_accounts())  # sending list to client
     
     @staticmethod
     def set_password(message: dict, user: User, *_args) -> None:
@@ -388,7 +383,7 @@ class AdminFuncs:
         set a new password for the given user
         """
         AccManager.set_pwd(message['User'], message['newPwd'])   # set new password
-        send_success(user, message)  # send success
+        send_success(user)  # send success
 
     @staticmethod
     def set_username(message: dict, user: User, *_args) -> None:
@@ -396,7 +391,7 @@ class AdminFuncs:
         change the username for the given user
         """
         AccManager.set_username(message['OldUser'], message['NewUser'])  # change account name
-        send_success(user, message)  # send success
+        send_success(user)  # send success
     
     @staticmethod
     def set_security(message: dict, user: User, *_args) -> None:
@@ -404,7 +399,7 @@ class AdminFuncs:
         change the clearance for the given user
         """
         AccManager.set_user_sec(message['Name'], message['sec'])
-        send_success(user, message)
+        send_success(user)
 
     @staticmethod
     def add_user(message: dict, user: User, *_args) -> None:
@@ -417,7 +412,7 @@ class AdminFuncs:
         except NameError:
             user.send({"Error": "NameError", "info": "user already exists"})
 
-        send_success(user, message)
+        send_success(user)
     
     @staticmethod
     def remove_user(message: dict, user: User, *_args) -> None:
@@ -425,7 +420,7 @@ class AdminFuncs:
         remove user by username
         """
         AccManager.remove_user(message['Name'])
-        send_success(user, message)
+        send_success(user)
 
     @staticmethod
     def reset_user_logins(*_args) -> None:
@@ -436,12 +431,12 @@ class AdminFuncs:
         Users.reset()
 
     @staticmethod
-    def manual_voting(message: dict, user: User, *_args) -> None:
+    def manual_voting(_message: dict, user: User, *_args) -> None:
         """
         trigger a manual voting
         """
         zero_switch()
-        send_success(user, message)
+        send_success(user)
 
     @staticmethod
     def end(_message: dict, user: User, *_args) -> None:
@@ -474,7 +469,7 @@ class ClientFuncs:
         Vote.set(tmp)  # set vote
         debug.debug(f'got vote: {message["vote"]}                     .')  # print that it received vote (debugging)
 
-        send_success(user, message)
+        send_success(user)
 
     @staticmethod
     def unvote(message: dict, user: User, *_args) -> None:
@@ -489,7 +484,7 @@ class ClientFuncs:
             del tmp[message['voting']][
                 str(user.id)]  # try to remove vote from client, if client hasn't voted yet, ignore it
         Vote.set(tmp)
-        send_success(user, message)
+        send_success(user)
 
     @staticmethod
     def calendar_handler(message: dict, user: User, *_args) -> None:
@@ -507,7 +502,7 @@ class ClientFuncs:
             debug.debug(
                 f'got Calender: {message["date"]} - "{message["event"]}"')  # notify that there has been a calendar entry
 
-        send_success(user, message)
+        send_success(user)
 
     @staticmethod
     def req_handler(message: dict, user: User, *_args) -> None:
@@ -518,43 +513,23 @@ class ClientFuncs:
         reqCounter += 1
         if message['reqType'] == 'now':  # now is for the current "votes" dictionary
             with open(Const.nowFile, 'r') as inp:
-                mes = {
-                    "content": json.load(inp),
-                    "time": message["time"]
-                }
-                user.send(mes)
+                user.send(json.load(inp))
 
         elif message['reqType'] == 'last':  # last is for the "votes" dictionary of the last day
             with open(Const.lastFile, 'r') as inp:
-                mes = {
-                    "content": json.load(inp),
-                    "time": message["time"]
-                }
-                user.send(mes)
+                user.send(json.load(inp))
 
         elif message['reqType'] == 'log':  # returns the log of the GayKings
             with open(Const.KingFile, 'r') as inp:
-                mes = {
-                    "content": json.load(inp),
-                    "time": message["time"]
-                }
-                user.send(mes)
+                user.send(json.load(inp))
 
         elif message['reqType'] == 'attds':  # returns All attendants (also non standard users)
             new_ones = get_new_ones(message['atype'], Vote, Const.lastFile, message['voting'])
-            mes = {
-                "content": {'Names': ['Lukas', 'Niclas', 'Melvin'] + new_ones},
-                "time": message["time"]
-            }
-            user.send(mes)  # return standard users + new ones
+            user.send({'Names': ['Lukas', 'Niclas', 'Melvin'] + new_ones})  # return standard users + new ones
 
         elif message['reqType'] == 'cal':  # returns the calendar dictionary
             with open(Const.CalFile, 'r') as inp:
-                mes = {
-                    "content": json.load(inp),
-                    "time": message["time"]
-                }
-                user.send(mes)
+                user.send(json.load(inp))
 
         else:  # notify if an invalid request has been sent
             debug.debug(f'Invalid Request {message["reqType"]} from user {user.name}')
@@ -574,7 +549,7 @@ class ClientFuncs:
             c_string = cryption_tools.Low.encrypt(fstring)
             output.write(c_string)
 
-        send_success(user, message)
+        send_success(user)
 
     @staticmethod
     def get_vote(message: dict, user: User, *_args) -> None:
@@ -603,23 +578,16 @@ class ClientFuncs:
             user.send(mes)
             return
         cVote = Vote[message['voting']][name]
-        mes = {
-            "content": {'Vote': cVote, 'time': message['time']},
-            "time": message["time"]
-        }
-        user.send(mes)
+
+        user.send(cVote)
 
     @staticmethod
-    def get_version(message: dict, user: User, *_args) -> None:
+    def get_version(_message: dict, user: User, *_args) -> None:
         """
         read the Version variable
         """
         vers = open(Const.versFile, 'r').read()
-        mes = {
-            "content": {'Version': vers},
-            "time": message["time"]
-        }
-        user.send(mes)
+        user.send(vers)
 
     @staticmethod
     def set_version(message: dict, user: User, *_args) -> None:
@@ -629,7 +597,7 @@ class ClientFuncs:
         with open(Const.versFile, 'w') as output:
             output.write(message['version'])
 
-        send_success(user, message)
+        send_success(user)
 
     @staticmethod
     def double_vote(message: dict, user: User, *_args) -> None:
@@ -640,13 +608,9 @@ class ClientFuncs:
         resp = check_if(message['vote'], Vote.get(), message['voting'])
         resp = DV.vote(resp, user_id)
         if resp:
-            send_success(user, message)
+            send_success(user)
         else:
-            mes = {
-                "content": {'Error': 'NoVotes'},
-                "time": message["time"]
-            }
-            user.send(mes)
+            user.send({'Error': 'NoVotes'})
 
     @staticmethod
     def double_unvote(message: dict, user: User, *_args) -> None:
@@ -656,7 +620,7 @@ class ClientFuncs:
         global DV
         user_id = user.id
         DV.unvote(user_id, message['voting'])
-        send_success(user, message)
+        send_success(user)
 
     @staticmethod
     def get_free_votes(message: dict, user: User, *_args) -> None:
@@ -674,22 +638,15 @@ class ClientFuncs:
             }
             user.send(mes)
             return
-        mes = {
-            "content": {'Value': frees},
-            "time": message["time"]
-        }
-        user.send(mes)
+
+        user.send({'Value': frees})
 
     @staticmethod
-    def get_online_users(message: dict, user: User, *_args) -> None:
+    def get_online_users(_message: dict, user: User, *_args) -> None:
         """
         get all logged in users
         """
-        mes = {
-            "content": {'users': list([t_user.name for t_user in Users])},
-            "time": message["time"]
-        }
-        user.send(mes)
+        user.send(list([t_user.name for t_user in Users]))
 
     @staticmethod
     def append_chat(message: dict, user: User, *_args) -> None:
@@ -697,34 +654,24 @@ class ClientFuncs:
         Add message to chat
         """
         Chat.add(message['message'], user.name)
-        send_success(user, message)
+        send_success(user)
 
     @staticmethod
-    def get_chat(message: dict, user: User, *_args) -> None:
+    def get_chat(_message: dict, user: User, *_args) -> None:
         """
         get Chat
         """
-        mes = {
-            "content": Chat.get(),
-            "time": message["time"]
-        }
-        user.send(mes)
+        user.send(Chat.get())
 
     @staticmethod
-    def get_all_vars(message: dict, user: User, *_args) -> None:
+    def get_all_vars(_message: dict, user: User, *_args) -> None:
         """
         get all user controlled variables
         """
-        _variables = dict()
         with suppress(FileNotFoundError):
-            _variables = json.load(open(Const.VarsFile, 'r'))
+            variables = json.load(open(Const.VarsFile, 'r'))
 
-        msg = {
-            "content": _variables,
-            "time": message["time"]
-        }
-
-        user.send(msg)
+        user.send(variables)
 
     @staticmethod
     def get_var(message: dict, user: User, *_args) -> None:
@@ -737,13 +684,12 @@ class ClientFuncs:
 
         if message["var"] in _variables:
             msg = {
-                "content": {"var": _variables[message["var"]]},
-                "time": message["time"]
+                "var": _variables[message["var"]]
             }
         else:
             msg = {
-                "content": {"Error": "KeyError", "info": {message['var']}},
-                "time": message["time"]
+                "Error": "KeyError",
+                "info": {message['var']}
             }
         user.send(msg)
 
@@ -758,7 +704,7 @@ class ClientFuncs:
         except FileNotFoundError:
             tmp = dict()
         json.dump(tmp, open(Const.VarsFile, 'w'), indent=4)
-        send_success(user, message)
+        send_success(user)
 
     @staticmethod
     def del_var(message: dict, user: User, *_args) -> None:
@@ -772,7 +718,7 @@ class ClientFuncs:
             user.send({"content": {"Error": "KeyError", "info": message["var"]}, "time": message["time"]})
 
         json.dump(tmp, open(Const.VarsFile, 'w'), indent=4)
-        send_success(user, message)
+        send_success(user)
 
     @staticmethod
     def end(_message: dict, user: User, *_args) -> None:
