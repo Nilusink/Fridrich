@@ -256,7 +256,7 @@ class User:
                 self.send({'Error': 'NotEncryptedError'}, force=True)
                 return
 
-    def send(self, message: dict | list | str, message_type: str | None = 'function', force: bool | None = False) -> None:
+    def send(self, message: dict | list | str | tuple, message_type: str | None = 'function', force: bool | None = False) -> None:
         """
         save the message(s) for sending
         """
