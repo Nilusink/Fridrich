@@ -190,7 +190,8 @@ class User:
         self.loop = True
 
         # message pool
-        self.__message_pool: list = []
+        self.__message_pool_names: typing.Tuple[str, str] = ("", "")
+        self.__message_pool: typing.Dict[str, typing.Any] = {}
         self.__message_pool_index: int = 0
         self.__message_pool_max: int = 0
         self.__message_pool_time: str = ""
@@ -234,7 +235,7 @@ class User:
                 mes = json.loads(mes)
 
                 # create message pool for request
-                self.__message_pool = [None] * len(mes["content"])
+                self.__message_pool_names = tuple(func_name["type"] for func_name in mes["content"])
                 self.__message_pool_max = len(mes["content"])
                 self.__message_pool_time = mes["time"]
                 self.__message_pool_index = 0
@@ -242,10 +243,12 @@ class User:
                 if not mes or mes is None:
                     self.send({'Error': 'MessageError', 'info': 'Invalid Message/AuthKey'}, force=True)
                     continue
+
                 for message in mes["content"]:
                     self.exec_func(message)
 
             except cryption_tools.NotEncryptedError:
+                print("not encrypted")
                 self.send({'Error': 'NotEncryptedError'}, force=True)
                 return
 
@@ -253,22 +256,25 @@ class User:
         """
         save the message(s) for sending
         """
-        if self.__message_pool_max == len(self.__message_pool) and not force:
+        message = {
+            "content": message
+        }
+        if self.__message_pool_max == sum([0 if element is None else 1 for element in self.__message_pool]) and not force:
             raise IndexError("trying to send message but no pool index is out of range")
 
         message['type'] = message_type
 
         try:
-            self.__message_pool[self.__message_pool_index] = message
+            self.__message_pool[self.__message_pool_names[self.__message_pool_index]] = message
             self.__message_pool_index += 1
 
         except IndexError:  # if used with "force", appends the message in case of a IndexError (if the pool hasn't been created or something)
             if force:
-                self.__message_pool.append(message)
+                self.__message_pool["forced"] = message
             else:
                 raise
 
-        if force or self.__message_pool_index == self.__message_pool_max:
+        if force or self.__message_pool_index == self.__message_pool_max:   # aka all functions are done
             self._send()
 
     def _send(self) -> None:
@@ -289,10 +295,11 @@ class User:
         self.__client.sendall(mes)
 
         # reset message pool
-        self.__message_pool = []
+        self.__message_pool = {}
         self.__message_pool_index = 0
         self.__message_pool_max = 0
         self.__message_pool_time = ""
+        self.__message_pool_names = ()
 
     def exec_func(self, message: dict):
         """

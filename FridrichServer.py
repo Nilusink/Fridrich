@@ -24,7 +24,7 @@ from fridrich.server import *
 from fridrich.cryption_tools import key_func, MesCryp
 from fridrich import app_store
 
-COM_PROTOCOL_VERSIONS: set = {"1.0.0"}
+COM_PROTOCOL_VERSIONS: set = {"1.1.0"}
 
 client: socket.socket
 Users = UserList()
@@ -104,9 +104,10 @@ def client_handler() -> None:
     if "type" in mes and mes['type'] == 'auth':   # authorization function
         # instantly raise an error if the COM_PROTOCOL_VERSION is not compatible
         if mes["com_protocol_version"] not in COM_PROTOCOL_VERSIONS:
+            debug.debug(f"Client tried to connect with COM_PROTOCOL_VERSION == {mes['com_protocol_version']}, allowed: {COM_PROTOCOL_VERSIONS}")
             Communication.send(cl, {
                 "Error": "RuntimeError",
-                "info": f"Invalid COM_PROTOCOL_VERSION, allowed: {COM_PROTOCOL_VERSIONS}"
+                "info": f"Invalid COM_PROTOCOL_VERSION"
             }, encryption=MesCryp.encrypt)
 
         verify(mes['Name'], mes['pwd'], cl, address)
@@ -294,7 +295,11 @@ class FunctionManager:
                 'getVote': ClientFuncs.get_vote,
                 'getFrees': ClientFuncs.get_free_votes,
                 'CalEntry': ClientFuncs.calendar_handler,
-                'req': ClientFuncs.req_handler,
+
+                "gRes": ClientFuncs.results,
+                "gLog": ClientFuncs.get_log,
+                "gCal": ClientFuncs.get_cal,
+
                 'end': ClientFuncs.end,
                 'changePwd': ClientFuncs.change_pwd,
                 'getVersion': ClientFuncs.get_version,
@@ -320,8 +325,11 @@ class FunctionManager:
                 'CalEntry': ClientFuncs.calendar_handler,
                 'getVersion': ClientFuncs.get_version,
                 'getVote': ClientFuncs.get_vote,
-                'req': ClientFuncs.req_handler,
                 'end': ClientFuncs.end,
+
+                "gRes": ClientFuncs.results,
+                "gLog": ClientFuncs.get_log,
+                "gCal": ClientFuncs.get_cal,
 
                 "ping": UserTools.ping
             },
@@ -505,34 +513,37 @@ class ClientFuncs:
         send_success(user)
 
     @staticmethod
-    def req_handler(message: dict, user: User, *_args) -> None:
+    def results(message: dict, user: User, *_args) -> None:
         """
-        Handle some default requests / logs
+        handle results requests
         """
-        global reqCounter, Vote
-        reqCounter += 1
-        if message['reqType'] == 'now':  # now is for the current "votes" dictionary
-            with open(Const.nowFile, 'r') as inp:
-                user.send(json.load(inp))
+        match message["flag"]:
+            case "now":
+                with open(Const.nowFile, 'r') as inp:
+                    user.send(json.load(inp))
 
-        elif message['reqType'] == 'last':  # last is for the "votes" dictionary of the last day
-            with open(Const.lastFile, 'r') as inp:
-                user.send(json.load(inp))
+            case "last":
+                with open(Const.lastFile, 'r') as inp:
+                    user.send(json.load(inp))
 
-        elif message['reqType'] == 'log':  # returns the log of the GayKings
-            with open(Const.KingFile, 'r') as inp:
-                user.send(json.load(inp))
+            case _:
+                raise KeyError(f"no results type \"{message['flag']}\"")
 
-        elif message['reqType'] == 'attds':  # returns All attendants (also non standard users)
-            new_ones = get_new_ones(message['atype'], Vote, Const.lastFile, message['voting'])
-            user.send({'Names': ['Lukas', 'Niclas', 'Melvin'] + new_ones})  # return standard users + new ones
+    @staticmethod
+    def get_log(_message: dict, user: User, *_args) -> None:
+        """
+        get the GayKings log
+        """
+        with open(Const.KingFile, 'r') as inp:
+            user.send(json.load(inp))
 
-        elif message['reqType'] == 'cal':  # returns the calendar dictionary
-            with open(Const.CalFile, 'r') as inp:
-                user.send(json.load(inp))
-
-        else:  # notify if an invalid request has been sent
-            debug.debug(f'Invalid Request {message["reqType"]} from user {user.name}')
+    @staticmethod
+    def get_cal(_message: dict, user: User, *_args) -> None:
+        """
+        get the calendar dictionary
+        """
+        with open(Const.CalFile, 'r') as inp:
+            user.send(json.load(inp))
 
     @staticmethod
     def change_pwd(message: dict, user: User, *_args) -> None:
