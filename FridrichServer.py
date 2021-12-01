@@ -343,17 +343,23 @@ class FunctionManager:
             'w_station': {
                 "register": WStationFuncs.register,
                 "commit": WStationFuncs.commit_data
+            },
+            "all": {
+                "secReq": get_sec_clearance
             }
         }
 
-    def exec(self, message: dict, user: User) -> typing.Tuple[bool, typing.Any] | typing.Tuple[str, str]:
+    def exec(self, message: dict, user: User) -> None:
         """
         execute the requested function or return error
         """
+        error: dict = {}
         if user.sec in self.switch:
             if message['type'] in self.switch[user.sec]:
                 self.switch[user.sec][message['type']](message, user)
-                return False, None
+
+            elif message["type"] in self.switch["all"]:
+                self.switch["all"][message['type']](message, user)
             
             else:
                 isIn = False
@@ -365,13 +371,32 @@ class FunctionManager:
                 
                 if isIn:
                     debug.debug(f'user {user.sec} tried to use function {message["type"]} ({req})')
-                    return 'ClearanceIssue', f'Clearance required: {req}'
+                    error = {
+                        "Error": "ClearanceIssue",
+                        "info": f'Clearance required: {req}'
+                    }
                 
                 else:
-                    return 'InvalidRequest', f'Invalid Request: {message["type"]}'
+                    error = {
+                        "Error": "InvalidRequest",
+                        "info": f'Invalid Request: {message["type"]}'
+                    }
 
         else:
-            return 'ClearanceIssue', f'Clearance not set: {user.sec}'
+            error = {
+                "Error": "ClearanceIssue",
+                "info": f'Clearance not set: {user.sec}'
+            }
+
+        if error:
+            user.send(error, message_type="Error", force=True)
+
+
+def get_sec_clearance(_message: dict, user: User, *_args):
+    """
+    send the user its security clearance
+    """
+    user.send(user.sec)
 
 
 class AdminFuncs:

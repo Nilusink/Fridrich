@@ -19,8 +19,12 @@ class FileVar:
         """
         create a variable synced to one or more files
         """
-        self.files = files if type(files) in (list, tuple) else [files]
-        
+        # filter all items that are not a string
+        self.files = [file if type(file) == str else ... for file in files] if type(files) in (list, tuple) else [files]
+        # remove all non standard items
+        while ... in self.files:
+            self.files.remove(...)
+
         self.value = value
         self.type = type(value)
         
@@ -241,7 +245,7 @@ class User:
                 self.__message_pool_index = 0
 
                 if not mes or mes is None:
-                    self.send({'Error': 'MessageError', 'info': 'Invalid Message/AuthKey'}, force=True)
+                    self.send({'Error': 'MessageError', 'info': 'Invalid Message/AuthKey'}, message_type="Error", force=True)
                     continue
 
                 for message in mes["content"]:
@@ -305,23 +309,12 @@ class User:
         """
         execute functions for the client
         """
-        if message["type"] == "secReq":
-            msg = {
-                "content": {"sec": self.__sec},
-                "time": message["time"]
-            }
-            self.send(msg)
+        try:
+            self.manager(message, self)
+
+        except Exception as e:
+            self.debugger.write_traceback(e, from_user=self.name)
             return
-        else:
-            try:
-                error, info = self.manager(message, self)
-
-            except Exception as e:
-                self.debugger.write_traceback(e, from_user=self.name)
-                return
-
-        if error:
-            self.send({"Error": error, "info": info}, message_type='Error')
 
     def end(self) -> None:
         print(f"Disconnecting: {self}")
