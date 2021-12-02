@@ -24,16 +24,6 @@ COMM_PROTOCOL_VERSION = "1.1.0"
 ############################################################################
 #                             other functions                              #
 ############################################################################
-def json_repair(string: str) -> str:
-    """
-    if two messages are scrambled together, split them and use the first one
-    """
-    parts = string.split('}{')  # happens sometimes, probably because python is to slow
-    if len(parts) > 1:
-        return parts[0]+'}'
-    return string
-
-
 def date_for_sort(message) -> str:
     """
     go from format "hour:minute:second:millisecond - day.month.year" to "year.month.day - hour:minute:second:millisecond"
@@ -130,7 +120,7 @@ class Connection:
     def debug_mode(self, value: str) -> None:
         allowed = ("normal", "full", False)
         if value not in allowed:
-            raise ValueError(f"must be {' or '.join(allowed)}")
+            raise ValueError(f"must be {' or '.join([str(el) for el in allowed])}")
         self._debug_mode = value
 
     # "local" functions
@@ -214,6 +204,7 @@ class Connection:
     def _send(self, dictionary: dict, wait: bool | None = False) -> float | None:
         """
         send messages to server
+
         :param dictionary: dict to send
         :param wait: don't send the messages immediately and wait
         :return: time of sending
@@ -224,8 +215,15 @@ class Connection:
             return self.__send()
 
     def __send(self) -> float:
+        """
+        the actual sending process
+        """
+
         if not self.__nonzero__():
             raise AuthError("Not authenticated")
+
+        if len(self.__message_pool) == 0:
+            raise ValueError("Message Pool Empty")
 
         for element in self.__message_pool:
             if "message" in element:
@@ -367,6 +365,8 @@ class Connection:
             print(f"found message: {out}")
 
         out = self.response_handler(out)
+        if len(out) == 0:
+            raise MessageError("received empty message pool from server")
 
         return out
 

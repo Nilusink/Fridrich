@@ -599,19 +599,11 @@ class ClientFuncs:
 
         name = str(user.id) + x
         if not message['voting'] in Vote.get():
-            mes = {
-                "content": {'Error': 'NotVoted'},
-                "time": message['time']
-            }
-            user.send(mes)
+            user.send({'Error': 'NotVoted'})
             return
 
         if name not in Vote[message['voting']]:
-            mes = {
-                "content": {'Error': 'NotVoted'},
-                "time": message["time"]
-            }
-            user.send(mes)
+            user.send({'Error': 'NotVoted'})
             return
         cVote = Vote[message['voting']][name]
 
@@ -659,7 +651,7 @@ class ClientFuncs:
         send_success(user)
 
     @staticmethod
-    def get_free_votes(message: dict, user: User, *_args) -> None:
+    def get_free_votes(_message: dict, user: User, *_args) -> None:
         """
         get free double votes of logged in user
         """
@@ -668,11 +660,7 @@ class ClientFuncs:
         frees = DV.get_frees(user_id)
 
         if frees is False and frees != 0:
-            mes = {
-                "content": {'Error': 'RegistryError'},
-                "time": message["time"]
-            }
-            user.send(mes)
+            user.send({'Error': 'RegistryError'})
             return
 
         user.send({'Value': frees})
@@ -751,7 +739,7 @@ class ClientFuncs:
         if message["var"] in tmp:
             del tmp[message["var"]]
         else:  # if KeyError occurs
-            user.send({"content": {"Error": "KeyError", "info": message["var"]}, "time": message["time"]})
+            user.send({"Error": "KeyError", "info": message["var"]})
 
         json.dump(tmp, open(Const.VarsFile, 'w'), indent=4)
         send_success(user)
