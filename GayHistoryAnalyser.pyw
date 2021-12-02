@@ -158,11 +158,11 @@ def main() -> None:
     """
     main Function
     """
-    c = backend.Connection(host="192.168.10.15")
-    c.auth("Fuehrer", "13102502")
+    with backend.Connection(host="192.168.10.15") as c:
+        c.auth("Fuehrer", "13102502")
 
-    log = c.get_log()
-    c.end()
+        log = c.get_log()
+        c.end()
 
     months = {}
     for element, kings in log.items():

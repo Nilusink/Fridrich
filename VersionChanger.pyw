@@ -97,9 +97,9 @@ class Window:
         end the connection and close the window
         """
         self.root.destroy()
-        self.c.end()
 
 
 if __name__ == '__main__':
-    w = Window(Connection())
-    w.run()
+    with Connection(host="192.168.10.15") as c:
+        w = Window(c)
+        w.run()

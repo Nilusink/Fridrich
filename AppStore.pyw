@@ -689,9 +689,9 @@ def main() -> None:
     """
     main program
     """
-    c = Connection(debug_mode=Off, host="192.168.10.15")
-    w = Window(c)
-    w.run()
+    with Connection(debug_mode=Off, host="192.168.10.15") as c:
+        w = Window(c)
+        w.run()
 
 
 if __name__ == '__main__':

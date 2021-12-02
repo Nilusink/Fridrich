@@ -48,21 +48,22 @@ def debug(func: Callable) -> Callable:
 #                      Server Communication Class                          #
 ############################################################################
 class Connection:
-    def __init__(self, debug_mode: str | None = Off, host: str | None = 'fridrich') -> None:
+    def __init__(self, debug_mode: str | None = Off, host: str | None = ...) -> None:
         """
         connect with any fridrich server
-        options:
-            ``debug_mode`` - ``"normal"`` | ``"full"`` | ``False``
 
-            ``host`` - name of the host, either IP or hostname / address
+        :param debug_mode: "normal" | "full" | False
+        :param host: name of the host, either IP or hostname / address
         """
         self._messages = dict()
         self._server_messages = dict()
         self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # create socket instance
         self._debug_mode = debug_mode
 
-        self.__ServerIp = ""
-        self.server_ip = host
+        self.__ServerIp = None
+
+        if host is not ...:
+            self.server_ip = host
 
         if self._debug_mode in ('normal', 'full'):
             print(ConsoleColors.OKGREEN + 'Server IP: ' + self.server_ip + ConsoleColors.ENDC)
@@ -218,6 +219,9 @@ class Connection:
         """
         the actual sending process
         """
+        # check errors before executing
+        if not self.server_ip:
+            raise Error("no host set")
 
         if not self.__nonzero__():
             raise AuthError("Not authenticated")
@@ -385,6 +389,9 @@ class Connection:
         """
         authenticate with the server
         """
+        if not self.server_ip:
+            raise Error("no host set")
+
         if not self.loop:
             raise Error("already called 'end'")
         self.reconnect()
@@ -899,9 +906,8 @@ class Connection:
         return self
 
     def __exit__(self, exception_type, value, traceback):
-        if exception_type:
-            self.end(revive=False)
-            print(f"{ConsoleColors.FAIL}Connection closed after {value}{ConsoleColors.ENDC}")
+        self.end(revive=False)
+        if exception_type is not None:
             return False
         return True
 
