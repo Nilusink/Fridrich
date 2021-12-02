@@ -895,6 +895,16 @@ class Connection:
         """
         return self.__nonzero__()
 
+    def __enter__(self) -> "Connection":
+        return self
+
+    def __exit__(self, exception_type, value, traceback):
+        if exception_type:
+            self.end(revive=False)
+            print(f"{ConsoleColors.FAIL}Connection closed after {value}{ConsoleColors.ENDC}")
+            return False
+        return True
+
     # the end
     def end(self, revive: bool | None = False) -> None:
         """
@@ -903,7 +913,7 @@ class Connection:
         msg = {
                'type': 'end'
         }    # set message
-        with suppress(ConnectionResetError, ConnectionAbortedError):
+        with suppress(ConnectionResetError, ConnectionAbortedError, AuthError):
             self._send(msg, wait=False)  # send message
         app_store.executor.shutdown(wait=False)
         self.AuthKey = None
