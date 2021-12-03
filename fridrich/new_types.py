@@ -256,7 +256,7 @@ class User:
                 self.send({'Error': 'NotEncryptedError'}, force=True)
                 return
 
-    def send(self, message: dict | list | str | tuple, message_type: str | None = 'function', force: bool | None = False) -> None:
+    def send(self, message: iter, message_type: str | None = 'function', force: bool | None = False) -> None:
         """
         save the message(s) for sending
         """
@@ -333,7 +333,7 @@ class User:
         return f"<class User (name: {self.__name}, sec: {self.__sec})>"
 
     def __contains__(self, item) -> bool:
-        return item in self.__name or item in self.__key
+        return item == self.name or item == self.id
 
 
 class UserList:
@@ -359,7 +359,7 @@ class UserList:
         for element in self._users:
             yield element.name
 
-    def sendall(self, message: dict | str) -> None:
+    def sendall(self, message: iter) -> None:
         for user in self._users:
             user.send({
                 "time": time.time(),
@@ -370,25 +370,25 @@ class UserList:
         """
         append object to the end of the list and start receive thread
         """
-        if self.__contains__(obj.name):
+        if obj.name in self:
             self.remove_by(name=obj.name)
 
         self.client_threads.append(self.executor.submit(obj.receive))
         self._users.append(obj)
 
-    def get_user(self, key: str | None = ..., name: str | None = ...) -> User:
+    def get_user(self, name: str | None = ..., user_id: str | None = ...) -> User:
         """
         get a user by its name or encryption key
         """
         for element in self._users:
-            if key is not ...:
-                if key in element:
-                    return element
-
             if name is not ...:
                 if name in element:
                     return element
-        raise KeyError(f'No User with encryption key {key} or name {name} found!')
+
+            if user_id is not ...:
+                if user_id in element:
+                    return element
+        raise KeyError(f'No User with name {name} or id {user_id} found!')
 
     def remove(self, user: User) -> None:
         """
@@ -414,7 +414,7 @@ class UserList:
             user.end()
         self._users = list()
 
-    def _garbage_collector(self, time_between_loops: int | None = .5) -> None:
+    def _garbage_collector(self, time_between_loops: float | None = .5) -> None:
         """
         check if any of the clients is disconnected and if yes, remove it
         """
@@ -440,10 +440,6 @@ class UserList:
 
     def __contains__(self, other: str) -> bool:
         with contextlib.suppress(KeyError):
-            self.get_user(name=other)
-            return True
-
-        with contextlib.suppress(KeyError):
-            self.get_user(key=other)
+            self.get_user(name=other, user_id=other)
             return True
         return False

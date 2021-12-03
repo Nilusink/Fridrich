@@ -80,7 +80,6 @@ def debug_send_traceback(func: types.FunctionType) -> typing.Callable:
     return wrapper
 
 
-# @debug_send_traceback
 @debug.catch_traceback
 def client_handler() -> None:
     """
@@ -345,7 +344,7 @@ class FunctionManager:
                 "commit": WStationFuncs.commit_data
             },
             "all": {
-                "secReq": get_sec_clearance
+                "secReq": UserTools.get_sec_clearance
             }
         }
 
@@ -390,13 +389,6 @@ class FunctionManager:
 
         if error:
             user.send(error, message_type="Error", force=True)
-
-
-def get_sec_clearance(_message: dict, user: User, *_args):
-    """
-    send the user its security clearance
-    """
-    user.send(user.sec)
 
 
 class AdminFuncs:

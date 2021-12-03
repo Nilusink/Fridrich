@@ -1,4 +1,3 @@
-from fridrich.server.server_funcs import send_success
 from fridrich.new_types import User
 from fridrich.server import Const
 from time import strftime
@@ -19,3 +18,10 @@ def get_time(_message: dict, user: User, *_args) -> None:
             "now": strftime("%H:%M:%S"),
             "voting": Const.switchTime
         })
+
+
+def get_sec_clearance(_message: dict, user: User, *_args):
+    """
+    send the user its security clearance
+    """
+    user.send(user.sec)
