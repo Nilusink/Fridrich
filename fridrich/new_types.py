@@ -443,3 +443,33 @@ class UserList:
             self.get_user(name=other, user_id=other)
             return True
         return False
+
+
+class Future:
+    def __init__(self) -> None:
+        self.__value: typing.Any | None = ...
+
+    @property
+    def result(self) -> typing.Any:
+        if self.__value is not ...:
+            return self.__value
+        raise ValueError("No value received yet")
+
+    @result.setter
+    def result(self, value) -> None:
+        self.__value = value
+
+    def __repr__(self) -> str:
+        return f"future: result={self.__value is not ...}"
+
+    def __nonzero__(self) -> bool:
+        """
+        return True if AuthKey
+        """
+        return self.__value is not ...
+
+    def __bool__(self) -> bool:
+        """
+        return True if AuthKey
+        """
+        return self.__nonzero__()
