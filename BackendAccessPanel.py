@@ -17,8 +17,7 @@ if __name__ == '__main__':
     from traceback import format_exc    # imports for shell
     with backend.Connection(debug_mode=Off, host="0.0.0.0") as c:
         while True:
-            # hostname = input(ConsoleColors.ENDC+"host: ")
-            hostname = "192.168.10.15"
+            hostname = input(ConsoleColors.ENDC+"host: ")
             try:
                 c.server_ip = hostname  # assign ip / hostname
                 break
@@ -42,7 +41,6 @@ if __name__ == '__main__':
         list_funcs()
 
         cmd = str()
-        c.auth("Adolf Hitler", "13102502")
         while True:  # shell for debugging
             try:
                 cmd = input('>> ')  # take input command as string
