@@ -339,7 +339,9 @@ class Connection:
                             self._messages[mes["time"]][resp_type] = message["content"]
 
                         case "Error":
-                            self._messages["Error"] = f"{message['Error']} - {message['info']}"
+                            print("caught error")
+                            self._messages["Error"] = message["content"]
+                            print(f"appended error to messages: {self._messages}")
 
                         case "disconnect":
                             self._messages["disconnect"] = True
@@ -372,8 +374,11 @@ class Connection:
                 print(self._messages)
             if timeout and time.time()-start >= timeout:
                 raise NetworkError("no message was received from server before timeout")
+
             if "Error" in self._messages:
-                raise Error(self._messages["Error"])
+                self.error_handler(self._messages["Error"]["Error"], self._messages["Error"])
+                return {}
+
             if "disconnect" in self._messages:
                 raise ConnectionAbortedError("Server ended connection")
             time.sleep(delay)
