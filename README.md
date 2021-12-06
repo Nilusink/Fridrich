@@ -114,7 +114,6 @@ There are three docker-images available for Fridrich:
 
 - **Server**: nilusink/fridrich_server
 - **BackendAccessPanel**: nilusink/fridrich_backend_access
-- ~~**AppStore**: nilusink/fridrich_appstore~~
 
 To run any of the above listed containers, you first need to [install Docker for your
 system](https://docs.docker.com/get-docker/).

@@ -253,7 +253,7 @@ class User:
 
             except cryption_tools.NotEncryptedError:
                 print("not encrypted")
-                self.send({'Error': 'NotEncryptedError'}, force=True)
+                self.send({'Error': 'NotEncryptedError'}, message_type="Error", force=True)
                 return
 
     def send(self, message: iter, message_type: str | None = 'function', force: bool | None = False) -> None:
