@@ -610,6 +610,7 @@ class Connection:
         msg = {
                'type': 'getVote',
                'flag': flag,
+               'voting': voting,
                'f_name': "getVote"+flag
         }    # set message
         self._send(msg, wait=True)
