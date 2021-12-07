@@ -167,8 +167,7 @@ class Connection:
         if necessary, process each result
         """
         for response in responses.keys():
-            match response:
-
+            match response.split("|")[0]:
                 case "gRes":
                     res = responses[response]
                     out = dict()
