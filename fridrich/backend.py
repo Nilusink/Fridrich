@@ -285,7 +285,7 @@ class Connection:
     @debug
     def receive(self):
         """
-        receive messages from server, decrypt them and raise incoming errors
+        receive messages from server, decrypt them and raise incoming errors (meant as thread, run by default)
         """
         while self.loop:
             try:
@@ -339,9 +339,7 @@ class Connection:
                             self._messages[mes["time"]][resp_type] = message["content"]
 
                         case "Error":
-                            print("caught error")
                             self._messages["Error"] = message["content"]
-                            print(f"appended error to messages: {self._messages}")
 
                         case "disconnect":
                             self._messages["disconnect"] = True
@@ -376,7 +374,9 @@ class Connection:
                 raise NetworkError("no message was received from server before timeout")
 
             if "Error" in self._messages:
-                self.error_handler(self._messages["Error"]["Error"], self._messages["Error"])
+                error_name, full_error = self._messages["Error"]["Error"],  self._messages["Error"]
+                self._messages.pop("Error")
+                self.error_handler(error_name, full_error)
                 return {}
 
             if "disconnect" in self._messages:
