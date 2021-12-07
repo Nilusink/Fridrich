@@ -228,7 +228,7 @@ class Connection:
             raise AuthError("Not authenticated")
 
         if len(self.__message_pool) == 0:
-            raise ValueError("Message Pool Empty")
+            raise ValueError("Client: Message Pool Empty")
 
         for element in self.__message_pool:
             if "message" in element:
@@ -367,36 +367,51 @@ class Connection:
         start = time.time()
         if self._debug_mode in ('full', 'normal'):
             print(f'waiting for message: {time_sent}')
+
         while time_sent not in self._messages:  # wait for server message
             if self._debug_mode == 'full':
                 print(self._messages)
+
             if timeout and time.time()-start >= timeout:
                 raise NetworkError("no message was received from server before timeout")
 
-            if "Error" in self._messages:
+            elif "Error" in self._messages:
                 try:
                     error_name, full_error = self._messages["Error"]["Error"],  self._messages["Error"]
+
                 except TypeError:
                     print("Error:", self._messages["Error"])
                     return {}
+
                 self._messages.pop("Error")
                 self.error_handler(error_name, full_error)
                 return {}
 
-            if "disconnect" in self._messages:
+            elif "disconnect" in self._messages:
                 raise ConnectionAbortedError("Server ended connection")
             time.sleep(delay)
 
         out = self._messages[time_sent]
         del self._messages[time_sent]
-        if "Error" in out:
-            self.error_handler(out["Error"], out)
-        if self._debug_mode in ('all', 'normal'):
-            print(f"found message: {out}")
 
         out = self.response_handler(out)
         if len(out) == 0:
             raise MessageError("received empty message pool from server")
+
+        if "Error" in self._messages:
+            try:
+                error_name, full_error = self._messages["Error"]["Error"],  self._messages["Error"]
+
+            except TypeError:
+                print("Error:", self._messages["Error"])
+                return {}
+
+            self._messages.pop("Error")
+            self.error_handler(error_name, full_error)
+            return {}
+
+        if self._debug_mode in ('all', 'normal'):
+            print(f"found message: {out}")
 
         return out
 
