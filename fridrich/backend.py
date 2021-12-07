@@ -167,6 +167,7 @@ class Connection:
         if necessary, process each result
         """
         for response in responses.keys():
+            print(f"matching {response.split('|')[0]}")
             match response.split("|")[0]:
                 case "gRes":
                     res = responses[response]
@@ -186,20 +187,20 @@ class Connection:
                         out[voting]['totalVotes'] = votes
                         out[voting]['results'] = attendants
 
-                    responses["gRes"] = out
+                    responses[response] = out
 
                 case "getFrees":
-                    responses["getFrees"] = responses["getFrees"]['Value']
+                    responses[response] = responses[response]['Value']
 
                 case "getChat":
-                    raw = responses["getChat"]
-                    responses["getChat"] = sorted(raw, key=date_for_sort)
+                    raw = responses[response]
+                    responses[response] = sorted(raw, key=date_for_sort)
 
                 case "get_var":
-                    responses["get_var"] = responses["get_var"]["var"]
+                    responses[response] = responses[response]["var"]
 
                 case "ping":
-                    responses["ping"] = (time.time() - responses["ping"]["time"]) * 1000
+                    responses[response] = (time.time() - responses["ping"]["time"]) * 1000
 
         return responses
 
@@ -482,7 +483,7 @@ class Connection:
         msg = {
                'type': 'gRes',
                'flag': flag,
-               'f_name': "gRes"+flag
+               'f_name': "gRes"+"|"+flag
         }    # set message
         self._send(msg, wait=True)
 
@@ -609,7 +610,7 @@ class Connection:
                'type': 'getVote',
                'flag': flag,
                'voting': voting,
-               'f_name': "getVote"+flag
+               'f_name': "getVote"+"|"+flag
         }    # set message
         self._send(msg, wait=True)
 
