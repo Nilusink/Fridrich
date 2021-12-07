@@ -403,7 +403,7 @@ class FunctionManager:
             }
 
         if error:
-            user.send(error, message_type="Error", force=True)
+            user.send(error, message_type="Error")
 
 
 class AdminFuncs:
@@ -450,7 +450,7 @@ class AdminFuncs:
             AccManager.new_user(message['Name'], message['pwd'], message['sec'])
 
         except NameError:
-            user.send({"Error": "NameError", "info": "user already exists"}, message_type="Error", force=True)
+            user.send({"Error": "NameError", "info": "user already exists"}, message_type="Error")
 
         send_success(user)
     
@@ -610,11 +610,11 @@ class ClientFuncs:
 
         name = str(user.id) + x
         if not message['voting'] in Vote.get():
-            user.send({'Error': 'NotVoted'}, message_type="Error", force=True)
+            user.send({'Error': 'NotVoted'}, message_type="Error")
             return
 
         if name not in Vote[message['voting']]:
-            user.send({'Error': 'NotVoted'}, message_type="Error", force=True)
+            user.send({'Error': 'NotVoted'}, message_type="Error")
             return
         cVote = Vote[message['voting']][name]
 
@@ -649,7 +649,7 @@ class ClientFuncs:
         if resp:
             send_success(user)
         else:
-            user.send({'Error': 'NoVotes'}, message_type="Error", force=True)
+            user.send({'Error': 'NoVotes'}, message_type="Error")
 
     @staticmethod
     def double_unvote(message: dict, user: User, *_args) -> None:
@@ -671,7 +671,7 @@ class ClientFuncs:
         frees = DV.get_frees(user_id)
 
         if frees is False and frees != 0:
-            user.send({'Error': 'RegistryError'}, message_type="Error", force=True)
+            user.send({'Error': 'RegistryError'}, message_type="Error")
             return
 
         user.send({'Value': frees})
@@ -726,7 +726,7 @@ class ClientFuncs:
                 "Error": "KeyError",
                 "info": {message['var']}
             }
-        user.send(msg, message_type="Error", force=True)
+        user.send(msg, message_type="Error")
 
     @staticmethod
     def set_var(message: dict, user: User, *_args) -> None:
@@ -750,7 +750,7 @@ class ClientFuncs:
         if message["var"] in tmp:
             del tmp[message["var"]]
         else:  # if KeyError occurs
-            user.send({"Error": "KeyError", "info": message["var"]}, message_type="Error", force=True)
+            user.send({"Error": "KeyError", "info": message["var"]}, message_type="Error")
 
         json.dump(tmp, open(Const.VarsFile, 'w'), indent=4)
         send_success(user)
