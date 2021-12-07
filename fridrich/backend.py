@@ -269,7 +269,6 @@ class Connection:
         return res
 
     def __assign_results(self, results: dict) -> None:
-        print(f"got results: {results}")
         if results is ...:
             raise ValueError("results not set")
 
