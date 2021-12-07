@@ -624,7 +624,7 @@ class Connection:
 
         # result handling
         res = nFuture()
-        self.__results_getters[msg["type"]+"|"+msg["flag"]] = res
+        self.__results_getters[msg["f_name"]] = res
         if not wait:
             self.send()
             return res.result
