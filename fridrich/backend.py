@@ -19,7 +19,7 @@ import time
 
 
 # for information if the Server has updated the communication but the client hasn't yet
-COMM_PROTOCOL_VERSION = "1.1.0"
+COMM_PROTOCOL_VERSION = "1.1.1"
 
 
 ############################################################################
@@ -269,10 +269,12 @@ class Connection:
         return res
 
     def __assign_results(self, results: dict) -> None:
+        print(f"got results: {results}")
         if results is ...:
             raise ValueError("results not set")
 
         for element in results.keys():
+            print(self.__results_getters)
             if not set(results.keys()) & set(self.__results_getters.keys()) & {element}:    # check if the element is in both list (using sets)
                 raise ValueError(f"element {element} not in results and getters")
 
@@ -482,12 +484,13 @@ class Connection:
         """
         msg = {
                'type': 'gRes',
-               'flag': flag
+               'flag': flag,
+               'f_name': "gRes"+flag
         }    # set message
         self._send(msg, wait=True)
 
         res = nFuture()
-        self.__results_getters[msg["type"]] = res
+        self.__results_getters[msg["f_name"]] = res
         if not wait:
             self.send()
             return res.result
@@ -608,13 +611,13 @@ class Connection:
         msg = {
                'type': 'getVote',
                'flag': flag,
-               'voting': voting
+               'f_name': "getVote"+flag
         }    # set message
         self._send(msg, wait=True)
 
         # result handling
         res = nFuture()
-        self.__results_getters[msg["type"]] = res
+        self.__results_getters[msg["type"]+"|"+msg["flag"]] = res
         if not wait:
             self.send()
             return res.result

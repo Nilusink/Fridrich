@@ -24,7 +24,7 @@ from fridrich.server import *
 from fridrich.cryption_tools import key_func, MesCryp
 from fridrich import app_store
 
-COM_PROTOCOL_VERSIONS: set = {"1.1.0"}
+COM_PROTOCOL_VERSIONS: set = {"1.1.0", "1.1.1"}
 
 client: socket.socket
 Users = UserList()

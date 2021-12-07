@@ -239,7 +239,7 @@ class User:
                 mes = json.loads(mes)
 
                 # create message pool for request
-                self.__message_pool_names = tuple(func_name["type"] for func_name in mes["content"])
+                self.__message_pool_names = tuple(func_name["f_name"] if "f_name" in func_name else func_name["type"] for func_name in mes["content"])
                 self.__message_pool_max = len(mes["content"])
                 self.__message_pool_time = mes["time"]
                 self.__message_pool_index = 0
@@ -264,6 +264,7 @@ class User:
             "content": message
         }
         if self.__message_pool_max == sum([0 if element is None else 1 for element in self.__message_pool]) and not force:
+            print(f"Pool error: {self.__message_pool=}, {self.__message_pool_names=}, {message=}")
             raise IndexError("trying to send message but no pool index is out of range")
 
         message['type'] = message_type
