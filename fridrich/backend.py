@@ -273,7 +273,6 @@ class Connection:
             raise ValueError("results not set")
 
         for element in results.keys():
-            print(self.__results_getters)
             if not set(results.keys()) & set(self.__results_getters.keys()) & {element}:    # check if the element is in both list (using sets)
                 raise ValueError(f"element {element} not in results and getters")
 
