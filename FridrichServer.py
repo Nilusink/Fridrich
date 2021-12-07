@@ -562,12 +562,12 @@ class ClientFuncs:
         """
         get the GayKings log
         """
-        logs: typing.Dict[dict] = {}
-        for log in Const.logDirec:
+        logs: typing.Dict[str, dict] = {}
+        for log in os.listdir(Const.logDirec):
             with open(Const.logDirec+log, 'r') as inp:
                 logs[log.rstrip(".json")] = json.load(inp)
 
-        user.send(inp)
+        user.send(logs)
 
     @staticmethod
     def get_cal(_message: dict, user: User, *_args) -> None:
