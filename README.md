@@ -9,19 +9,26 @@ It mainly consists of three parts:
 The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It saves all the data in files and accepts requests, handles events like the 0 o'clock vote and some other "cool" stuff. The basic File Layout for the Server should look like this:  
 <pre>
 |  
-|---♦ data  
+|---♦ data
+|   |---♦ logs
+|   |   |---♦ All of the voting logs (generated, directory must exist)
+|   |
 |   |---♦ chat.json
 |   |---♦ Calendar.json
-|   |---♦ settings.json
 |   |---♦ dVotes.json
-|   |---♦ KeyFile.enc  
-|   |---♦ KingLog.json
+|   |---♦ KeyFile.enc
 |   |---♦ now.json
+|   |---♦ strikes.json
 |   |---♦ tempData.json
 |   |---♦ users.enc
 |   |---♦ Version
 |   |---♦ yes.json
-|  
+|
+|---♦ weather
+|   |---♦ all.json
+|   |---♦ now.json
+|   |---♦ individual log for each station (generated)
+|
 |---♦ fridrich  
 |   |---♦ server
 |   |   |---♦ __init__.py
@@ -46,7 +53,7 @@ The **Calendar.json** file saves the configurations of the calendar in a dict:
 ```
 **dVotes.json** stores all the data about how many double votes each user has left in this week:
 ```Python
-{'User1':1, 'User2':0}
+{'User1': 1, 'User2': 0}
 ```
 The **KeyFile.enc** is the default key if the client hasn't yet authenticated or sends errors. It is encrypted with the cryption_tools.low class.
 **KingLog.json** is the file where all the GayKings are saved (basically a *log*):

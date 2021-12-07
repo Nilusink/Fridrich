@@ -7,7 +7,9 @@ from typing import Dict, List, Tuple, Iterable
 import matplotlib.pyplot as plt
 from fridrich import backend
 from fridrich import *
+import seaborn as sns
 import tkinter as tk
+import pandas as pd
 import numpy as np
 
 
@@ -127,16 +129,20 @@ def plot_3d(values: list) -> None:
     plt.show()
 
 
-def plot_2d(x: Iterable, y: Iterable | dict, x_label: str | None = ..., y_label: str | None = ..., x_ticks: int | None = ..., y_ticks: int | None = ...) -> None:
+def plot_2d(x: list, y: Iterable | dict, x_label: str | None = ..., y_label: str | None = ..., x_ticks: int | None = ..., y_ticks: int | None = ...) -> None:
     if type(y) == dict:
         all_persons = set(
             [person.lower().replace(" ", "") for element in y.values() for persons in element for person in
              persons.split("|")])
 
-        for person in all_persons:
-            plt.plot(x, [y[month][person] for month in y], label=person)
+        df = {person: [y[month][person] for month in y] for person in all_persons}
 
-        plt.legend()
+        df.update({"Dates": [i for i in range(len(x))]})
+        df = pd.DataFrame(df)
+
+        g = sns.lmplot('Dates', 'value', data=pd.melt(df, ['Dates']), hue='variable', ci=None, order=5, truncate=True)
+        g.set_xticklabels([""]+x+[""])
+        g.set(ylabel="Votes per month")
 
     else:
         plt.plot(x, y)
@@ -159,7 +165,7 @@ def main() -> None:
     main Function
     """
     with backend.Connection(host="192.168.10.15") as c:
-        c.auth("Fuehrer", "13102502")
+        c.auth("Adolf Hitler", "13102502")
 
         log = c.get_log()
         c.end()

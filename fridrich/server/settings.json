@@ -4,11 +4,13 @@
     "Terminate": null,
 
     "direc": "/home/pi/Server/data/",
-    "vardirec": "/var/www/html/",
 
     "lastFile": "/home/pi/Server/data/yes.json",
     "nowFile": "/home/pi/Server/data/now.json",
-    "KingFile": "/home/pi/Server/data/KingLog.json",
+    "strikeFile": "/home/pi/Server/strikes.json",
+
+    "logDirec": "/home/pi/Server/data/logs/",
+
     "CalFile": "/home/pi/Server/data/Calendar.json",
     "crypFile": "/home/pi/Server/data/users.enc",
     "versFile": "/home/pi/Server/data/Version",
@@ -20,11 +22,6 @@
     "VarsFile": "/home/pi/Server/data/vars.json",
     "WeatherDir": "/home/pi/Server/weather/",
 
-    "varTempLog": "/var/www/html/json/tempData.json",
-    "varKingLogFile": "/var/www/html/KingLog.log",
-    "varLogFile": "/var/www/html/json/KingLog.json",
-    "varNowFile": "/var/www/html/json/now.json",
-
     "logFile": "/home/pi/Server/data/temp.log",
     "errFile": "/home/pi/Server/data/Server.err.log",
     "tempFile": "/home/pi/Server/data/tempData.json",
@@ -34,8 +31,6 @@
     "DoubleVoteResetDay": "Mon",
     "switchTime": "00:00",
     "rebootTime": "03:00",
-    "status_led_pin": 21,
-    "status_led_sleep_time": ["00:30", "07:00"],
 
     "AppStoreDirectory": "/home/pi/Server/USBApps/"
 }

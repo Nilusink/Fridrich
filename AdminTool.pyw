@@ -153,8 +153,11 @@ class Window:
         """
         refresh the window
         """
-        self.users = sort_user_list(c.admin_get_users())
-        self.onlineUsers = c.get_online_users()
+        users = c.admin_get_users(wait=True)
+        o_users = c.get_online_users(wait=True)
+        c.send()
+        self.users = sort_user_list(users.result)
+        self.onlineUsers = o_users.result
 
         for element in self.userEs:
             with suppress(IndexError):
@@ -241,15 +244,20 @@ class Window:
 
                 try:
                     if name != o_name:
-                        self.c.admin_set_username(o_name, name)
+                        self.c.admin_set_username(o_name, name, wait=True)
                     
                     if pwd != o_pwd:
-                        self.c.admin_set_password(name, pwd)
+                        self.c.admin_set_password(name, pwd, wait=True)
                     
                     if sec != o_sec:
-                        self.c.admin_set_security(name, sec)
+                        self.c.admin_set_security(name, sec, wait=True)
+
+                    with suppress(ValueError):
+                        c.send()
+
                 except NameError:
                     messagebox.showerror('Error', 'Name already exists')
+
             except AttributeError:
                 break
         self.refresh()

@@ -460,7 +460,7 @@ class Future:
         self.__value = value
 
     def __repr__(self) -> str:
-        return f"future: result={self.__value is not ...}"
+        return f"<future: result={self.__value is not ...}>"
 
     def __nonzero__(self) -> bool:
         """

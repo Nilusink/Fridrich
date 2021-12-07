@@ -3,4 +3,6 @@ cryptography==3.3.2
 
 # only for GayHistoryAnalyser
 matplotlib
+seaborn
+pandas
 numpy
