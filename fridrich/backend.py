@@ -167,28 +167,7 @@ class Connection:
         if necessary, process each result
         """
         for response in responses.keys():
-            print(f"matching {response.split('|')[0]}")
-            match response.split("|")[0]:
-                case "gRes":
-                    res = responses[response]
-                    out = dict()
-
-                    for voting in res:
-                        attendants = dict()  # create dictionary with all attendants: votes
-                        nowVoting = res[voting]
-                        for element in [nowVoting[element] for element in nowVoting] + (['Lukas', 'Niclas', 'Melvin'] if voting == 'GayKing' else []):
-                            attendants[element] = 0
-
-                        votes = int()
-                        for element in res[voting]:  # assign votes to attendant
-                            votes += 1
-                            attendants[res[voting][element]] += 1
-                        out[voting] = dict()
-                        out[voting]['totalVotes'] = votes
-                        out[voting]['results'] = attendants
-
-                    responses[response] = out
-
+            match response:
                 case "getFrees":
                     responses[response] = responses[response]['Value']
 
@@ -201,6 +180,27 @@ class Connection:
 
                 case "ping":
                     responses[response] = (time.time() - responses["ping"]["time"]) * 1000
+
+                case _:
+                    if response.startswith("gRes"):  # because it could also be "gRes|last" or "gRes+now"
+                        res = responses[response]
+                        out = dict()
+
+                        for voting in res:
+                            attendants = dict()  # create dictionary with all attendants: votes
+                            nowVoting = res[voting]
+                            for element in [nowVoting[element] for element in nowVoting] + (['Lukas', 'Niclas', 'Melvin'] if voting == 'GayKing' else []):
+                                attendants[element] = 0
+
+                            votes = int()
+                            for element in res[voting]:  # assign votes to attendant
+                                votes += 1
+                                attendants[res[voting][element]] += 1
+                            out[voting] = dict()
+                            out[voting]['totalVotes'] = votes
+                            out[voting]['results'] = attendants
+
+                        responses[response] = out
 
         return responses
 
@@ -316,7 +316,7 @@ class Connection:
             try:
                 mes = cryption_tools.MesCryp.decrypt(data, self.AuthKey.encode())
             except cryption_tools.InvalidToken:
-                self._messages["Error"] = f"cant decrypt: {data}"
+                self._messages["Error"] = {"Error": "MessageError", "info": f"cant decrypt: {data}"}
                 continue
 
             try:
@@ -374,7 +374,11 @@ class Connection:
                 raise NetworkError("no message was received from server before timeout")
 
             if "Error" in self._messages:
-                error_name, full_error = self._messages["Error"]["Error"],  self._messages["Error"]
+                try:
+                    error_name, full_error = self._messages["Error"]["Error"],  self._messages["Error"]
+                except TypeError:
+                    print("Error:", self._messages["Error"])
+                    return {}
                 self._messages.pop("Error")
                 self.error_handler(error_name, full_error)
                 return {}
@@ -416,6 +420,10 @@ class Connection:
 
         if not self.loop:
             raise Error("already called 'end'")
+
+        if self:
+            self.end(revive=True)
+
         self.reconnect()
         msg = {  # message
             'type': 'auth',
@@ -483,7 +491,7 @@ class Connection:
         msg = {
                'type': 'gRes',
                'flag': flag,
-               'f_name': "gRes"+"|"+flag
+               'f_name': "gRes"+flag
         }    # set message
         self._send(msg, wait=True)
 
@@ -610,7 +618,7 @@ class Connection:
                'type': 'getVote',
                'flag': flag,
                'voting': voting,
-               'f_name': "getVote"+"|"+flag
+               'f_name': "getVote"+flag
         }    # set message
         self._send(msg, wait=True)
 
@@ -1115,7 +1123,7 @@ class Connection:
         return True
 
     # the end
-    def end(self, revive: bool | None = False) -> None:
+    def end(self, revive: bool | None = False):
         """
         close connection with server and logout
         """
@@ -1131,6 +1139,4 @@ class Connection:
         self.loop = False
 
         if revive:
-            self.executor = ThreadPoolExecutor(max_workers=1)
-            app_store.executor = ThreadPoolExecutor()
-            self.loop = True
+            return Connection(debug_mode=self.debug_mode, host=self.server_ip)

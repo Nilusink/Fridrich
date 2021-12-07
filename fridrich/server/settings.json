@@ -7,7 +7,7 @@
 
     "lastFile": "/home/pi/Server/data/yes.json",
     "nowFile": "/home/pi/Server/data/now.json",
-    "strikeFile": "/home/pi/Server/strikes.json",
+    "strikeFile": "/home/pi/Server/data/strikes.json",
 
     "logDirec": "/home/pi/Server/data/logs/",
 

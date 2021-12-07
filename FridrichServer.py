@@ -133,11 +133,15 @@ def zero_switch() -> None:
         masters: typing.List[str] = [max(vote_res, key=vote_res.count)]   # create list with members of highest votes
         highest = vote_res.count(masters[-1])  # set last highest number of occurrences (for while loop)
         vote_res = list(filter(lambda x: x != masters[-1], vote_res))  # remove member from list
-        master = max(vote_res, key=vote_res.count)
-        while vote_res.count(master) >= highest:
-            masters.append(master)
-            vote_res = list(filter(lambda x: x != master, vote_res))    # remove from last
+        if len(vote_res) > 0:
             master = max(vote_res, key=vote_res.count)
+
+            while vote_res.count(master) >= highest:
+                masters.append(master)
+                vote_res = list(filter(lambda x: x != master, vote_res))    # remove from last
+                if len(vote_res) == 0:
+                    break
+                master = max(vote_res, key=vote_res.count)
 
         # if a person was vote from all contestants (and there were more than one contestants)
         strike = {res[list(res.keys())[0]]}.intersection(*[{element} for element in res.values()])
@@ -145,7 +149,7 @@ def zero_switch() -> None:
             strike = "|".join(strike)
             debug.debug(f"Strike in {voting}: {strike}")
             try:
-                strikes = json.load(open(Const.stikeFile, "r"))
+                strikes = json.load(open(Const.strikeFile, "r"))
 
             except (json.decoder.JSONDecodeError, FileNotFoundError):
                 strikes = {}
