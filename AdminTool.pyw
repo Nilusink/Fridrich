@@ -39,6 +39,7 @@ class Window:
         self.userEs = list()
         self.users = list()
         self.onlineUsers = list()
+        self.default_pwd = "<set>"
 
         # tkinter
         self.c = connection_instance  # setup root
@@ -48,7 +49,6 @@ class Window:
         self.root.minsize(width=600, height=500)
         self.root.maxsize(width=600, height=500)
 
-        self.root.bind("WM_DELETE_WINDOW", self.end)  # bind to window exits
         self.root.bind('<Escape>', self.end)
         self.root.bind('<F5>', self.update)
 
@@ -181,7 +181,7 @@ class Window:
             self.userEs[-1][1].delete(0, 'end')
             self.userEs[-1][2].delete(0, 'end')
             self.userEs[-1][0].insert(0, user['Name'])
-            self.userEs[-1][1].insert(0, user['pwd'])
+            self.userEs[-1][1].insert(0, self.default_pwd)
             self.userEs[-1][2].insert(0, user['sec'] if 'sec' in user else '')
             self.userEs[-1][0].place(x=50, y=i*50+10)
             self.userEs[-1][1].place(x=300, y=i*50+10)
@@ -243,13 +243,13 @@ class Window:
                 o_sec = self.users[i]['sec'] if 'sec' in self.users[i] else ''
 
                 try:
-                    if name != o_name:
+                    if name != o_name and name:
                         self.c.admin_set_username(o_name, name, wait=True)
                     
-                    if pwd != o_pwd:
+                    if pwd != o_pwd and pwd and pwd != self.default_pwd:
                         self.c.admin_set_password(name, pwd, wait=True)
                     
-                    if sec != o_sec:
+                    if sec != o_sec and sec:
                         self.c.admin_set_security(name, sec, wait=True)
 
                     with suppress(ValueError):
@@ -291,6 +291,7 @@ class Window:
         if ans:
             with suppress(ConnectionAbortedError):
                 c.admin_reset_logins()
+            c = c.end(revive=True)
             w.root.destroy()
             w = Window(c)
 
@@ -298,10 +299,9 @@ class Window:
         """
         end connection to fridrich and destroy the tkinter.root
         """
-        print("called end")
-        self.c.end()
         try:
             self.root.destroy()
+
         except (Exception,):
             return
 

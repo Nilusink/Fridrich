@@ -6,7 +6,7 @@ Author: Nilusink
 """
 from concurrent.futures import ThreadPoolExecutor, Future
 from typing import Dict, Callable, Iterable, Any
-from fridrich.new_types import Future as nFuture
+from fridrich.classes import Future as nFuture
 from contextlib import suppress
 from traceback import format_exc
 from fridrich import app_store
@@ -25,7 +25,7 @@ COMM_PROTOCOL_VERSION = "1.1.1"
 ############################################################################
 #                             other functions                              #
 ############################################################################
-def date_for_sort(message) -> str:
+def date_for_sort(message: dict) -> str:
     """
     go from format "hour:minute:second:millisecond - day.month.year" to "year.month.day - hour:minute:second:millisecond"
     """
@@ -265,7 +265,6 @@ class Connection:
         send the messages and also receive them
         """
         res = self.wait_for_message(self.__send())
-        self.__assign_results(res)
         return res
 
     def __assign_results(self, results: dict) -> None:
@@ -277,6 +276,9 @@ class Connection:
                 raise ValueError(f"element {element} not in results and getters")
 
             self.__results_getters[element].result = results[element]
+
+        for element in set(self.__results_getters.keys()) - set(results.keys()):
+            self.__results_getters[element].result = False
 
     @property
     def results_getters(self) -> dict:
@@ -376,27 +378,25 @@ class Connection:
                 raise NetworkError("no message was received from server before timeout")
 
             elif "Error" in self._messages:
-                try:
-                    error_name, full_error = self._messages["Error"]["Error"],  self._messages["Error"]
-
-                except TypeError:
-                    print("Error:", self._messages["Error"])
-                    return {}
-
-                self._messages.pop("Error")
-                self.error_handler(error_name, full_error)
-                return {}
+                for _ in range(10):
+                    if time_sent in self._messages:
+                        break
+                    time.sleep(.01)
+                break
 
             elif "disconnect" in self._messages:
                 raise ConnectionAbortedError("Server ended connection")
             time.sleep(delay)
 
-        out = self._messages[time_sent]
-        del self._messages[time_sent]
+        with suppress(KeyboardInterrupt):
+            out = self._messages[time_sent]
+            del self._messages[time_sent]
 
-        out = self.response_handler(out)
-        if len(out) == 0:
-            raise MessageError("received empty message pool from server")
+            if len(out) == 0:
+                raise MessageError("received empty message pool from server")
+
+            out = self.response_handler(out)
+            self.__assign_results(out)
 
         if "Error" in self._messages:
             try:
@@ -1108,7 +1108,7 @@ class Connection:
 
     # magical functions
     def __repr__(self) -> str:
-        return f'Backend instance (debug_mode: {self._debug_mode}, user: {self._userN}, authkey: {self.AuthKey})'
+        return f'<Backend instance (debug_mode: {self._debug_mode}, user: {self._userN})>'
 
     def __str__(self) -> str:
         """
@@ -1131,11 +1131,20 @@ class Connection:
     def __enter__(self) -> "Connection":
         return self
 
-    def __exit__(self, exception_type, value, traceback):
+    def __exit__(self, exception_type, value, traceback) -> bool:
         self.end(revive=False)
         if exception_type is not None:
             return False
         return True
+
+    def __del__(self) -> None:
+        print("called end")
+        self.end()
+
+    def __eq__(self, other: "Connection") -> bool:
+        if not type(other) == Connection:
+            raise ValueError("can only compare of type \"Connection\"")
+        return all([str(self) == str(other), bool(self) is bool(other), self.server_ip == other.server_ip, self.port == other.port])
 
     # the end
     def end(self, revive: bool | None = False):

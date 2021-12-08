@@ -8,6 +8,7 @@ from traceback import format_exc
 from contextlib import suppress
 from threading import Thread
 from os import system
+import numpy as np
 import sys
 
 from cryptography.fernet import InvalidToken
@@ -15,7 +16,7 @@ from cryptography.fernet import InvalidToken
 # local imports
 from fridrich.server.accounts import Manager
 from fridrich.server.server_funcs import *
-from fridrich.new_types import *
+from fridrich.classes import *
 
 from fridrich.server import WStationFuncs
 from fridrich.server import UserTools
@@ -128,20 +129,10 @@ def zero_switch() -> None:
         log_out_file = Const.logDirec+voting+".json"
         vote_res = list(res.values())
 
-        # has to be shortened
         # get masters
-        masters: typing.List[str] = [max(vote_res, key=vote_res.count)]   # create list with members of highest votes
-        highest = vote_res.count(masters[-1])  # set last highest number of occurrences (for while loop)
-        vote_res = list(filter(lambda x: x != masters[-1], vote_res))  # remove member from list
-        if len(vote_res) > 0:
-            master = max(vote_res, key=vote_res.count)
-
-            while vote_res.count(master) >= highest:
-                masters.append(master)
-                vote_res = list(filter(lambda x: x != master, vote_res))    # remove from last
-                if len(vote_res) == 0:
-                    break
-                master = max(vote_res, key=vote_res.count)
+        res_arr = np.array(vote_res)
+        m_max = max([x for x in np.unique(res_arr, return_counts=True)[1]])
+        masters = [master for master in np.unique(res_arr) if vote_res.count(master) == m_max]
 
         # if a person was vote from all contestants (and there were more than one contestants)
         strike = {res[list(res.keys())[0]]}.intersection(*[{element} for element in res.values()])
@@ -150,11 +141,12 @@ def zero_switch() -> None:
             debug.debug(f"Strike in {voting}: {strike}")
             try:
                 strikes = json.load(open(Const.strikeFile, "r"))
-
             except (json.decoder.JSONDecodeError, FileNotFoundError):
                 strikes = {}
+
             if time.strftime('%d.%m.%Y') not in strikes:
                 strikes[time.strftime('%d.%m.%Y')] = []
+
             strikes[time.strftime('%d.%m.%Y')].append((voting, strike))
 
         total_masters = "|".join(masters)
@@ -184,7 +176,7 @@ def zero_switch() -> None:
 
 
 @debug.catch_traceback
-def auto_reboot(r_time: str | None = "03:00") -> None:
+def auto_reboot(r_time: str) -> None:
     """
     if time is r_time, reboot the server (format is "HH:MM")
     
@@ -219,7 +211,7 @@ class DoubleVote:
             for element in validUsers:
                 value[element['Name']] = 1
 
-        self.value = new_types.FileVar(value, self.filePath)
+        self.value = classes.FileVar(value, self.filePath)
 
     def vote(self, vote: str, user_id: int) -> bool:
         """

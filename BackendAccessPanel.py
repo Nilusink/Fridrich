@@ -48,7 +48,7 @@ if __name__ == '__main__':
                     backend_access_panel_result_please_dont_name_your_variable_like_this = eval(cmd)   # execute the code
                     print(ConsoleColors.OKGREEN + str(backend_access_panel_result_please_dont_name_your_variable_like_this) + ConsoleColors.ENDC)    # print it
 
-            except (SyntaxError, RuntimeError, RuntimeWarning):   # if error occurs, try to execute the command with exec and if that fails again, return both errors
+            except SyntaxError:   # if error occurs, try to execute the command with exec and if that fails again, return both errors
                 trace = format_exc()
                 try:
                     exec(cmd)

@@ -13,7 +13,7 @@ import threading
 import os
 
 from fridrich.backend import Connection
-from fridrich.new_types import FileVar
+from fridrich.classes import FileVar
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk

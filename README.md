@@ -42,7 +42,7 @@ The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It
 |   |---♦ __init__.py
 |   |---♦ app_store.py
 |   |---♦ cryption_tools.py
-|   |---♦ new_types.py
+|   |---♦ classes.py
 |   |---♦ useful.py
 |  
 |---♦ FridrichServer.py  
@@ -103,7 +103,7 @@ The File Layout is straightforward:
 |   |---♦ app_store.py
 |   |---♦ backend.py
 |   |---♦ cryption_tools.py
-|   |---♦ new_types.py
+|   |---♦ classes.py
 |   |---♦ useful.py
 |  
 |---♦ YourProgram.py  
