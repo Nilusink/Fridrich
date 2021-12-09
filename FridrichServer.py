@@ -52,7 +52,7 @@ def verify(username: str, password: str, cl: socket.socket, address: str) -> Non
         new_user = User(name=logged_in_user["Name"], sec=logged_in_user["sec"], key=key, user_id=logged_in_user["id"], cl=cl, ip=address, function_manager=FunManager.exec, debugger=debug)
         Users.append(new_user)
         
-    debug.debug(new_user)   # print out username, if connected successfully or not and if it is a bot
+    debug.debug(f"Connected to {new_user}, {IsValid=}")   # print out username, if connected successfully or not and if it is a bot
     mes = cryption_tools.MesCryp.encrypt(json.dumps({'Auth': IsValid, 'AuthKey': key}))
     cl.send(mes)
 
@@ -89,7 +89,7 @@ def client_handler() -> None:
     try:
         cl, address = server.accept()
         address = address[0]
-        debug.debug(f'Connected to {address}')
+
     except OSError:
         return
     # try to load the message, else ignore it and restart
@@ -151,14 +151,14 @@ def zero_switch() -> None:
 
         total_masters = "|".join(masters)
         # write to log (for each voting)
-        with open(log_out_file, "w") as output:
-            try:
-                log = json.load(open(log_out_file, "r"))
-            except (json.decoder.JSONDecodeError, FileNotFoundError):
-                log = {}
+        try:
+            log = json.load(open(log_out_file, "r"))
 
-            log[time.strftime('%d.%m.%Y')] = total_masters
-            json.dump(log, output, indent=4)
+        except (json.decoder.JSONDecodeError, FileNotFoundError):
+            log = {}
+
+        log[time.strftime('%d.%m.%Y')] = total_masters
+        json.dump(log, open(log_out_file, "w"), indent=4)
 
         debug.debug(f"Results for {voting}: {total_masters}")
 
@@ -167,6 +167,7 @@ def zero_switch() -> None:
         json.dump(dict(Vote), output, indent=4)
 
     Vote.set({})
+    debug.debug("done voting")
 
     if time.strftime('%a') == Const.DoubleVoteResetDay:  # if reset day, reset double votes
         dVotes = DV.value.get()
@@ -499,7 +500,6 @@ class ClientFuncs:
         tmp = Vote.get()
         tmp[message['voting']][str(user.id)] = resp
         Vote.set(tmp)  # set vote
-        debug.debug(f'got vote: {message["vote"]}                     .')  # print that it received vote (debugging)
 
         send_success(user)
 

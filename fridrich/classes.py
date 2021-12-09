@@ -331,7 +331,7 @@ class User:
             yield key, item
 
     def __repr__(self) -> str:
-        return f"<class User (name: {self.__name}, sec: {self.__sec})>"
+        return f"<class User ({self.__name=}, {self.__sec=})>"
 
     def __contains__(self, item) -> bool:
         return item == self.name or item == self.id

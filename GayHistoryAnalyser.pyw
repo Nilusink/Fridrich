@@ -167,7 +167,7 @@ def main() -> None:
     with backend.Connection(host="192.168.10.15") as c:
         c.auth("Adolf Hitler", "13102502")
 
-        log = c.get_log()
+        log = c.get_log()["GayKing"]
         c.end()
 
     months = {}

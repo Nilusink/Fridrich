@@ -1143,7 +1143,7 @@ class Connection:
 
     def __eq__(self, other: "Connection") -> bool:
         if not type(other) == Connection:
-            raise ValueError("can only compare of type \"Connection\"")
+            return self.__bool__()
         return all([str(self) == str(other), bool(self) is bool(other), self.server_ip == other.server_ip, self.port == other.port])
 
     # the end
