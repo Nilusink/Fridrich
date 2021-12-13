@@ -330,8 +330,11 @@ class User:
         for key, item in (('key', self.__key), ('name', self.__name), ('sec', self.__sec)):
             yield key, item
 
+    def __str__(self) -> str:
+        return f"<class User (name={self.__name}, sec={self.__sec})>"
+
     def __repr__(self) -> str:
-        return f"<class User ({self.__name=}, {self.__sec=})>"
+        return self.__str__()
 
     def __contains__(self, item) -> bool:
         return item == self.name or item == self.id
@@ -445,6 +448,18 @@ class UserList:
             return True
         return False
 
+    def __str__(self) -> str:
+        return f"<class UserList (users={list(self.names)}, running={self.__bool__()})>"
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
+    def __bool__(self) -> bool:
+        """
+        return True if AuthKey
+        """
+        return self.loop
+
 
 class Future:
     def __init__(self) -> None:
@@ -463,14 +478,98 @@ class Future:
     def __repr__(self) -> str:
         return f"<future: result={self.__value is not ...}>"
 
-    def __nonzero__(self) -> bool:
+    def __bool__(self) -> bool:
         """
         return True if AuthKey
         """
         return self.__value is not ...
 
+
+class Daytime:
+    def __init__(self, hour: int, minute: int, second: int, day: int | None = ...) -> None:
+        self.hour = hour
+        self.minute = minute
+        self.second = second
+        self.__day = day
+
+    @property
+    def hour(self) -> int:
+        return self.__hour
+
+    @hour.setter
+    def hour(self, value: int) -> None:
+        self.__hour = value % 24
+        while self.__hour < 0:
+            self.__hour += 24
+
+    @property
+    def minute(self) -> int:
+        return self.__minute
+
+    @minute.setter
+    def minute(self, value: int) -> None:
+        self.__minute = value % 60
+        while self.__minute < 0:
+            self.__minute += 60
+
+    @property
+    def second(self) -> int:
+        return self.__second
+
+    @second.setter
+    def second(self, value: int) -> None:
+        self.__second = value % 60
+        while self.__second < 0:
+            self.__second += 60
+
+    @property
+    def day(self) -> int:
+        return self.__day
+
+    def __add__(self, other: "Daytime") -> "Daytime":
+        secs = self.second + other.second
+        minutes = self.minute + other.minute + secs // 60
+        hours = self.hour + other.hour + minutes // 60
+
+        day = self.__day
+        if day is not ...:
+            day += hours // 24
+
+        secs = secs % 60
+        minutes = minutes % 60
+        hours = hours % 60
+
+        return Daytime(hour=hours, minute=minutes, second=secs, day=day)
+
+    def __sub__(self, other: "Daytime") -> "Daytime":
+        secs = self.second - other.second
+        minutes = self.minute - other.minute
+        hours = self.hour - other.hour
+
+        while secs < 0:
+            secs += 60
+            minutes -= 1
+
+        while minutes < 0:
+            minutes += 60
+            hours -= 1
+
+        day = self.__day
+        if day is not ...:
+            while hours < 0:
+                hours += 24
+                day -= 1
+
+            while day < 0:
+                day += 32
+
+        return Daytime(hour=hours, minute=minutes, second=secs, day=day)
+
+    def __str__(self) -> str:
+        return f"{self.__hour}:{self.__minute}:{self.__second}"
+
+    def __repr__(self) -> str:
+        return self.__str__() + (f" - {self.day} (day)" if self.day is not ... else "")
+
     def __bool__(self) -> bool:
-        """
-        return True if AuthKey
-        """
-        return self.__nonzero__()
+        return True
