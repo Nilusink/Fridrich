@@ -186,10 +186,12 @@ class Connection:
 
                 case "get_time":
                     self.__server_voting_time = responses[response]["voting"]
-                    lo_now = Daytime(int(time.strftime("%H")), int(time.strftime("%M")), int(time.strftime("%S")), int(time.strftime("%d")))
+                    lo_now = Daytime(int(time.strftime("%H")), int(time.strftime("%M")), int(time.strftime("%S")))
                     se_lis = responses[response]["now"].split(":")
                     se_now = Daytime(int(se_lis[0]), int(se_lis[1]), int(se_lis[2]))
                     self.__server_time_delta = lo_now - se_now
+
+                    responses[response]["difference"] = str(self.__server_time_delta)
 
                 case _:
                     if response.startswith("gRes"):  # because it could also be "gRes|last" or "gRes+now"
@@ -552,7 +554,11 @@ class Connection:
         :return: (Name, Streak)
         """
         sorted_log = {x: log[x] for x in sorted(log, key=lambda x: '.'.join(reversed(x.split('.'))))}    # sort list by year, month, date
-        StreakGuys: dict = {guy: 0 for guy in sorted_log[list(sorted_log.keys())[-1]].split("|")}
+        try:
+            StreakGuys: dict = {guy: 0 for guy in sorted_log[list(sorted_log.keys())[-1]].split("|")}
+        except AttributeError:
+            raise ValueError("Please only pass one voting per time")
+
         for guy in StreakGuys.keys():
             for date in reversed(sorted_log.keys()):
                 if guy in sorted_log[date] and StreakGuys[guy] != -1:
@@ -1113,10 +1119,11 @@ class Connection:
                 return res.result
             return res
 
-        tmp = Daytime(int(time.strftime("%H")), int(time.strftime("%M")), int(time.strftime("%S")), int(time.strftime("%d"))) + self.__server_time_delta
+        tmp = Daytime(int(time.strftime("%H")), int(time.strftime("%M")), int(time.strftime("%S"))) + self.__server_time_delta
         res.result = {
             "now": str(tmp),
-            "voting": self.__server_voting_time
+            "voting": self.__server_voting_time,
+            "difference": str(self.__server_time_delta)
         }
         if not wait:
             return res.result

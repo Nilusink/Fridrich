@@ -486,11 +486,13 @@ class Future:
 
 
 class Daytime:
-    def __init__(self, hour: int, minute: int, second: int, day: int | None = ...) -> None:
+    """
+    class for calculating with HH:MM:SS
+    """
+    def __init__(self, hour: int = 0, minute: int = 0, second: int = 0) -> None:
         self.hour = hour
         self.minute = minute
         self.second = second
-        self.__day = day
 
     @property
     def hour(self) -> int:
@@ -522,54 +524,74 @@ class Daytime:
         while self.__second < 0:
             self.__second += 60
 
-    @property
-    def day(self) -> int:
-        return self.__day
+    @staticmethod
+    def from_abs(absolute_value: int) -> "Daytime":
+        """
+        convert an absolute value (seconds) to a Daytime
+
+        :param absolute_value: the absolute time value in seconds
+        """
+        if type(absolute_value) != int:
+            raise ValueError("only accepts of type int")
+
+        # making sure the value is in range of the 24 hour time format
+        while absolute_value < 0:
+            absolute_value += 24*3600
+
+        while absolute_value > 24*3600:
+            absolute_value -= 24*3600
+
+        # splitting up in Hour, Minute, Second
+        hour = absolute_value // 3600
+        absolute_value -= hour * 3600
+        minute = absolute_value // 60
+        absolute_value -= minute * 60
+        return Daytime(hour=hour, minute=minute, second=absolute_value)
 
     def __add__(self, other: "Daytime") -> "Daytime":
-        secs = self.second + other.second
-        minutes = self.minute + other.minute + secs // 60
-        hours = self.hour + other.hour + minutes // 60
+        return Daytime.from_abs(abs(self) + abs(other))
 
-        day = self.__day
-        if day is not ...:
-            day += hours // 24
-
-        secs = secs % 60
-        minutes = minutes % 60
-        hours = hours % 60
-
-        return Daytime(hour=hours, minute=minutes, second=secs, day=day)
+    def __iadd__(self, other: "Daytime") -> "Daytime":
+        self.__dict__ = self.__add__(other).__dict__
+        return self
 
     def __sub__(self, other: "Daytime") -> "Daytime":
-        secs = self.second - other.second
-        minutes = self.minute - other.minute
-        hours = self.hour - other.hour
+        return Daytime.from_abs(abs(self) - abs(other))
 
-        while secs < 0:
-            secs += 60
-            minutes -= 1
-
-        while minutes < 0:
-            minutes += 60
-            hours -= 1
-
-        day = self.__day
-        if day is not ...:
-            while hours < 0:
-                hours += 24
-                day -= 1
-
-            while day < 0:
-                day += 32
-
-        return Daytime(hour=hours, minute=minutes, second=secs, day=day)
+    def __isub__(self, other: "Daytime") -> "Daytime":
+        self.__dict__ = self.__sub__(other).__dict__
+        return self
 
     def __str__(self) -> str:
         return f"{self.__hour}:{self.__minute}:{self.__second}"
 
     def __repr__(self) -> str:
-        return self.__str__() + (f" - {self.day} (day)" if self.day is not ... else "")
+        return self.__str__()
 
     def __bool__(self) -> bool:
         return True
+
+    def __abs__(self) -> int:
+        """
+        returns time in seconds
+        """
+        return self.hour * 3600 + self.minute * 60 + self.second
+
+    def __getitem__(self, item: str) -> int:
+        if item not in self.__dict__:
+            raise ValueError(f"{item} is not a valid variable")
+        return self.__dict__[item]
+
+    def __setitem__(self, item: str, value: int) -> None:
+        if item not in self.__dict__:
+            raise ValueError(f"{item} is not a valid variable")
+
+        match item:
+            case "day":
+                raise ValueError("Day cannot be modified")
+            case "hour":
+                self.hour = value
+            case "minute":
+                self.minute = value
+            case "second":
+                self.second = value
