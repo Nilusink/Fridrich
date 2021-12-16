@@ -157,3 +157,4 @@ pyproject.toml
 *.bat
 *.lnk
 *.zip
+direct_voting.py
