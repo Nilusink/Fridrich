@@ -379,8 +379,8 @@ class FunctionManager:
                 if isIn:
                     debug.debug(f'user {user.sec} tried to use function {message["type"]} ({req})')
                     error = {
-                        "Error": "ClearanceIssue",
-                        "info": f'Clearance required: {req}'
+                        "Error": "AccessError",
+                        "info": f'Clearance required: {" | ".join(req)}'
                     }
                 
                 else:
@@ -391,7 +391,7 @@ class FunctionManager:
 
         else:
             error = {
-                "Error": "ClearanceIssue",
+                "Error": "SecurityClearanceNotSet",
                 "info": f'Clearance not set: {user.sec}'
             }
 

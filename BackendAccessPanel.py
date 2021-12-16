@@ -45,6 +45,8 @@ if __name__ == '__main__':
             try:
                 cmd = input('>> ')  # take input command as string
                 if cmd:
+                    if "\\n" in cmd:
+                        raise RuntimeError("No multiline commands allowed")
                     backend_access_panel_result_please_dont_name_your_variable_like_this = eval(compile(cmd, "backend_command", "eval"))   # execute the code
                     print(ConsoleColors.OKGREEN + str(backend_access_panel_result_please_dont_name_your_variable_like_this) + ConsoleColors.ENDC)    # print it
 
@@ -52,12 +54,6 @@ if __name__ == '__main__':
                 trace = format_exc()
                 try:
                     exec(compile(cmd, "backend_command", "exec"))
-
-                except SyntaxError:  # could probably be better, but I wanted a correct traceback
-                    try:
-                        raise SyntaxError("No multiline commands are allowed")
-                    except SyntaxError:
-                        print(ConsoleColors.FAIL + format_exc() + ConsoleColors.ENDC)
 
                 except (Exception,):
                     print(ConsoleColors.FAIL+format_exc()+ConsoleColors.ENDC)

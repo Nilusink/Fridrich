@@ -136,6 +136,7 @@ class Connection:
         """
         Handle incoming errors
         """
+        print(args)
         match error:    # match errors where not specific error class exists (and NotEncryptedError)
             case 'NotVoted':
                 raise NameError('No votes registered for user')
@@ -151,10 +152,10 @@ class Connection:
 
             case _:  # for all other errors try to raise them and when that fails, raise a ServerError
                 if 'full' in args[0] and 'info' in args[0]:
-                    st = f'raise {error}("info: {args[0]["info"]} -- Full Traceback: {args[0]["full"]}")'
+                    st = f'raise {error}("{args[0]["info"]} -- Full Traceback: {args[0]["full"]}")'
 
                 elif 'info' in args[0]:
-                    st = f'raise {error}("info: {args[0]["info"]}")'
+                    st = f'raise {error}("{args[0]["info"]}")'
 
                 else:
                     st = f'raise {error}'
@@ -400,7 +401,7 @@ class Connection:
                 raise ConnectionAbortedError("Server ended connection")
             time.sleep(delay)
 
-        with suppress(KeyboardInterrupt):
+        with suppress(KeyError):
             out = self._messages[time_sent]
             del self._messages[time_sent]
 
@@ -415,8 +416,7 @@ class Connection:
                 error_name, full_error = self._messages["Error"]["Error"],  self._messages["Error"]
 
             except TypeError:
-                print("Error:", self._messages["Error"])
-                return {}
+                raise Error(self._messages.pop("Error"))
 
             self._messages.pop("Error")
             self.error_handler(error_name, full_error)
