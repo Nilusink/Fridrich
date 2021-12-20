@@ -7,7 +7,6 @@ Author: Nilusink
 from traceback import format_exc
 from contextlib import suppress
 from threading import Thread
-from os import system
 import numpy as np
 import sys
 
@@ -189,8 +188,8 @@ def auto_reboot(r_time: str) -> None:
         raise InvalidStringError('r_time needs to be formatted like this: HH:MM')
 
     if time.strftime('%H:%M') == r_time:
+        reboot()
         time.sleep(55)
-        system('sudo reboot')
 
 
 class DoubleVote:
