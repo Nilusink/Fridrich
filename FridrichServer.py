@@ -283,7 +283,6 @@ class FunctionManager:
                 'setSec': AdminFuncs.set_security,
                 'newUser': AdminFuncs.add_user,
                 'removeUser': AdminFuncs.remove_user,
-                'end': AdminFuncs.end,
                 'rsLogins': AdminFuncs.reset_user_logins,
 
                 'setVersion': ClientFuncs.set_version,
@@ -306,7 +305,6 @@ class FunctionManager:
                 "gLog": ClientFuncs.get_log,
                 "gCal": ClientFuncs.get_cal,
 
-                'end': ClientFuncs.end,
                 'changePwd': ClientFuncs.change_pwd,
                 'getVersion': ClientFuncs.get_version,
                 'gOuser': ClientFuncs.get_online_users,
@@ -321,8 +319,7 @@ class FunctionManager:
                 'download_app': app_store.download_app,
                 'create_app': app_store.receive_app,
                 "modify_app": app_store.modify_app,
-                
-                "ping": UserTools.ping,
+
                 "get_time":  UserTools.get_time,
 
                 "get_temps": WStationFuncs.get_all
@@ -339,19 +336,22 @@ class FunctionManager:
 
                 "ping": UserTools.ping
             },
-            'bot': {
+            'v_bot': {
                 'setVersion': ClientFuncs.set_version,
-                'getVersion': ClientFuncs.get_version,
-                'end': ClientFuncs.end,
-
-                "ping": UserTools.ping
+                'getVersion': ClientFuncs.get_version
+            },
+            "s_bot": {
+                "gRes": ClientFuncs.results,
+                "gLog": ClientFuncs.get_log
             },
             'w_station': {
                 "register": WStationFuncs.register,
                 "commit": WStationFuncs.commit_data
             },
             "all": {
-                "secReq": UserTools.get_sec_clearance
+                "secReq": UserTools.get_sec_clearance,
+                "ping": UserTools.ping,
+                "end": ClientFuncs.end
             }
         }
 
