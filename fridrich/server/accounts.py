@@ -38,7 +38,6 @@ class Manager:
         self.__accounts = accounts
         with open(self.__encryptionFile, 'w') as out:
             json.dump(self.__accounts, out, indent=4)
-            print(f"wrote accounts to {self.__encryptionFile}")
 
     def get_accounts(self) -> list:
         """
