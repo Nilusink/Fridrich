@@ -190,7 +190,11 @@ class Connection:
                     lo_now = Daytime(int(time.strftime("%H")), int(time.strftime("%M")), int(time.strftime("%S")))
                     se_lis = responses[response]["now"].split(":")
                     se_now = Daytime(int(se_lis[0]), int(se_lis[1]), int(se_lis[2]))
-                    self.__server_time_delta = lo_now - se_now
+                    tmp = abs(lo_now - se_now)
+                    if tmp > 0:
+                        tmp = (3600*24) - tmp
+
+                    self.__server_time_delta = Daytime.from_abs(tmp)
 
                     responses[response]["difference"] = str(self.__server_time_delta)
 

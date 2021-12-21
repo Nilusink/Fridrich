@@ -165,7 +165,7 @@ def main() -> None:
     main Function
     """
     with backend.Connection(host="192.168.10.15") as c:
-        c.auth("Adolf Hitler", "13102502")
+        c.auth("StatsBot", "IGetDaStats")
 
         log = c.get_log()["GayKing"]
         c.end()

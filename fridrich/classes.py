@@ -548,6 +548,14 @@ class Daytime:
         absolute_value -= minute * 60
         return Daytime(hour=hour, minute=minute, second=absolute_value)
 
+    @staticmethod
+    def now() -> "Daytime":
+        """
+        Daytime object with current time
+        """
+        return Daytime(hour=int(time.strftime("%H")), minute=int(time.strftime("%M")), second=int(time.strftime("%S")))
+
+    # mathematics
     def __add__(self, other: "Daytime") -> "Daytime":
         return Daytime.from_abs(abs(self) + abs(other))
 
@@ -562,6 +570,26 @@ class Daytime:
         self.__dict__ = self.__sub__(other).__dict__
         return self
 
+    # comparison
+    def __eq__(self, other: "Daytime") -> bool:
+        return abs(self) == abs(other)
+
+    def __ne__(self, other: "Daytime") -> bool:
+        return abs(self) != abs(other)
+
+    def __lt__(self, other: "Daytime") -> bool:
+        return abs(self) < abs(other)
+
+    def __le__(self, other: "Daytime") -> bool:
+        return abs(self) <= abs(other)
+
+    def __gt__(self, other: "Daytime") -> bool:
+        return abs(self) > abs(other)
+
+    def __ge__(self, other: "Daytime") -> bool:
+        return abs(self) >= abs(other)
+
+    # representation
     def __str__(self) -> str:
         return f"{self.__hour}:{self.__minute}:{self.__second}"
 
@@ -577,6 +605,7 @@ class Daytime:
         """
         return self.hour * 3600 + self.minute * 60 + self.second
 
+    # accessibility
     def __getitem__(self, item: str) -> int:
         if item not in self.__dict__:
             raise ValueError(f"{item} is not a valid variable")
