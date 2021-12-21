@@ -13,16 +13,6 @@ class Manager:
     """
     account manager
     """
-    # _instance = None
-
-    # def __new__(cls, *args, **kw):
-    # """
-    # check if the class already exists
-    # """
-    # if cls._instance is None:
-    #     cls._instance = super(Manager, cls).__new__(cls)
-    # return cls._instance
-
     def __init__(self, account_file: str) -> None:
         """
         account_file - file to store encrypted account data in
@@ -48,6 +38,7 @@ class Manager:
         self.__accounts = accounts
         with open(self.__encryptionFile, 'w') as out:
             json.dump(self.__accounts, out, indent=4)
+            print(f"wrote accounts to {self.__encryptionFile}")
 
     def get_accounts(self) -> list:
         """
@@ -101,6 +92,7 @@ class Manager:
                 continue    # to not further iterate all users and get i value of element
 
         self.__accounts[i] = element    # make sure the new element is in list and on correct position
+        self.__write_accounts(self.__accounts)
 
     def new_user(self, username: str, password: str, security_clearance: str) -> None:
         """

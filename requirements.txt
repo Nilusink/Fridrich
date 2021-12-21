@@ -6,3 +6,6 @@ numpy
 # matplotlib
 # seaborn
 # pandas
+
+# only for FridrichDiscordBot
+# discord.py
