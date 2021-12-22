@@ -76,7 +76,7 @@ class Connection:
         self.loop = True
 
         self.executor = ThreadPoolExecutor(max_workers=1)
-        self.receive_thread = Future
+        self.receive_thread = Future()
 
         # for down-/uploading
         self.load_state = str()
@@ -89,7 +89,7 @@ class Connection:
         
         # optimization variables
         self.__server_time_delta = None
-        self.__server_voting_time: str = ""
+        self.__server_voting_time = None
 
     # properties
     @property
@@ -186,17 +186,19 @@ class Connection:
                     responses[response] = (time.time() - responses["ping"]["time"]) * 1000
 
                 case "get_time":
-                    self.__server_voting_time = responses[response]["voting"]
-                    lo_now = Daytime(int(time.strftime("%H")), int(time.strftime("%M")), int(time.strftime("%S")))
-                    se_lis = responses[response]["now"].split(":")
-                    se_now = Daytime(int(se_lis[0]), int(se_lis[1]), int(se_lis[2]))
-                    tmp = abs(lo_now - se_now)
+                    self.__server_voting_time = Daytime.from_strftime(responses[response]["voting"])
+                    responses[response]["voting"] = self.__server_voting_time
+                    responses[response]["now"] = Daytime.from_strftime(responses[response]["now"])
+
+                    lo_now = Daytime.now()
+                    tmp = abs(lo_now - responses[response]["now"])
                     if tmp > 0:
                         tmp = (3600*24) - tmp
 
                     self.__server_time_delta = Daytime.from_abs(tmp)
 
-                    responses[response]["difference"] = str(self.__server_time_delta)
+                    responses[response]["difference"] = self.__server_time_delta
+                    responses[response]["until_voting"] = self.__server_voting_time - responses[response]["now"]
 
                 case _:
                     if response.startswith("gRes"):  # because it could also be "gRes|last" or "gRes+now"
@@ -311,7 +313,7 @@ class Connection:
                 bs = self.Server.recv(8)    # receive message length
                 (length,) = struct.unpack('>Q', bs)
 
-            except (ConnectionResetError, struct.error):
+            except (ConnectionResetError, struct.error, socket.timeout):
                 continue
 
             data = b''
@@ -438,6 +440,7 @@ class Connection:
         try:    # try to reconnect to the server
             self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.Server.connect((self.server_ip, self.port))  # connect to server
+            self.Server.settimeout(.5)
         except socket.error:
             raise ConnectionError('Server not reachable')
 
@@ -1123,11 +1126,12 @@ class Connection:
                 return res.result
             return res
 
-        tmp = Daytime(int(time.strftime("%H")), int(time.strftime("%M")), int(time.strftime("%S"))) + self.__server_time_delta
+        tmp = Daytime.now() + self.__server_time_delta
         res.result = {
-            "now": str(tmp),
+            "now": tmp,
             "voting": self.__server_voting_time,
-            "difference": str(self.__server_time_delta)
+            "difference": self.__server_time_delta,
+            "until_voting": self.__server_voting_time - tmp
         }
         if not wait:
             return res.result
@@ -1168,7 +1172,7 @@ class Connection:
         return all([str(self) == str(other), bool(self) is bool(other), self.server_ip == other.server_ip, self.port == other.port])
 
     # the end
-    def end(self, revive: bool = False):
+    def end(self, revive: bool = False) -> None:
         """
         close connection with server and logout
         """
@@ -1177,11 +1181,21 @@ class Connection:
         }    # set message
         with suppress(ConnectionResetError, ConnectionAbortedError, AuthError):
             self._send(msg, wait=False)  # send message
+
         app_store.executor.shutdown(wait=False)
         self.__AuthKey = None
         self.__userN = None
-        self.executor.shutdown(wait=False)
         self.loop = False
 
         if revive:
-            return Connection(debug_mode=self.debug_mode, host=self.server_ip)
+            # waiting for receive thread to shutdown
+            while not self.receive_thread.done():
+                time.sleep(.1)
+
+            # re-creating the thread-pool
+            del self.executor
+            self.executor = ThreadPoolExecutor(max_workers=1)
+            self.loop = True
+            return
+
+        self.executor.shutdown(wait=True)

@@ -549,6 +549,15 @@ class Daytime:
         return Daytime(hour=hour, minute=minute, second=absolute_value)
 
     @staticmethod
+    def from_strftime(string_time: str, sep: str = ":") -> "Daytime":
+        """
+        from format "HH:MM:SS"
+        """
+        parts = string_time.split(sep)
+        parts += ["00"] * (3-len(parts))
+        return Daytime(hour=int(parts[0]), minute=int(parts[1]), second=int(parts[2]))
+
+    @staticmethod
     def now() -> "Daytime":
         """
         Daytime object with current time
@@ -594,10 +603,10 @@ class Daytime:
         return f"{self.__hour}:{self.__minute}:{self.__second}"
 
     def __repr__(self) -> str:
-        return self.__str__()
+        return f"<Daytime: {self.__str__()}>"
 
     def __bool__(self) -> bool:
-        return True
+        return bool(self.__abs__())
 
     def __abs__(self) -> int:
         """

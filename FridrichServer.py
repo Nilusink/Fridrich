@@ -342,7 +342,8 @@ class FunctionManager:
             },
             "s_bot": {
                 "gRes": ClientFuncs.results,
-                "gLog": ClientFuncs.get_log
+                "gLog": ClientFuncs.get_log,
+                "get_time": UserTools.get_time
             },
             'w_station': {
                 "register": WStationFuncs.register,

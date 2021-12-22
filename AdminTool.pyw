@@ -281,17 +281,16 @@ class Window:
         except NameError:
             messagebox.showerror('Error', f'User with name "{""}" already exists')
 
-    @staticmethod
-    def reset_logins(_event=None) -> None:
+    def reset_logins(self, _event=None) -> None:
         """
         reset all logins
         """
-        global w, c
+        global w
         ans = messagebox.askyesno('Confirm', 'Clear all users (logout)')
         if ans:
             with suppress(ConnectionAbortedError):
-                c.admin_reset_logins()
-            c = c.end(revive=True)
+                self.c.admin_reset_logins()
+            self.c.end(revive=True)
             w.root.destroy()
             w = Window(c)
 
