@@ -26,7 +26,7 @@ command_warning_interval = Daytime(minute=10)  # interval of 10 minutes
 last_command_warning = Daytime.now() - command_warning_interval
 
 LOGGED_IN_USERS: Dict[str, Connection] = {}
-USER_TIMEOUT = Daytime(minute=5)
+USER_TIMEOUT = Daytime(minute=2)
 
 
 async def check_if_channel(ctx) -> bool:
@@ -56,6 +56,9 @@ async def check_if_channel(ctx) -> bool:
 
 
 async def check_if_dm(ctx) -> bool:
+    """
+    check if the channel is dm
+    """
     if not isinstance(ctx.channel, discord.channel.DMChannel):
         with suppress(discord.errors.Forbidden):
             await ctx.message.delete()
@@ -65,6 +68,9 @@ async def check_if_dm(ctx) -> bool:
 
 
 async def check_if_logged_in(ctx) -> bool:
+    """
+    check if the user is logged in
+    """
     if ctx.author not in LOGGED_IN_USERS:
         await ctx.send("Not logged in")
         return False
@@ -79,6 +85,9 @@ async def check_if_logged_in(ctx) -> bool:
 # general commands
 @bot.command(name='status', help="get the state of the current voting")
 async def status(ctx, flag: str = "now") -> None:
+    """
+    basically get_results
+    """
     if not await check_if_channel(ctx):
         return
 
@@ -102,6 +111,9 @@ async def status(ctx, flag: str = "now") -> None:
 
 @bot.command(name='log', help="get the current log")
 async def log(ctx) -> None:
+    """
+    get the current log
+    """
     if not await check_if_channel(ctx):
         return
 
@@ -121,6 +133,9 @@ async def log(ctx) -> None:
 
 @bot.command(name="streak", help="get the current streaks")
 async def streak(ctx) -> None:
+    """
+    get the current streaks
+    """
     if not await check_if_channel(ctx):
         return
 
@@ -140,6 +155,9 @@ async def streak(ctx) -> None:
 
 @bot.command(name="time", help="get the current server time")
 async def g_time(ctx) -> None:
+    """
+    get an overview of the server and the votings
+    """
     if not await check_if_channel(ctx):
         return
 
@@ -151,6 +169,9 @@ async def g_time(ctx) -> None:
 # user specific commands
 @bot.command(name="login", help="login to your account (dm only)")
 async def login(ctx, username: str, password: str) -> None:
+    """
+    login
+    """
     if not await check_if_dm(ctx):
         return
 
@@ -167,8 +188,11 @@ async def login(ctx, username: str, password: str) -> None:
     await ctx.send("Login failed")
 
 
-@bot.command(name="end", help="logout (if logged in)")
-async def end(ctx) -> None:
+@bot.command(name="logout", help="logout (if logged in)")
+async def logout(ctx) -> None:
+    """
+    logout
+    """
     if not all([await check_if_dm(ctx), await check_if_logged_in(ctx)]):
         return
 
@@ -179,6 +203,9 @@ async def end(ctx) -> None:
 
 @bot.command(name="vote", help="send a vote to the fridrich server (only when logged in)")
 async def send_vote(ctx, vote: str, voting: str = "GayKing") -> None:
+    """
+    send a vote to the server
+    """
     if not all([await check_if_dm(ctx), await check_if_logged_in(ctx)]):
         return
 
@@ -187,12 +214,15 @@ async def send_vote(ctx, vote: str, voting: str = "GayKing") -> None:
 
 
 @bot.event
-async def on_command_error(ctx, error):
+async def on_command_error(ctx, error) -> None:
+    """
+    run if there was an error running an command
+    """
     if isinstance(error, commands.errors.CheckFailure):
         await ctx.send('You do not have the correct role for this command.')
 
     elif isinstance(error, commands.errors.CommandNotFound):
-        await ctx.send(f"Invalid command \"{ctx.message.content}\" (not found)")
+        await ctx.send(f"Invalid command \"{ctx.message.content.split(' '[0])}\" (not found)")
 
 
 @bot.event
@@ -203,8 +233,13 @@ async def on_member_join(member):
     )
 
 
-@tasks.loop(seconds=1)
+@tasks.loop(seconds=30)
 async def check_login_time():
+    """
+    repeated every 30 seconds
+    checks if a user has been logged in for longer than "USER_TIMEOUT"
+    then logs them out
+    """
     for user in LOGGED_IN_USERS:
         if LOGGED_IN_USERS[user] and LOGGED_IN_USERS[user].login_time > USER_TIMEOUT:
             print(f"user timed out: {user}")
@@ -221,6 +256,7 @@ if __name__ == '__main__':
                 except ConnectionError:
                     continue
             print("Bot started")
+            check_login_time.start()
             bot.run(TOKEN)
 
     finally:

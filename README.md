@@ -5,7 +5,84 @@ It mainly consists of three parts:
 * Fridrich Backend
 * Fridrich Dashboard
 <br><br><br>
-## Fridrich Server
+# Fridrich Server
+## Installation
+### Step 1: Clone this repository
+Clone this Repo to your target directory. ( [how to clone a github repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) )<br>
+Then head to your directory:
+```bash
+cd /your/directory/Fridrich/
+```
+
+### Step 2: Install python 3.10 on your system
+This step is going to be different for every OS. Here is an example for rasbian:
+<br>
+[python3.10 installation for raspberry-pi](https://raspberrytips.com/install-latest-python-raspberry-pi/)
+<br>
+### Step 3: Installing the python libraries
+If you plan on using FridrichDiscordBot, edit *requirements.txt* and uncomment everything after **# only for FridrichDiscordBot**:
+```bash
+cryptography==3.3.2
+numpy
+
+# only for GayHistoryAnalyser
+# matplotlib
+# seaborn
+# pandas
+
+# only for FridrichDiscordBot
+discord.py
+
+```
+The same thing applies for GayHistoryAnalyser.
+
+In your Fridrich directory, run:
+
+For Linux:
+```bash
+python3.10 -m pip install -r requirements.txt
+```
+For Windows:
+```batch
+pip3.10 -m pip install -r requirements.txt
+```
+### Step 4: create the required files
+Copy the *data* directory from [this](https://www.github.com/Nilusink/FridrichServer-Docker/) repository
+into your directory.
+<br>
+### Step 5: Adjust settings.json
+The file *settings.json* can be found under **Fridrich/fridrich/server/** and contains
+all the settings for the server. In this file there are other settings as well, but the
+ones we need are those with filepaths in them.<br>
+Then for every directory replace **/home/pi/Server/** with your directory.
+
+Ex.:
+```bash
+"lastFile": "/home/pi/Server/data/yes.json"
+```
+to
+```bash
+"lastFile": "/your/server/directory/Fridrich/data/yes.json"
+```
+
+### Step 6 (optional): Autostart
+If you want your server to run every time on startup, you can put FridrichServer (and FridrichDiscordBot)
+into autostart. Again, this step is going to be different for every system, but
+here is an example for rasbian:
+
+Open the file with nano:
+```bash
+sudo nano /etc/rc.local
+```
+Add the following line to the end of the file (before *exit 0*):
+```bash
+python3 /path/do/your/server/FridrichServer.py &
+```
+And optionally:
+```bash
+python3 /path/do/your/server/FridrichDiscordBot.py &
+```
+## Description
 The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It saves all the data in files and accepts requests, handles events like the 0 o'clock vote and some other "cool" stuff. The basic File Layout for the Server should look like this:  
 <pre>
 |  
@@ -45,8 +122,10 @@ The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It
 |   |---♦ classes.py
 |   |---♦ useful.py
 |  
-|---♦ FridrichServer.py  
+|---♦ FridrichServer.py
+|---♦ FridrichDiscordBot.py (optional)
 </pre>
+<br><br><br>
 The **Calendar.json** file saves the configurations of the calendar in a dict:
 ```Python 
 {'10.10.2005' : ['stuff happened', 'some other things happened as well'], '11.10.2005' : []}
@@ -89,8 +168,16 @@ The **Version** file stores information about the current version: *Version:0.3.
 **yes.json** is basically the same file as *now.json* but from yesterday.<br><br>
 All the files in the **fridrich** folder are just modules for the Server to run.
 
-
-## Fridrich Backend
+## FridrichDiscordBot
+To run the discord bot you must replace the *TOKEN*
+with your discord bot's Token and the 
+*CHANNEL_ID* with your discord servers channel id
+<br>
+*How?*
+<br>
+[Follow the steps in this tutorial](https://realpython.com/how-to-make-a-discord-bot-python/)
+<br><br>
+# Fridrich Backend
 The Backend File is meant to be imported by another program (**Fridrich Dashboard**). It is generally used to communicate with the server, get information and send votes.
 The File Layout is straightforward:  
 <pre>
@@ -110,13 +197,13 @@ The File Layout is straightforward:
 </pre>  
 Optionally there also is the file **FridrichBackendOffline.py** which is for testing if you can't connect to a Fridrich Server.
 <br><br>
-## Fridrich Dashboard
+# Fridrich Dashboard
 As you may have noticed, this program is not actually included in this repository. The Programmer of it
 doesn't want his code to be open-source, so unfortunately you have to make your own program.
 As an example of how to use the fridrich module, you can use **VersionChanger.py**, **AppStore.py**
 and **adminTool.py**.
 <br><br>
-## Installation with Docker
+# Installation with Docker
 There are three docker-images available for Fridrich:
 
 - **Server**: nilusink/fridrich_server

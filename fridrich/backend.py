@@ -488,6 +488,9 @@ class Connection:
         self.Server.settimeout(.5)
 
         self.receive_thread = self.executor.submit(self.receive)  # start thread for receiving
+        if mes["Auth"]:
+            self.__login_time = Daytime.now()
+
         return mes['Auth']  # return True or False
 
     def re_auth(self) -> bool:
@@ -1204,6 +1207,7 @@ class Connection:
 
         self.loop = False
         self.__AuthKey = None
+        self.__login_time = None
 
         if revive:
             # waiting for receive thread to shutdown
