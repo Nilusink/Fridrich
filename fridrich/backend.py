@@ -72,6 +72,7 @@ class Connection:
 
         self.__AuthKey = None
         self.__userN = None
+        self.__pwd_hash = None
 
         self.loop = True
 
@@ -90,6 +91,8 @@ class Connection:
         # optimization variables
         self.__server_time_delta = None
         self.__server_voting_time = None
+
+        self.__login_time = None
 
     # properties
     @property
@@ -129,6 +132,10 @@ class Connection:
         if value not in allowed:
             raise ValueError(f"must be {' or '.join([str(el) for el in allowed])}")
         self._debug_mode = value
+
+    @property
+    def login_time(self) -> Daytime | None:
+        return self.__login_time
 
     # "local" functions
     @staticmethod
@@ -440,12 +447,11 @@ class Connection:
         try:    # try to reconnect to the server
             self.Server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.Server.connect((self.server_ip, self.port))  # connect to server
-            self.Server.settimeout(.5)
         except socket.error:
             raise ConnectionError('Server not reachable')
 
     # user functions
-    def auth(self, username: str, password: str) -> bool:
+    def auth(self, username: str, password: str, pwd_hashed: bool = False) -> bool:
         """
         authenticate with the server
         """
@@ -462,10 +468,11 @@ class Connection:
         msg = {  # message
             'type': 'auth',
             'Name': username,
-            'pwd': sha512(password.encode()).hexdigest(),
+            'pwd': sha512(password.encode()).hexdigest() if not pwd_hashed else password,
             "com_protocol_version": COMM_PROTOCOL_VERSION
         }
         self.__userN = username
+        self.__pwd_hash = msg["pwd"]
         self.__AuthKey = None  # reset AuthKey
         stringMes = json.dumps(msg, ensure_ascii=False)
 
@@ -477,8 +484,21 @@ class Connection:
             self.error_handler(mes["Error"], mes)
         self.__AuthKey = mes['AuthKey']
 
+        # setting timeout for receive thread
+        self.Server.settimeout(.5)
+
         self.receive_thread = self.executor.submit(self.receive)  # start thread for receiving
         return mes['Auth']  # return True or False
+
+    def re_auth(self) -> bool:
+        """
+        if a user has already been logged in, you can now try to re-login
+        """
+        if self.__userN is None or self.__pwd_hash is None:
+            return False
+
+        self.end(revive=True)
+        return self.auth(username=self.__userN, password=self.__pwd_hash, pwd_hashed=True)
 
     def get_sec_clearance(self, wait: bool = False) -> str | nFuture:
         """
@@ -1182,10 +1202,8 @@ class Connection:
         with suppress(ConnectionResetError, ConnectionAbortedError, AuthError):
             self._send(msg, wait=False)  # send message
 
-        app_store.executor.shutdown(wait=False)
-        self.__AuthKey = None
-        self.__userN = None
         self.loop = False
+        self.__AuthKey = None
 
         if revive:
             # waiting for receive thread to shutdown
@@ -1199,3 +1217,4 @@ class Connection:
             return
 
         self.executor.shutdown(wait=True)
+        app_store.executor.shutdown(wait=False)
