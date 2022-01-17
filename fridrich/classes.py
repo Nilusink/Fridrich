@@ -600,7 +600,7 @@ class Daytime:
 
     # representation
     def __str__(self) -> str:
-        return f"{self.__hour}:{self.__minute}:{self.__second}"
+        return f"{'0' if self.hour < 10 else ''}{self.hour}:{'0' if self.minute < 10 else ''}{self.__minute}:{'0' if self.second < 10 else ''}{self.__second}"
 
     def __repr__(self) -> str:
         return f"<Daytime: {self.__str__()}>"
@@ -616,20 +616,34 @@ class Daytime:
 
     # accessibility
     def __getitem__(self, item: str) -> int:
-        if item not in self.__dict__:
-            raise ValueError(f"{item} is not a valid variable")
-        return self.__dict__[item]
+        match item:
+            case "hour":
+                return self.hour
+            case "minute":
+                return self.minute
+            case "second":
+                return self.second
+            case _:
+                raise ValueError(f"{item} is not a valid variable!")
 
     def __setitem__(self, item: str, value: int) -> None:
-        if item not in self.__dict__:
-            raise ValueError(f"{item} is not a valid variable")
-
         match item:
-            case "day":
-                raise ValueError("Day cannot be modified")
             case "hour":
                 self.hour = value
             case "minute":
                 self.minute = value
             case "second":
                 self.second = value
+            case _:
+                raise ValueError(f"{item} is not a valid variable!")
+
+    def __delitem__(self, item: str) -> None:
+        match item:
+            case "hour":
+                self.hour = 0
+            case "minute":
+                self.minute = 0
+            case "second":
+                self.second = 0
+            case _:
+                raise ValueError(f"{item} is not a valid variable!")

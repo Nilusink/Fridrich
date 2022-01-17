@@ -87,7 +87,7 @@ class Connection:
         # message pool
         self.__message_pool: list = []
         self.__results_getters: Dict[str, Future] = {}
-        
+
         # optimization variables
         self.__server_time_delta = None
         self.__server_voting_time = None
@@ -1141,7 +1141,7 @@ class Connection:
                 "type": "get_time"
             }
             self._send(msg, wait=True)
-    
+
             # result handling
             self.__results_getters[msg["type"]] = res
             if not wait:
@@ -1186,7 +1186,6 @@ class Connection:
         return True
 
     def __del__(self) -> None:
-        print("called end")
         self.end()
 
     def __eq__(self, other: "Connection") -> bool:
