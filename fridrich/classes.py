@@ -602,6 +602,12 @@ class Daytime:
     def __str__(self) -> str:
         return f"{'0' if self.hour < 10 else ''}{self.hour}:{'0' if self.minute < 10 else ''}{self.__minute}:{'0' if self.second < 10 else ''}{self.__second}"
 
+    def to_string(self) -> str:
+        """
+        call __str__
+        """
+        return self.__str__()
+
     def __repr__(self) -> str:
         return f"<Daytime: {self.__str__()}>"
 

@@ -8,6 +8,7 @@ from traceback import format_exc
 from contextlib import suppress
 from threading import Thread
 import numpy as np
+import signal
 import sys
 
 from cryptography.fernet import InvalidToken
@@ -124,7 +125,9 @@ def zero_switch() -> None:
     """
     execute the switch
     """
+    print(f"Calculating results for Votings: {list(Vote)}")
     for voting, res in Vote:
+        print(f"now: {voting}")
         log_out_file = Const.logDirec+voting+".json"
         vote_res = list(res.values())
 
@@ -159,14 +162,14 @@ def zero_switch() -> None:
         log[time.strftime('%d.%m.%Y')] = total_masters
         json.dump(log, open(log_out_file, "w"), indent=4)
 
-        debug.debug(f"Results for {voting}: {total_masters}")
+        print(f"Results for {voting}: {total_masters}")
 
     # copy log to last log
     with open(Const.lastFile, "w") as output:
         json.dump(dict(Vote), output, indent=4)
 
     Vote.set({})
-    debug.debug("done voting")
+    print("done voting")
 
     if time.strftime('%a') == Const.DoubleVoteResetDay:  # if reset day, reset double votes
         dVotes = DV.value.get()
@@ -179,9 +182,7 @@ def zero_switch() -> None:
 def auto_reboot(r_time: str) -> None:
     """
     if time is r_time, reboot the server (format is "HH:MM")
-    
     if you don't want the server to reboot, just set ``r_time`` to something like "99:99"
-
     or any other time that will never happen
     """
     if not len(r_time) == 5 and r_time.replace(':', '').isnumeric():
@@ -189,7 +190,7 @@ def auto_reboot(r_time: str) -> None:
 
     if time.strftime('%H:%M') == r_time:
         reboot()
-        time.sleep(55)
+        sys.exit(0)
 
 
 class DoubleVote:
@@ -484,7 +485,6 @@ class ClientFuncs:
     """
     Manages the Client Functions
     """
-
     @staticmethod
     def vote(message: dict, user: User, *_args) -> None:
         """
@@ -511,8 +511,6 @@ class ClientFuncs:
         global Vote
         tmp = Vote.get()
         with suppress(KeyError):
-            debug.debug(
-                f"voting: {tmp}, user id: {user.id}, userid in voting: {str(user.id) in tmp[message['voting']]}")
             del tmp[message['voting']][
                 str(user.id)]  # try to remove vote from client, if client hasn't voted yet, ignore it
         Vote.set(tmp)
@@ -771,7 +769,7 @@ def update() -> None:
     global reqCounter
     while not Const.Terminate:
         # --------  00:00 switch ---------
-        if time.strftime("%H:%M") == Const.switchTime:
+        if Daytime.now() == Daytime.from_strftime(Const.switchTime):
             zero_switch()
             time.sleep(61)
 
@@ -779,6 +777,18 @@ def update() -> None:
         auto_reboot(Const.rebootTime)
 
         time.sleep(1)
+
+
+def end(*_trash) -> None:
+    """
+    global function to end the server
+    """
+    print(f"shutting down server at {Daytime.now().to_string()}")
+
+    server.shutdown(socket.SHUT_RDWR)
+    debug.debug(format_exc())
+    Const.Terminate = True
+    sys.exit(0)
 
 
 ############################################################################
@@ -789,6 +799,7 @@ if __name__ == '__main__':
     try:
         reqCounter = 0
 
+        # create class instances
         AccManager = Manager(Const.crypFile)
         FunManager = FunctionManager()
 
@@ -820,16 +831,23 @@ if __name__ == '__main__':
                 cal[dForm] = list()
             json.dump(cal, open(Const.CalFile, 'w'))
 
+        # create server socket object
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind((Const.ip, Const.port))
         server.listen()
         debug.debug(Const.ip)
 
+        # start update thread
         Updater = Thread(target=update, daemon=True)
-
         Updater.start()
 
+        # handle interrupts
+        signals = [signal.SIGINT, signal.SIGTERM, signal.SIGQUIT, signal.SIGHUP]
+        for s in signals:
+            signal.signal(s, end)
+
+        # "start" server
         receive()
 
     except Exception as e:
@@ -838,7 +856,4 @@ if __name__ == '__main__':
         with open(Const.errFile, 'a') as out:   # debug to file because there may be an error before the debug class was initialized
             out.write(f'######## - Exception "{e}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")} - ########\n\n{format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n')
 
-        server.shutdown(socket.SHUT_RDWR)
-        debug.debug(format_exc())
-        Terminate = True
-        sys.exit(0)
+        end()
