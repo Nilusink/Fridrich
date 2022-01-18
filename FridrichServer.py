@@ -130,6 +130,9 @@ def zero_switch() -> None:
         print(f"now: {voting}")
         log_out_file = Const.logDirec+voting+".json"
         vote_res = list(res.values())
+        if not vote_res:
+            print(f"no votes for {voting}")
+            continue
 
         # get masters
         res_arr = np.array(vote_res)
