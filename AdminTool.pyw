@@ -306,6 +306,6 @@ class Window:
 
 
 if __name__ == '__main__':
-    with Connection(host='192.168.10.15') as c:
+    with Connection(host='server.fridrich.xyz') as c:
         w = Window(c)
         w.run()

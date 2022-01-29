@@ -164,11 +164,10 @@ def main() -> None:
     """
     main Function
     """
-    with backend.Connection(host="192.168.10.15") as c:
+    with backend.Connection(host="server.fridrich.xyz") as c:
         c.auth("StatsBot", "IGetDaStats")
 
         log = c.get_log()["GayKing"]
-        c.end()
 
     months = {}
     for element, kings in log.items():

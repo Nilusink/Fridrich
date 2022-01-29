@@ -125,13 +125,13 @@ def zero_switch() -> None:
     """
     execute the switch
     """
-    print(f"Calculating results for Votings: {list(Vote)}")
+    print(f"Calculating results for Votings: {[tmp[0] for tmp in Vote]}")
     for voting, res in Vote:
-        print(f"now: {voting}")
+        print(f"now: {voting}; - ", end="")
         log_out_file = Const.logDirec+voting+".json"
         vote_res = list(res.values())
         if not vote_res:
-            print(f"no votes for {voting}")
+            print(f"no votes for")
             continue
 
         # get masters
@@ -165,7 +165,7 @@ def zero_switch() -> None:
         log[time.strftime('%d.%m.%Y')] = total_masters
         json.dump(log, open(log_out_file, "w"), indent=4)
 
-        print(f"Results for {voting}: {total_masters}")
+        print(f"results: {total_masters}")
 
     # copy log to last log
     with open(Const.lastFile, "w") as output:
@@ -326,7 +326,9 @@ class FunctionManager:
 
                 "get_time":  UserTools.get_time,
 
-                "get_temps": WStationFuncs.get_all
+                "get_temps_now": WStationFuncs.get_now,
+                "get_temps_log": WStationFuncs.get_log,
+                "get_stations": WStationFuncs.get_stations
             },
             'guest': {                                  # instead of 5 billion if'S
                 'CalEntry': ClientFuncs.calendar_handler,

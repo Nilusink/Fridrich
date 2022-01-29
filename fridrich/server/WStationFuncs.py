@@ -1,11 +1,13 @@
 """
 for weather-stations to commit data to the pool
 
-Author: Nilusink
+Author:
+Nilusink
 """
 from fridrich.server.server_funcs import send_success
 from fridrich.classes import User
 from fridrich.server import Const
+from traceback import format_exc
 import json
 
 
@@ -17,7 +19,7 @@ def register(message: dict, user: User, *_args) -> None:
     try:
         tmp = json.load(open(Const.WeatherDir+"all.json", "r"))
 
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, FileNotFoundError):
         tmp = []
 
     for element in tmp:
@@ -37,8 +39,8 @@ def register(message: dict, user: User, *_args) -> None:
     with open(Const.WeatherDir+"all.json", "w") as out_file:
         json.dump(tmp, out_file, indent=4)
 
-    with open(Const.WeatherDir+message["station_name"], "w") as out_file:
-        out_file.write("[]")
+    with open(Const.WeatherDir+message["station_name"]+".json", "w") as out_file:
+        out_file.write("{}")
 
     send_success(user)
 
@@ -49,56 +51,69 @@ def commit_data(message: dict, user: User, *_args) -> None:
     """
     now_data: dict
     station_data: dict
-    if not check_if_registered(message, user, *_args):
-        mes = {
-                'Error': 'RegistryError',
-                "info": "weather-station is not registered yet"
-            }
-        user.send(mes, message_type="Error")
-        return
-
     try:
-        now_data = json.load(open(Const.WeatherDir+"now.json", "r"))
+        if not check_if_registered(message, user, *_args):
+            mes = {
+                    'Error': 'RegistryError',
+                    "info": "weather-station is not registered yet"
+                }
+            user.send(mes, message_type="Error")
+            return
 
-    except json.JSONDecodeError:
-        now_data = {}
+        try:
+            now_data = json.load(open(Const.WeatherDir+"now.json", "r"))
 
-    now_data[message["station_name"]] = {
-        "time": message["time"],
-        "temp": message["temp"],
-        "hum": message["hum"],
-        "press": message["press"]
-    }
+        except (json.JSONDecodeError, FileNotFoundError):
+            now_data = {}
 
-    with open(Const.WeatherDir+"now.json", "w") as out_file:
-        json.dump(now_data, out_file, indent=4)
+        now_data[message["station_name"]] = {
+            "time": message["time"],
+            "temp": message["temp"],
+            "hum": message["hum"],
+            "press": message["press"]
+        }
 
-    try:
-        station_data = json.load(open(Const.WeatherDir+message["station_name"], "r"))
+        with open(Const.WeatherDir+"now.json", "w") as out_file:
+            json.dump(now_data, out_file, indent=4)
 
-    except json.JSONEncoder:
-        station_data = {}
+        try:
+            station_data = json.load(open(Const.WeatherDir+message["station_name"]+".json", "r"))
 
-    station_data[message["time"]] = {
-        "temp": message["temp"],
-        "hum": message["hum"],
-        "press": message["press"]
-    }
+        except json.JSONEncoder:
+            station_data = {}
 
-    with open(Const.WeatherDir + message["station_name"], "w") as out_file:
-        json.dump(station_data, out_file, indent=4)
+        station_data[message["time"]] = {
+            "temp": message["temp"],
+            "hum": message["hum"],
+            "press": message["press"]
+        }
 
-    send_success(user)
+        with open(Const.WeatherDir + message["station_name"]+".json", "w") as out_file:
+            json.dump(station_data, out_file, indent=4)
+
+        send_success(user)
+
+    except KeyError:
+        print(format_exc())
+        user.send({
+            "Error": "KeyError",
+            "info": "Not all keys are given",
+            "full": format_exc()
+        })
 
 
 def check_if_registered(message: dict, _user: User, *_args) -> bool:
     """
     check if a weather-station is already registered
     """
-    return message["station_name"] in json.load(open(Const.WeatherDir+"all.json", "r"))
+    try:
+        return message["station_name"] in [station["station_name"] for station in json.load(open(Const.WeatherDir+"all.json", "r"))]
+
+    except FileNotFoundError:
+        return False
 
 
-def get_all(_message: dict, user: User, *_args) -> None:
+def get_now(_message: dict, user: User, *_args) -> None:
     """
     send a dict of all weather-stations with their current measurement
     """
@@ -106,7 +121,38 @@ def get_all(_message: dict, user: User, *_args) -> None:
     try:
         now_data = json.load(open(Const.WeatherDir+"now.json", "r"))
 
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, FileNotFoundError):
         now_data = {}
 
     user.send(now_data)
+
+
+def get_log(message: dict, user: User, *_args) -> None:
+    """
+    send the log of a specific weather station
+    """
+    try:
+        station_log = json.load(open(Const.WeatherDir+message["station_name"]+".json", "r"))
+
+    except FileNotFoundError:
+        user.send({
+            "Error": "KeyError",
+            "info": f"Weather station with name ({message['station_name']}) not registered!"
+        })
+        return
+
+    user.send(station_log)
+
+
+def get_stations(_message: dict, user: User, *_args) -> None:
+    """
+    send a dict of all currently registered weather station names and locations
+    """
+    try:
+        stations = json.load(open(Const.WeatherDir+"all.json", "r"))
+
+    except FileNotFoundError:
+        user.send({})
+        return
+
+    user.send(stations)

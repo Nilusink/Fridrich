@@ -345,7 +345,12 @@ if __name__ == '__main__':
                 except ConnectionError:
                     continue
             print(f"Bot started at {str(Daytime.now())}")
+
+            # start loops
             # check_login_time.start()  # kinda messes everything up
+            looper.start()
+
+            # run bot
             bot.run(TOKEN)
 
     finally:

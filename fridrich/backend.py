@@ -785,6 +785,52 @@ class Connection:
             return res.result
         return res
 
+    def get_weather_stations(self, wait: bool = False) -> dict | nFuture:
+        """
+        get the names and locations of all registered weather stations
+        """
+        msg = {
+            "type": "get_stations"
+        }
+        self._send(msg, wait=True)
+
+        # result handling
+        res = nFuture()
+        self.__results_getters[msg["type"]] = res
+        if not wait:
+            self.send()
+            return res.result
+        return res
+
+    def get_temps_now(self, wait: bool = False) -> dict | nFuture:
+        msg = {
+            "type": "get_temps_now"
+        }
+        self._send(msg, wait=True)
+
+        # result handling
+        res = nFuture()
+        self.__results_getters[msg["type"]] = res
+        if not wait:
+            self.send()
+            return res.result
+        return res
+
+    def get_temps_log(self, station_name: str, wait: bool = False) -> dict | nFuture:
+        msg = {
+            "type": "get_temps_log",
+            "station_name": station_name
+        }
+        self._send(msg, wait=True)
+
+        # result handling
+        res = nFuture()
+        self.__results_getters[msg["type"]] = res
+        if not wait:
+            self.send()
+            return res.result
+        return res
+
     # user controlled variables:
     def get_all_vars(self, wait: bool = False) -> dict | nFuture:
         """
@@ -871,6 +917,48 @@ class Connection:
 
     def __delitem__(self, item: str) -> None:
         return self.del_var(item)
+
+    # WeatherStation Funcs
+    def register_station(self, station_name: str, location: str, wait: bool = False) -> None | nFuture:
+        """
+        register a new weather station
+        """
+        msg = {
+            "type": "register",
+            "station_name": station_name,
+            "location": location
+        }
+        self._send(msg, wait=True)
+
+        # result handling
+        res = nFuture()
+        self.__results_getters[msg["type"]] = res
+        if not wait:
+            self.send()
+            return res.result
+        return res
+
+    def commit_weather_data(self, station_name: str, temperature: float | None = ..., humidity: float | None = ..., pressure: float | None = ..., wait: bool = False) -> None | nFuture:
+        """
+        Commit data to the WeatherStation database
+        """
+        msg = {
+            "type": "commit",
+            "time": Daytime.now().to_string(),
+            "station_name": station_name,
+            "temp": None if temperature is ... else temperature,
+            "hum": None if humidity is ... else humidity,
+            "press": None if pressure is ... else pressure
+        }
+        self._send(msg, wait=True)
+
+        # result handling
+        res = nFuture()
+        self.__results_getters[msg["type"]] = res
+        if not wait:
+            self.send()
+            return res.result
+        return res
 
     # Admin Functions
     def admin_get_users(self, wait: bool = False) -> list | nFuture:
