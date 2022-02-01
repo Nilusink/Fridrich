@@ -59,7 +59,7 @@ class Window:
         tk.Label(self.loginFrame, text='Username', font="Helvetica 50 bold", bg='black', fg='white').place(x=137, y=50)  # Username Label
         self.loginUsername = tk.Entry(self.loginFrame, width=20, font="Helvetica 25 bold")  # Username entry
         self.loginUsername.place(x=115, y=150)
-        self.loginUsername.insert(0, 'admin')
+        self.loginUsername.insert(0, 'Admin')
 
         tk.Label(self.loginFrame, text='Password', font="Helvetica 50 bold", bg='black', fg='white').place(x=137, y=250)  # Password Label
         self.loginPassword = tk.Entry(self.loginFrame, width=20, font="Helvetica 25 bold", show='*')  # Password entry
@@ -187,7 +187,7 @@ class Window:
             self.userEs[-1][1].place(x=300, y=i*50+10)
             self.userEs[-1][2].place(x=550, y=i*50+10)
 
-            if user['Name'] != 'admin':
+            if user['Name'].lower() != 'admin':
                 self.userEs[-1][3].place(x=10,  y=i*50+10)
             else:
                 self.userEs[-1][0].config(state=tk.DISABLED)

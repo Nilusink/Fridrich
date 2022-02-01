@@ -296,8 +296,12 @@ class User:
         length = pack('>Q', len(mes))   # get message length
 
         # send to client
-        self.__client.sendall(length)
-        self.__client.sendall(mes)
+        try:
+            self.__client.sendall(length)
+            self.__client.sendall(mes)
+
+        except (OSError, ConnectionResetError, ConnectionAbortedError):
+            return self.end()
 
         # reset message pool
         self.__message_pool = {}

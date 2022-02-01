@@ -177,6 +177,8 @@ class Connection:
         """
         if necessary, process each result
         """
+        if self._debug_mode == "full":
+            print(f"handling responses {responses=}")
         for response in responses.keys():
             match response:
                 case "getFrees":
@@ -294,6 +296,9 @@ class Connection:
         return res
 
     def __assign_results(self, results: dict) -> None:
+        if self._debug_mode in ("normal", "full"):
+            print(f"assigning {results=}")
+
         if results is ...:
             raise ValueError("results not set")
 
@@ -301,6 +306,8 @@ class Connection:
             if not set(results.keys()) & set(self.__results_getters.keys()) & {element}:    # check if the element is in both list (using sets)
                 raise ValueError(f"element {element} not in results and getters")
 
+            if self._debug_mode == "full":
+                print(f"appended {element=}, now: {self.results_getters}")
             self.__results_getters[element].result = results[element]
 
         for element in set(self.__results_getters.keys()) - set(results.keys()):
@@ -322,6 +329,8 @@ class Connection:
 
             except (ConnectionResetError, struct.error, socket.timeout):
                 continue
+            if self._debug_mode == "full":
+                print(f"new message, receiving now")
 
             data = b''
             no_rec = 0
@@ -341,11 +350,17 @@ class Connection:
                 if no_rec >= 100:          # if for 100 loops no packages were received, raise connection loss
                     raise socket.error('Failed receiving data - connection loss')
 
+            if self._debug_mode == "full":
+                print("received data")
+
             try:
                 mes = cryption_tools.MesCryp.decrypt(data, self.__AuthKey.encode())
             except cryption_tools.InvalidToken:
                 self._messages["Error"] = {"Error": "MessageError", "info": f"cant decrypt: {data}"}
                 continue
+
+            if self._debug_mode in ("full", "normal"):
+                print(f"decrypted data: {mes=}")
 
             try:
                 for _ in range(2):
@@ -599,20 +614,6 @@ class Connection:
         max_num = max(list(StreakGuys.values()))
         names = "|".join([guy for guy in StreakGuys if StreakGuys[guy] == max_num])
         return names, max_num  # return results
-
-    def get_temps(self, wait: bool = False) -> Dict[str, dict] | nFuture:
-        """
-        get room and cpu temperature in °C as well as humidity in %
-        """
-        msg = {'type': 'get_temps'}  # set message
-        self._send(msg, wait=True)
-
-        res = nFuture()
-        self.__results_getters[msg["type"]] = res
-        if not wait:
-            self.send()
-            return res.result
-        return res
 
     def get_cal(self, wait: bool = False) -> dict | nFuture:
         """
@@ -944,7 +945,7 @@ class Connection:
         """
         msg = {
             "type": "commit",
-            "time": Daytime.now().to_string(),
+            "time": time.strftime("%Y.%m.%d")+"-"+Daytime.now().to_string(),
             "station_name": station_name,
             "temp": None if temperature is ... else temperature,
             "hum": None if humidity is ... else humidity,

@@ -15,6 +15,7 @@ from discord.ext import commands, tasks
 from traceback import print_exc
 from typing import Any, Dict
 from time import sleep
+import binascii
 import discord
 
 TOKEN = Low.decrypt('|Nb`sE&w(FH~=vKF#t3GH2^mNGypdMH~=;PH~=;PFaS6J |Nb}tE&wn9 |Nb`sE&wtBH~=sJF#s?CIRH2SH~={SG5|OLFaR|GF#tFK |Nb!mFaRz9FaR_FIRH2SHvlyNHUKgJF#s_DG5|0DH~={S |Nb`sE&w(FH~=vKF#t3GH2^mNGypdMH~=;PH~=;PFaS6J |Nb@rE&w?IG5|OLG5|0DGXOFGGXO9EG5|LKH2^gLFaS9K |Nb`sE&wtBH~=sJF#s?CIRH2SH~={SG5|OLFaR|GF#tFK |Nc1uE&w?IGypjOH~=>QGypRIHvlmJFaS0HHUKgJ |Nb`sE&w(FH~=vKF#t3GH2^mNGypdMH~=;PH~=;PFaS6J |Nb}tE&wn9 |Nb`sE&w$EGypjOH~=#MGypUJGXOOJG5|LKFaS3IH2? |Nb!mFaRz9FaR_FIRH2SHvlyNHUKgJF#s_DG5|0DH~={S |Nb`sE&w$EGypjOH~=#MGypUJGXOOJG5|LKFaS3IH2? |Nb@rE&w?IG5|OLG5|0DGXOFGGXO9EG5|LKH2^gLFaS9K |Nb`sE&wn9 |Nc1uE&w?IGypjOH~=>QGypRIHvlmJFaS0HHUKgJ |Nb`sE&w$EGypjOH~=#MGypUJGXOOJG5|LKFaS3IH2? |Nb}tE&wn9 |Nb`sE&wn9 |Nb=qE&wwCH~=*OF#t9IGypgNFaS3IF#t0FGypXKFaR_F |Nb`sE&w$EGypjOH~=#MGypUJGXOOJG5|LKFaS3IH2? |Nb@rE&w?IG5|OLG5|0DGXOFGGXO9EG5|LKH2^gLFaS9K |Nc1uE&wqAF#s?CGypRIGXOOJHvl;RF#t3GGypRI |Nb!mFaRz9FaS9KIRG^PFaR_FIRG;NH~=#MHUKgJFaS3IHvj |Nb=qE&wn9IRH5TFaR+CIRG^PF#t0FH2^sPG5|LKH~=&NH2? |Nb}tE&wwCFaS0HHUKgJGXOXMHUKgJIRG&LH~=sJHvlyN |Nb}tE&w<HH~=^RF#tILGypUJF#tCJGXOCFH2^gLH~={S |Nb`sE&wtBF#s_DF#s?CG5|FIH2^RGIRG*MHvl;RHvl*Q |Nb@rE&w+GH~=yLGXOFGIRH5TH~=#MF#s|EH2^XIHUKyP |Nb@rE&wn9H~=yLHvl#OG5|FIGXO9EG5|RMH~=yLF#tIL |Nc1uE&w?IGypjOH~=>QGypRIHvlmJFaS0HHUKgJ |Nb=qE&wn9IRH5TFaR+CIRG^PF#t0FH2^sPG5|LKH~=&NH2? |Nb}tE&wqAG5|CHFaR?EH~=&NFaR_FHUKjKH2^sPHUI |Nb@rE&w<HH2^gLHUKpMGypaLFaR(BGypIFF#s?CGypUJ |Nb@rE&w+GH~=yLGXOFGIRH5TH~=#MF#s|EH2^XIHUKyP |Nb`sE&wqAGypLGGypOHH~=&NG5|OLH2^dKG5|OLH2? |Nb`sE&wzDF#t9IF#tILH~=&NH~=>QFaS9KH2^jMHUKjK |Nc1uE&wn9 |Nc1uE&w(FIRG^PGXOOJIRG~RF#t3GH~=#MG5|IJH2^sP |Nc1uE&w<HIRH5TGypjOGypjOGXORKHUKdIF#t9IHUKpM |Nb@rE&w?IG5|OLG5|0DGXOFGGXO9EG5|LKH2^gLFaS9K |Nb`sE&wtBF#s_DF#s?CG5|FIH2^RGIRG*MHvl;RHvl*Q |Nb=qE&wtBIRG&LH2^RGG5|IJG5|6FF#s|EIRG&LH~=vK |Nc1uE&wzDH~=;PH~=#MG5|RMH~=sJH2^RGH2^UHGXOXM |Nb`sE&wzDF#t9IF#tILH~=&NH~=>QFaS9KH2^jMHUKjK |Nc1uE&w(FIRG^PGXOOJIRG~RF#t3GH~=#MG5|IJH2^sP |Nb`sE&w?IGXOULG5|FIGXOaNGXOIHF#tILGXOULHvlpK |Nb=qE&w<HGXO9EIRG^PF#tFKIRG>OH~=&NH2^aJFaR+C |Nb`sE&wzDH~=#MGXOCFGypdMHvlsLH2^dKHvl*QH~=#M |Nb=qE&w$EHUKvOHvl#OGypRIHUKgJH~=#MFaR(BG5|3EH2? |Nb`sE&wn9HvlmJFaS0HHvl*QF#s_DH~=;PH2^dKHvlyNH2? |Nb`sE&w(FH~=vKF#t3GH2^mNGypdMH~=;PH~=;PFaS6J |Nc1uE&w<HGypgNH~=*OHvl*QFaR+CHvl;RHUKdIFaR_F |Nb@rE&wn9 |Nb=qE&w?IF#t9IFaS3IIRG~RH~=#MFaS9KIRG{QF#t9I |Nc1uE&w$EIRG&LHUKsNGXO9EGypaLHUKgJH2^dKGXOXM |Nc1uE&wwCG5|LKGXOULIRG#KH2^aJFaS6JH~=^RF#t9I |Nb}tE&wtBGypaLG5|3EF#s|EH2^UHG5|9GH2^aJG5|3E |Nb=qE&wtBIRG&LH2^RGG5|IJG5|6FF#s|EIRG&LH~=vK ')
@@ -260,6 +261,36 @@ async def unvote(ctx, voting: str = "GayKing") -> None:
         await ctx.send("Deleted vote")
 
 
+@bot.command(name="users", help="get all currently logged in users (only when logged in)")
+async def users(ctx) -> None:
+    with print_traceback():
+        if not all([await check_if_dm(ctx), await check_if_logged_in(ctx)]):
+            return
+
+        all_users = LOGGED_IN_USERS[ctx.author].get_online_users()
+        out = "Logged in users:\n:white_medium_small_square: " + "\n:white_medium_small_square: ".join(all_users)
+
+        await ctx.send(out)
+
+
+@bot.command(name="weather", help="request all data from all weather stations")
+async def weather(ctx) -> None:
+    with print_traceback():
+        if not all([await check_if_dm(ctx), await check_if_logged_in(ctx)]):
+            return
+
+        u_c = LOGGED_IN_USERS[ctx.author]
+
+        now_d = u_c.get_temps_now()
+
+        out = "♦ WEATHER ♦"
+        for station in now_d:
+            out += f"\n:white_medium_small_square: {station} ({now_d[station]['time']}):\n    - " + "\n    - ".join([datapoint + ": " + str(now_d[station][datapoint]) for datapoint in ["temp", "hum", "press"]])
+            out += "\n"
+
+        await ctx.send(out)
+
+
 @bot.event
 async def on_message(message):
     """
@@ -320,20 +351,21 @@ async def looper() -> None:
     """
     function for checking all kinds of stuff in a loop
     """
-    # data for each loop
-    left = stats_c.get_server_time()["until_voting"]
+    with suppress(binascii.Error):
+        # data for each loop
+        left = stats_c.get_server_time()["until_voting"]
 
-    # 00:00 switch
-    if left < Daytime(second=2):
-        sleep(2)
-        res = stats_c.get_log()
-        mes = f"♦ Voting results ♦"
-        for voting in res:
-            dat = res[voting][list(res[voting])[-1]]
-            mes += f"\n{voting}: {dat}"
+        # 00:00 switch
+        if left < Daytime(second=2):
+            sleep(2)
+            res = stats_c.get_log()
+            mes = f"♦ Voting results ♦"
+            for voting in res:
+                dat = res[voting][list(res[voting])[-1]]
+                mes += f"\n{voting}: {dat}"
 
-        channel = bot.get_channel(VOTINGS_CHANNEL_ID)
-        channel.send(mes)
+            channel = bot.get_channel(VOTINGS_CHANNEL_ID)
+            await channel.send(mes)
 
 if __name__ == '__main__':
     try:

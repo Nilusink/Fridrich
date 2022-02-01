@@ -79,7 +79,7 @@ def commit_data(message: dict, user: User, *_args) -> None:
         try:
             station_data = json.load(open(Const.WeatherDir+message["station_name"]+".json", "r"))
 
-        except json.JSONEncoder:
+        except (json.JSONEncoder, FileNotFoundError):
             station_data = {}
 
         station_data[message["time"]] = {

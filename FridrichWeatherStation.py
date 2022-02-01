@@ -9,6 +9,8 @@ from fridrich.backend import Connection
 from fridrich.classes import Daytime
 from random import randint
 import asyncio
+import signal
+import sys
 
 
 # default login data for weather stations
@@ -16,11 +18,15 @@ USERNAME = "WStation"
 PASSWORD = "ISetDaWeather"
 
 # set the station name and location for THIS station
-NAME = "Weather station 1"
+NAME = "WeatherStation1"
 LOCATION = "Somewhere"
 
 # settings for station
-SEND_INTERVAL = 60*15   # wait time in seconds
+SEND_INTERVAL: int | float = 60*15   # wait time in seconds (in this case every 15 minutes)
+
+
+# default variables
+RUNNING: bool = True
 
 
 async def send_weather() -> None:
@@ -54,10 +60,31 @@ async def main() -> None:
     """
     main Function
     """
-    while True:
-        last_run = asyncio.create_task(send_weather())
-        await asyncio.sleep(SEND_INTERVAL)
-        await last_run
+    while RUNNING:
+        try:
+            last_run = asyncio.create_task(send_weather())
+            await asyncio.sleep(SEND_INTERVAL)
+            await last_run
 
-if __name__ == '__main__':
+        except KeyboardInterrupt:
+            return end(0)
+
+
+def end(*signals) -> None:
+    """
+    gets called if the session gets terminated or the program exits
+    """
+    global RUNNING
+    print("shutting down...")
+    RUNNING = False
+    sys.exit(signals[0])
+
+
+if __name__ == "__main__":
+    # signal handling (termination)
+    signal.signal(signal.SIGINT, end)
+    signal.signal(signal.SIGTERM, end)
+
+    # run program
     asyncio.run(main())
+    end()

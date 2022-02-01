@@ -689,7 +689,7 @@ def main() -> None:
     """
     main program
     """
-    with Connection(debug_mode=Off, host="192.168.10.15") as c:
+    with Connection(debug_mode=Off, host="server.fridrich.xyz") as c:
         w = Window(c)
         w.run()
 

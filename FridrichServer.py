@@ -93,13 +93,24 @@ def client_handler() -> None:
     except OSError:
         return
     # try to load the message, else ignore it and restart
-    b = cl.recv(2048)
+    try:
+        b = cl.recv(2048)
+    except (OSError, ConnectionAbortedError, ConnectionResetError):
+        return
+
     try:
         t_mes = cryption_tools.MesCryp.decrypt(b)
 
     except InvalidToken:
         debug.debug(f"Received Message (undecryptable): {b.decode()}")
-        Communication.send(cl, {'error': 'MessageError', 'info': "Couldn'T decrypt message with default key"}, encryption=MesCryp.encrypt)
+        Communication.send(cl, {'error': 'MessageError', 'info': "Couldn'T decrypt message with default key"},
+                           encryption=MesCryp.encrypt)
+        return
+
+    except UnicodeDecodeError:
+        debug.debug(f"Received message (UnicodeDecodeError): {b}")
+        Communication.send(cl, {'error': 'MessageError', 'info': "Couldn'T decrypt message with default key"},
+                           encryption=MesCryp.encrypt)
         return
 
     mes = json.loads(t_mes)
