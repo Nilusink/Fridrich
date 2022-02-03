@@ -5,7 +5,7 @@ Author:
 Nilusink
 """
 from fridrich.server.server_funcs import send_success
-from fridrich.classes import User
+from fridrich.server.classes import User
 from fridrich.server import Const
 from traceback import format_exc
 import json
