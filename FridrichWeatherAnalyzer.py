@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from typing import Dict, List
 import seaborn as sns
 import pandas as pd
+import json
 
 
 # Bot login
@@ -46,7 +47,7 @@ def main() -> None:
 
                 # append data for date
                 temp_graphs[station["station_name"]][short_date] = station_log[date][DATA_POINT]
-
+        print(f"{json.dumps(temp_graphs, indent=4)=}")
         # combine all dates from every weather station
         all_dates: set = {date for station in temp_graphs for date in temp_graphs[station]}
 

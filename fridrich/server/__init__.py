@@ -5,6 +5,7 @@ Contains all the modules that only the server needs
 Author: Nilusink
 """
 from dataclasses import dataclass
+from contextlib import suppress
 from typing import Dict
 import traceback
 import datetime
@@ -137,6 +138,7 @@ class Debug:
         self.debug(err)
 
 
+print(os.getcwd() + '/fridrich/server/user_config.json')
 Const = Constants()
 DEBUGGER = Debug(Const.SerlogFile, Const.errFile)
 
@@ -145,4 +147,5 @@ try:
     USER_CONFIG = json.load(open(os.getcwd() + '/fridrich/server/user_config.json', 'r'))
 
 except FileNotFoundError:
-    USER_CONFIG = json.load(open('/home/apps/Fridrich/fridrich/server/user_config.json', 'r'))
+    with suppress(FileNotFoundError):
+        USER_CONFIG = json.load(open('/home/apps/Fridrich/fridrich/server/user_config.json', 'r'))

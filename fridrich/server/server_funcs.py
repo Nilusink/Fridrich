@@ -4,8 +4,8 @@ defines functions for the Server
 
 Author: Nilusink
 """
-from fridrich.server import Const
-from fridrich import classes
+from fridrich.server import Const, classes
+from fridrich.classes import FileVar
 from sys import platform
 from fridrich import *
 from os import system
@@ -41,7 +41,7 @@ def check_if(s: str, d: dict, voting: str) -> str:
     return s
 
 
-def get_new_ones(flag: str, vote_instance: classes.FileVar, last_file: str, voting: str) -> list:
+def get_new_ones(flag: str, vote_instance: FileVar, last_file: str, voting: str) -> list:
     """
     get all attendants which are not in the default name list
     """

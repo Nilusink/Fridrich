@@ -5,7 +5,6 @@ main program for the Server
 Author: Nilusink
 """
 from traceback import format_exc
-from contextlib import suppress
 from threading import Thread
 import numpy as np
 import signal
@@ -16,6 +15,7 @@ from cryptography.fernet import InvalidToken
 # local imports
 from fridrich.server.accounts import Manager
 from fridrich.server.server_funcs import *
+from fridrich.server.classes import *
 from fridrich.classes import *
 
 from fridrich.server import WStationFuncs

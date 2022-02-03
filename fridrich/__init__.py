@@ -12,6 +12,9 @@ import inspect
 
 
 def decorate_class(decorate_function):
+    """
+    decorate all methods of a class with one decorator
+    """
     def wrapper(cls):
         for name, method in inspect.getmembers(cls, inspect.ismethod):
             setattr(cls, name, decorate_function(method))
