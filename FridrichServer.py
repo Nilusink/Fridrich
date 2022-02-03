@@ -20,10 +20,10 @@ from fridrich.classes import *
 
 from fridrich.server import WStationFuncs
 from fridrich.server import UserTools
+from fridrich.server import app_store
 from fridrich.server import *
 
 from fridrich.cryption_tools import key_func, MesCryp
-from fridrich import app_store
 
 COM_PROTOCOL_VERSIONS: set = {"1.1.0", "1.1.1"}
 
@@ -226,7 +226,7 @@ class DoubleVote:
             for element in validUsers:
                 value[element['Name']] = 1
 
-        self.value = classes.FileVar(value, self.filePath)
+        self.value = FileVar(value, self.filePath)
 
     def vote(self, vote: str, user_id: int) -> bool:
         """
