@@ -117,13 +117,17 @@ class High:
 
 
 try:
-    with open('/home/pi/Server/data/KeyFile.enc', 'r') as inp:
-        defKey = Low.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
-
-except FileNotFoundError:
     with open('data/KeyFile.enc', 'r') as inp:
         defKey = Low.decrypt(inp.read())
 
+except FileNotFoundError:
+    try:
+        from fridrich.server import Const
+        with open(Const.direc+"KeyFile.enc", 'r') as inp:
+            defKey = Low.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
+
+    except ModuleNotFoundError:
+        raise FileNotFoundError("Cannot find file data/KeyFile.enc")
 
 class MesCryp:
     """

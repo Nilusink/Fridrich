@@ -149,6 +149,7 @@ test.file
 test.txt
 ChatElement.pyw
 direct_voting.py
+todo_list.py
 
 # didn't work for some reason
 setup.py
@@ -157,4 +158,3 @@ pyproject.toml
 *.bat
 *.lnk
 *.zip
-direct_voting.py
