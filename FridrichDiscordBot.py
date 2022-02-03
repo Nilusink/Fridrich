@@ -350,6 +350,12 @@ async def looper() -> None:
     function for checking all kinds of stuff in a loop
     """
     with suppress(binascii.Error):
+        if not stats_c:
+            try:
+                stats_c.re_auth()
+            except (Exception,):
+                return
+
         # data for each loop
         left = stats_c.get_server_time()["until_voting"]
 

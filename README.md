@@ -183,15 +183,17 @@ The File Layout is straightforward:
 <pre>
 |  
 |---♦ data  
-|   |---♦ KeyFile.enc  
+|   |---♦ KeyFile.enc
 |  
 |---♦ fridrich
+|   |---♦ server
+|   |   |---♦__init_.py
+|   |
 |   |---♦ __init__.py
 |   |---♦ app_store.py
 |   |---♦ backend.py
-|   |---♦ cryption_tools.py
 |   |---♦ classes.py
-|   |---♦ useful.py
+|   |---♦ cryption_tools.py
 |  
 |---♦ YourProgram.py  
 </pre>  

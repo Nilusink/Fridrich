@@ -74,29 +74,8 @@ Const = Constants()
 
 
 # user configuration
-USER_CONFIG: Dict[str, dict] = {
-    "admin": {
-        "multi_login_allowed": False,
-        "auto_logout": True
-    },
-    "user": {
-        "multi_login_allowed": True,
-        "auto_logout": True
-    },
-    "guest": {
-        "multi_login_allowed": True,
-        "auto_logout": True
-    },
-    "v_bot": {
-        "multi_login_allowed": True,
-        "auto_logout": False
-    },
-    "s_bot": {
-        "multi_login_allowed": True,
-        "auto_logout": False
-    },
-    "w_station": {
-        "multi_login_allowed": True,
-        "auto_logout": False
-    },
-}
+try:
+    USER_CONFIG = json.load(open(os.getcwd() + '/fridrich/server/user_config.json', 'r'))
+
+except FileNotFoundError:
+    USER_CONFIG = json.load(open('/home/apps/Fridrich/fridrich/server/user_config.json', 'r'))

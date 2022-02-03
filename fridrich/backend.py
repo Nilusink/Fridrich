@@ -4,9 +4,9 @@ used to interface with a Fridrich Server
 
 Author: Nilusink
 """
-from typing import Dict, Callable, Iterable, Any, List, Any
 from concurrent.futures import ThreadPoolExecutor, Future
 from fridrich.classes import Future as nFuture, Daytime
+from typing import Dict, Callable, Iterable, List, Any
 from traceback import format_exc
 from contextlib import suppress
 from fridrich import app_store
@@ -274,7 +274,12 @@ class Connection:
         if self.__AuthKey:
             stringMes = json.dumps(message, ensure_ascii=True)
             mes = cryption_tools.MesCryp.encrypt(stringMes, key=self.__AuthKey.encode())
-            self.Server.send(mes)
+            try:
+                self.Server.send(mes)
+
+            except BrokenPipeError:
+                return self.end(revive=True)
+
             if self._debug_mode in ('normal', 'full'):
                 print(ConsoleColors.OKCYAN+stringMes+ConsoleColors.ENDC)
             if self._debug_mode == 'full':
