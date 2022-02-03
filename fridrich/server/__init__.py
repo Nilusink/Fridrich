@@ -5,6 +5,7 @@ Contains all the modules that only the server needs
 Author: Nilusink
 """
 from dataclasses import dataclass
+from typing import Dict
 import json
 import os
 
@@ -70,3 +71,32 @@ class Constants:
 
 
 Const = Constants()
+
+
+# user configuration
+USER_CONFIG: Dict[str, dict] = {
+    "admin": {
+        "multi_login_allowed": False,
+        "auto_logout": True
+    },
+    "user": {
+        "multi_login_allowed": True,
+        "auto_logout": True
+    },
+    "guest": {
+        "multi_login_allowed": True,
+        "auto_logout": True
+    },
+    "v_bot": {
+        "multi_login_allowed": True,
+        "auto_logout": False
+    },
+    "s_bot": {
+        "multi_login_allowed": True,
+        "auto_logout": False
+    },
+    "w_station": {
+        "multi_login_allowed": True,
+        "auto_logout": False
+    },
+}

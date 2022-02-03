@@ -102,7 +102,7 @@ def client_handler() -> None:
         t_mes = cryption_tools.MesCryp.decrypt(b)
 
     except InvalidToken:
-        debug.debug(f"Received Message (undecryptable): {b.decode()}")
+        debug.debug(f"Received Message (undecryptable): {b}")
         Communication.send(cl, {'error': 'MessageError', 'info': "Couldn'T decrypt message with default key"},
                            encryption=MesCryp.encrypt)
         return

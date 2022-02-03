@@ -5,21 +5,15 @@ defines new types for Users, FileVar, ...
 Author: Nilusink
 """
 from concurrent.futures import ThreadPoolExecutor
+from fridrich.server import USER_CONFIG
 from fridrich import cryption_tools
+from threading import Timer
 from struct import pack
 import contextlib
 import socket
 import typing
 import json
 import time
-
-# setting for UsersList class
-MULTI_LOGIN_ALLOWED: set = {
-    "guest",
-    "v_bot",
-    "s_bot",
-    "w_station"
-}
 
 
 class FileVar:
@@ -208,6 +202,15 @@ class User:
         self.__message_pool_max: int = 0
         self.__message_pool_time: str = ""
 
+        # for auto-disconnect
+        self.__last_connection = Daytime.now()
+        self.__timeout = Daytime(minute=5)
+
+        self.__logout_task = Timer(10, self.check_disconnect)   # check every 10 seconds if the user should be logged out
+        # only if the user's security clearance requires auto-logout, start the thread
+        if USER_CONFIG[self.sec]["auto_logout"]:
+            self.__logout_task.start()
+
     @property
     def name(self) -> str:
         """
@@ -243,6 +246,9 @@ class User:
         while self.loop:
             try:
                 mes = cryption_tools.MesCryp.decrypt(self.__client.recv(2048), self.__key.encode())
+
+                # refresh auto-disconnect
+                self.__last_connection = Daytime.now()
 
                 mes = json.loads(mes)
 
@@ -294,6 +300,9 @@ class User:
         """
         actually send the message
         """
+        # refresh auto-disconnect
+        self.__last_connection = Daytime.now()
+
         # process the message
         mes = {
             "content": self.__message_pool,
@@ -318,6 +327,16 @@ class User:
         self.__message_pool_time = ""
         self.__message_pool_names = ()
 
+    def check_disconnect(self) -> None:
+        """
+        for auto-disconnect, check if there was no interaction with the user for self.__timeout
+        """
+        if Daytime.now()-self.__last_connection > self.__timeout:
+            self.end("timeout")
+
+        # re-schedule the task
+        self.__logout_task = Timer(10, self.check_disconnect)
+
     def exec_func(self, message: dict):
         """
         execute functions for the client
@@ -329,11 +348,12 @@ class User:
             self.debugger.write_traceback(e, from_user=self.name)
             return
 
-    def end(self) -> None:
-        print(f"Disconnecting: {self}")
+    def end(self, reason: str = ...) -> None:
+        print(f"Disconnecting: {self} ({reason if reason is not ... else ''})")
         self.disconnect = True
         self.loop = False
         self.__client.close()
+        self.__logout_task.cancel()
 
     def __getitem__(self, item) -> str:
         return dict(self)[item]
@@ -386,7 +406,7 @@ class UserList:
         """
         append object to the end of the list and start receive thread
         """
-        if obj.name in self and obj.sec not in MULTI_LOGIN_ALLOWED:
+        if obj.name in self and not USER_CONFIG[obj.sec]["multi_login_allowed"]:
             self.remove_by(name=obj.name)
 
         self.client_threads.append(self.executor.submit(obj.receive))

@@ -8,8 +8,8 @@ from fridrich import AuthError, RegistryError
 from fridrich.backend import Connection
 from fridrich.classes import Daytime
 from random import randint
-import asyncio
 import signal
+import time
 import sys
 
 
@@ -21,15 +21,12 @@ PASSWORD = "ISetDaWeather"
 NAME = "WeatherStation1"
 LOCATION = "Somewhere"
 
-# settings for station
-SEND_INTERVAL: int | float = 60*15   # wait time in seconds (in this case every 15 minutes)
-
 
 # default variables
 RUNNING: bool = True
 
 
-async def send_weather() -> None:
+def send_weather() -> None:
     """
     login to the server, send weather data, logout
     """
@@ -56,15 +53,18 @@ async def send_weather() -> None:
             c.send()
 
 
-async def main() -> None:
+def main() -> None:
     """
     main Function
     """
     while RUNNING:
         try:
-            last_run = asyncio.create_task(send_weather())
-            await asyncio.sleep(SEND_INTERVAL)
-            await last_run
+            if time.strftime("%M")[-1] in ("5", "0"):    # send every 5 minutes
+                send_weather()
+                time.sleep(60)
+
+            # for performance
+            time.sleep(.5)
 
         except KeyboardInterrupt:
             return end(0)
@@ -86,5 +86,5 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, end)
 
     # run program
-    asyncio.run(main())
+    main()
     end()
