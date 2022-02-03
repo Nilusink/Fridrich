@@ -4,8 +4,9 @@ defines functions for the Server
 
 Author: Nilusink
 """
-from fridrich.server import Const, classes
+from fridrich.server.classes import *
 from fridrich.classes import FileVar
+from fridrich.server import Const
 from sys import platform
 from fridrich import *
 from os import system
@@ -17,7 +18,7 @@ import json
 import time
 
 
-def send_success(user: classes.User) -> None:
+def send_success(user: User) -> None:
     """
     send the success message to the client
     """
