@@ -13,6 +13,14 @@ import typing
 import json
 import time
 
+# setting for UsersList class
+MULTI_LOGIN_ALLOWED: set = {
+    "guest",
+    "v_bot",
+    "s_bot",
+    "w_station"
+}
+
 
 class FileVar:
     def __init__(self, value: str | dict, files: str | list | tuple) -> None:
@@ -378,7 +386,7 @@ class UserList:
         """
         append object to the end of the list and start receive thread
         """
-        if obj.name in self:
+        if obj.name in self and obj.sec not in MULTI_LOGIN_ALLOWED:
             self.remove_by(name=obj.name)
 
         self.client_threads.append(self.executor.submit(obj.receive))

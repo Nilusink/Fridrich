@@ -276,17 +276,15 @@ async def users(ctx) -> None:
 @bot.command(name="weather", help="request all data from all weather stations")
 async def weather(ctx) -> None:
     with print_traceback():
-        if not all([await check_if_dm(ctx), await check_if_logged_in(ctx)]):
-            return
-
-        u_c = LOGGED_IN_USERS[ctx.author]
-
-        now_d = u_c.get_temps_now()
-
+        now_d = stats_c.get_temps_now()
         out = "♦ WEATHER ♦"
         for station in now_d:
-            out += f"\n:white_medium_small_square: {station} ({now_d[station]['time']}):\n    - " + "\n    - ".join([datapoint + ": " + str(now_d[station][datapoint]) for datapoint in ["temp", "hum", "press"]])
-            out += "\n"
+            out += f"\n:white_medium_small_square: {station} ({now_d[station]['time']}):"
+            out += f"""
+                - Temperature: {now_d[station]["temp"]} °C
+                - Humidity: {now_d[station]["hum"]} %
+                - Pressure: {now_d[station]["press"]} hPa
+            """
 
         await ctx.send(out)
 

@@ -4,9 +4,9 @@ used to interface with a Fridrich Server
 
 Author: Nilusink
 """
+from typing import Dict, Callable, Iterable, Any, List, Any
 from concurrent.futures import ThreadPoolExecutor, Future
 from fridrich.classes import Future as nFuture, Daytime
-from typing import Dict, Callable, Iterable, Any
 from traceback import format_exc
 from contextlib import suppress
 from fridrich import app_store
@@ -143,7 +143,6 @@ class Connection:
         """
         Handle incoming errors
         """
-        print(args)
         match error:    # match errors where not specific error class exists (and NotEncryptedError)
             case 'NotVoted':
                 raise NameError('No votes registered for user')
@@ -240,6 +239,8 @@ class Connection:
         :param wait: don't send the messages immediately and wait
         :return: time of sending
         """
+        if not self:
+            raise AuthError("Cannot send message - not authenticated yet!")
         self.__message_pool.append(dictionary)
         if not wait:
             return self.__send()
@@ -786,7 +787,7 @@ class Connection:
             return res.result
         return res
 
-    def get_weather_stations(self, wait: bool = False) -> dict | nFuture:
+    def get_weather_stations(self, wait: bool = False) -> List[Dict[str, str]] | nFuture:
         """
         get the names and locations of all registered weather stations
         """

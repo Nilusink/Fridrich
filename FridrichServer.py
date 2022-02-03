@@ -345,13 +345,14 @@ class FunctionManager:
                 'CalEntry': ClientFuncs.calendar_handler,
                 'getVersion': ClientFuncs.get_version,
                 'getVote': ClientFuncs.get_vote,
-                'end': ClientFuncs.end,
 
                 "gRes": ClientFuncs.results,
                 "gLog": ClientFuncs.get_log,
                 "gCal": ClientFuncs.get_cal,
 
-                "ping": UserTools.ping
+                "get_temps_now": WStationFuncs.get_now,
+                "get_temps_log": WStationFuncs.get_log,
+                "get_stations": WStationFuncs.get_stations
             },
             'v_bot': {
                 'setVersion': ClientFuncs.set_version,
@@ -360,7 +361,11 @@ class FunctionManager:
             "s_bot": {
                 "gRes": ClientFuncs.results,
                 "gLog": ClientFuncs.get_log,
-                "get_time": UserTools.get_time
+                "get_time": UserTools.get_time,
+
+                "get_temps_now": WStationFuncs.get_now,
+                "get_temps_log": WStationFuncs.get_log,
+                "get_stations": WStationFuncs.get_stations
             },
             'w_station': {
                 "register": WStationFuncs.register,
