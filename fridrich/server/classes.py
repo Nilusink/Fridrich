@@ -46,11 +46,14 @@ class User:
         # for auto-disconnect
         self.__last_connection = Daytime.now()
         self.__timeout = Daytime(second=5)
-        self.__thread_pool = ThreadPoolExecutor(max_workers=1)
+        self.__thread_pool = ThreadPoolExecutor(max_workers=2)
 
         # only if the user's security clearance requires auto-logout, start the thread
         if USER_CONFIG[self.sec]["auto_logout"]:
             self.__auto_logout_thread = self.__thread_pool.submit(self.__check_disconnect)
+
+        # start to receive
+        self.__thread_pool.submit(self.receive)
 
     @property
     def name(self) -> str:
@@ -88,6 +91,7 @@ class User:
         """
         needs to be run in a thread, handles communication with client
         """
+        self.__client.settimeout(.2)
         while self.loop:
             try:
                 mes = cryption_tools.MesCryp.decrypt(self.__client.recv(2048), self.__key.encode())
@@ -114,6 +118,9 @@ class User:
                 print("not encrypted")
                 self.send({'Error': 'NotEncryptedError'}, message_type="Error", force=True)
                 return
+
+            except TimeoutError:
+                continue
 
     def send(self, message: iter, message_type: str | None = 'function', force: bool | None = False) -> None:
         """
@@ -228,7 +235,6 @@ class UserList:
         special: ´´get_user´´ function (gets a user by its name or encryption key)
         """
         self._users = users if users is not ... else list()
-        self.client_threads = list()
 
         self.executor = ThreadPoolExecutor()
         self.collector = self.executor.submit(self._garbage_collector, .5)
@@ -257,7 +263,6 @@ class UserList:
         if obj.name in self and not USER_CONFIG[obj.sec]["multi_login_allowed"]:
             self.remove_by(name=obj.name)
 
-        self.client_threads.append(self.executor.submit(obj.receive))
         self._users.append(obj)
 
     def get_user(self, name: str | None = ..., user_id: str | None = ...) -> User:
@@ -305,6 +310,7 @@ class UserList:
         while self.loop:
             for element in self._users:
                 if element.disconnect:
+                    print(f"removing {element.name}")
                     element.end()
                     self._users.remove(element)
             time.sleep(time_between_loops)
