@@ -5,9 +5,9 @@ defines new types for Users, FileVar, ...
 Author: Nilusink
 """
 from fridrich import cryption_tools, decorate_class
-from fridrich.server.server_funcs import DEBUGGER
 from concurrent.futures import ThreadPoolExecutor
 from fridrich.server import USER_CONFIG
+from fridrich.server import DEBUGGER
 from threading import Timer
 from struct import pack
 import contextlib

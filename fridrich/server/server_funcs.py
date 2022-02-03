@@ -10,11 +10,9 @@ from sys import platform
 from fridrich import *
 from os import system
 import contextlib
-import traceback
 import datetime
 import typing
 import socket
-import types
 import json
 import time
 
@@ -69,69 +67,6 @@ def reboot() -> None:
         system("shutdown -r -t 0")
         return
     system("sudo reboot")
-
-
-class Debug:
-    """
-    for debugging...
-    """
-    instance: "Debug" = None
-
-    # if a instance already exists, pass that one
-    def __new__(cls, *args, **kw):
-        if cls.instance is not None:
-            print("old instance!")
-            return cls.instance
-
-        cls.instance = super(Debug, cls).__new__(cls)
-        return cls.instance
-
-    def __init__(self, deb_file: str, error_file: str) -> None:
-        """
-        debFile: file to write debug-messages to
-        """
-        self.file = deb_file
-        self.errFile = error_file
-
-        with open(self.file, 'w') as out:
-            out.write('')
-
-        with open(self.errFile, 'a') as out:
-            out.write(
-                f'\n\n\n\n\n######## - Program restart [{datetime.datetime.now().strftime("%Y.%m.%d at %H:%M:%S.%f")}] - ########\n\n')
-
-    def debug(self, *args) -> None:
-        """
-        prints and writes all arguments
-
-        for each argument a new line in the file is begun
-        """
-        print(*args)
-        with open(self.file, 'a') as out:
-            for element in args:
-                out.write(str(element) + '\n')
-
-    def catch_traceback(self, func: types.FunctionType) -> typing.Callable:
-        """
-        execute function with traceback and debug all errors
-        """
-
-        def wrapper(*args, **kw) -> None:
-            try:
-                return func(*args, **kw)
-            except Exception as e:
-                err = f'\n\n\n######## - Exception "{e}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")} - ########\n\n{traceback.format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n'
-                self.debug(err)
-
-        return wrapper
-
-    def write_traceback(self, error: type, from_user: str | None = ...) -> None:
-        """
-        write a caught error
-        """
-        err = '\n\n\n' + (
-            "From User: " + from_user if from_user is not ... else "") + f'######## - Exception "{error}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")} - ########\n\n{traceback.format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n'
-        self.debug(err)
 
 
 class Chat:
@@ -209,6 +144,3 @@ class Communication:
                 client.close()
             return None, None
         return client, mes
-
-
-DEBUGGER = Debug(Const.SerlogFile, Const.errFile)
