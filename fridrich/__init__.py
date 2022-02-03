@@ -8,6 +8,15 @@ and a Client that connects to the Server
 Author: Nilusink
 """
 from fridrich import cryption_tools
+import inspect
+
+
+def decorate_class(decorate_function):
+    def wrapper(cls):
+        for name, method in inspect.getmembers(cls, inspect.ismethod):
+            setattr(cls, name, decorate_function(method))
+        return cls
+    return wrapper
 
 
 class ConsoleColors:

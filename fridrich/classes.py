@@ -4,9 +4,10 @@ defines new types for Users, FileVar, ...
 
 Author: Nilusink
 """
+from fridrich import cryption_tools, decorate_class
+from fridrich.server.server_funcs import DEBUGGER
 from concurrent.futures import ThreadPoolExecutor
 from fridrich.server import USER_CONFIG
-from fridrich import cryption_tools
 from threading import Timer
 from struct import pack
 import contextlib
@@ -170,6 +171,7 @@ class FileVar:
             raise TypeError(f'Expected {wanted_type}, got {self.type}. This function is not available for the given variable type')
 
 
+@decorate_class(DEBUGGER.catch_traceback)
 class User:
     def __init__(self, name: str, sec: str, key: str, user_id: int, cl: socket.socket, ip: str, function_manager: typing.Callable, debugger) -> None:
         """
@@ -191,7 +193,7 @@ class User:
         self.manager = function_manager
         self.debugger = debugger
 
-        self.disconnect = False
+        self.__disconnect = False
 
         self.loop = True
 
@@ -204,9 +206,9 @@ class User:
 
         # for auto-disconnect
         self.__last_connection = Daytime.now()
-        self.__timeout = Daytime(minute=5)
+        self.__timeout = Daytime(second=20)
 
-        self.__logout_task = Timer(10, self.check_disconnect)   # check every 10 seconds if the user should be logged out
+        self.__logout_task = Timer(.2, self.check_disconnect)   # check every 10 seconds if the user should be logged out
         # only if the user's security clearance requires auto-logout, start the thread
         if USER_CONFIG[self.sec]["auto_logout"]:
             self.__logout_task.start()
@@ -238,6 +240,10 @@ class User:
         :return: the users id
         """
         return self.__id
+
+    @property
+    def disconnect(self) -> bool:
+        return self.__disconnect
 
     def receive(self) -> None:
         """
@@ -331,11 +337,13 @@ class User:
         """
         for auto-disconnect, check if there was no interaction with the user for self.__timeout
         """
+        print(f"check_disconnect ({Daytime.now()-self.__last_connection=})")
         if Daytime.now()-self.__last_connection > self.__timeout:
-            self.end("timeout")
+            return self.end("timeout")
 
         # re-schedule the task
-        self.__logout_task = Timer(10, self.check_disconnect)
+        self.__logout_task = Timer(.2, self.check_disconnect)
+        print("scheduled next task")
 
     def exec_func(self, message: dict):
         """
@@ -349,8 +357,8 @@ class User:
             return
 
     def end(self, reason: str = ...) -> None:
-        print(f"Disconnecting: {self} ({reason if reason is not ... else ''})")
-        self.disconnect = True
+        print(f"Disconnecting: {self} {'('+reason+')' if reason is not ... else ''}")
+        self.__disconnect = True
         self.loop = False
         self.__client.close()
         self.__logout_task.cancel()

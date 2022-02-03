@@ -75,6 +75,16 @@ class Debug:
     """
     for debugging...
     """
+    instance: "Debug" = None
+
+    # if a instance already exists, pass that one
+    def __new__(cls, *args, **kw):
+        if cls.instance is not None:
+            print("old instance!")
+            return cls.instance
+
+        cls.instance = super(Debug, cls).__new__(cls)
+        return cls.instance
 
     def __init__(self, deb_file: str, error_file: str) -> None:
         """
@@ -199,3 +209,6 @@ class Communication:
                 client.close()
             return None, None
         return client, mes
+
+
+DEBUGGER = Debug(Const.SerlogFile, Const.errFile)

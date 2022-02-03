@@ -30,7 +30,7 @@ COM_PROTOCOL_VERSIONS: set = {"1.1.0", "1.1.1"}
 client: socket.socket
 Users = UserList()
 
-debug = Debug(Const.SerlogFile, Const.errFile)
+debug = DEBUGGER
 
 
 def verify(username: str, password: str, cl: socket.socket, address: str) -> None:
