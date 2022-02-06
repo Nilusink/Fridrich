@@ -11,7 +11,7 @@ import time
 import json
 
 
-@decorate_class(DEBUGGER.catch_traceback)
+@decorate_class(DEBUGGER.catch_traceback())
 class User:
     def __init__(self, name: str, sec: str, key: str, user_id: int, cl: socket.socket, ip: str, function_manager: typing.Callable, debugger) -> None:
         """
@@ -227,7 +227,7 @@ class User:
         return item == self.name or item == self.id
 
 
-@decorate_class(DEBUGGER.write_traceback)
+@decorate_class(DEBUGGER.catch_traceback(raise_error=False))
 class UserList:
     def __init__(self, users: typing.List[User] | None = ...) -> None:
         """

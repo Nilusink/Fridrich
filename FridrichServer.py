@@ -210,7 +210,7 @@ def auto_reboot(r_time: str) -> None:
         sys.exit(0)
 
 
-@decorate_class(debug.catch_traceback(catch_traceback=False))
+@decorate_class(debug.catch_traceback(raise_error=False))
 class DoubleVote:
     """
     Handle Double Votes
@@ -426,7 +426,7 @@ class FunctionManager:
             user.send(error, message_type="Error")
 
 
-@decorate_class(debug.catch_traceback(catch_traceback=False))
+@decorate_class(debug.catch_traceback(raise_error=False))
 class AdminFuncs:
     """
     Manages the Admin Functions
@@ -508,7 +508,7 @@ class AdminFuncs:
             Users.remove(user)
 
 
-@decorate_class(debug.catch_traceback(catch_traceback=False))
+@decorate_class(debug.catch_traceback(raise_error=False))
 class ClientFuncs:
     """
     Manages the Client Functions
