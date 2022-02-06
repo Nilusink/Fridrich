@@ -46,7 +46,7 @@ class User:
 
         # for auto-disconnect
         self.__last_connection = Daytime.now()
-        self.__timeout = Daytime(second=5)
+        self.__timeout = Daytime(minute=2)  # if there wasn't any interaction with a client for 2 minutes, kick it (ping also counts as activity)
         self.__thread_pool = ThreadPoolExecutor(max_workers=2)
 
         # only if the user's security clearance requires auto-logout, start the thread
@@ -207,7 +207,7 @@ class User:
         self.__disconnect = True
         self.loop = False
         self.__client.close()
-        self.__thread_pool.shutdown(wait=True)
+        self.__thread_pool.shutdown(wait=False)
         print(f"{self} is fully shut down and disconnected")
 
     def __getitem__(self, item) -> str:

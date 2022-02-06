@@ -8,25 +8,23 @@ and a Client that connects to the Server
 Author:
 Nilusink
 """
-from optparse import OptionParser
-import inspect
 
 
 ###########################################################################
 #                  classes and functions used everywhere                  #
 ###########################################################################
-def decorate_class(decorate_function):
+def decorate_class(decorator):
     """
     decorate all methods of a class with one decorator
     """
     ignored = ("__init__", "__new__")
 
-    def wrapper(cls):
-        for name, method in inspect.getmembers(OptionParser, predicate=inspect.isfunction):
-            if name not in ignored:
-                setattr(cls, name, decorate_function(method))
+    def decorate(cls):
+        for attr in cls.__dict__:
+            if callable(getattr(cls, attr)) and attr not in ignored:
+                setattr(cls, attr, decorator(getattr(cls, attr)))
         return cls
-    return wrapper
+    return decorate
 
 
 class ConsoleColors:

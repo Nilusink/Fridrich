@@ -5,6 +5,7 @@ Author:
 Nilusink
 """
 from typing import Callable, Tuple
+from fridrich import ConsoleColors
 from traceback import format_exc
 import os
 
@@ -72,7 +73,7 @@ class Debugger:
                         out.write(trace)
 
                     if print_traceback:
-                        print(trace)
+                        print(f"{ConsoleColors.FAIL}{trace}{ConsoleColors.ENDC}")
 
                     if raise_error:
                         raise
