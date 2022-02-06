@@ -4,6 +4,7 @@ Contains all the modules that only the server needs
 
 Author: Nilusink
 """
+from fridrich import ConsoleColors
 from dataclasses import dataclass
 import traceback
 import datetime
@@ -122,7 +123,8 @@ class Debug:
             try:
                 return func(*args, **kw)
             except Exception as e:
-                err = f'\n\n\n######## - Exception "{e}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")} - ########\n\n{traceback.format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n'
+                err = f'{ConsoleColors.FAIL}\n\n\n######## - Exception "{e}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")} -' \
+                      f' ########\n\n{traceback.format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n{ConsoleColors.ENDC}'
                 self.debug(err)
 
         return wrapper

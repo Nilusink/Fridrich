@@ -780,7 +780,6 @@ class ClientFuncs:
             Users.remove(user)
 
 
-@debug.catch_traceback
 def receive() -> None:
     """
     Basically the whole server
@@ -807,7 +806,6 @@ def update() -> None:
         time.sleep(1)
 
 
-@debug.catch_traceback
 def end(*_trash) -> None:
     """
     global function to end the server

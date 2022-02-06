@@ -4,7 +4,7 @@ Debugging helper for backend
 Author:
 Nilusink
 """
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Any
 from fridrich import ConsoleColors
 from traceback import format_exc
 import os
@@ -58,9 +58,9 @@ class Debugger:
         :param print_traceback: defines if the caught error should be printed
         """
         def decorator(function: Callable) -> Callable:
-            def wrapper(*args, **kwargs) -> None:
+            def wrapper(*args, **kwargs) -> Any:
                 try:
-                    function(*args, **kwargs)
+                    return function(*args, **kwargs)
 
                 except (Exception,):
                     title = f"ERROR IN FUNCTION \"{function.__name__}\""

@@ -13,15 +13,14 @@ Nilusink
 ###########################################################################
 #                  classes and functions used everywhere                  #
 ###########################################################################
-def decorate_class(decorator):
+def decorate_class(decorator, dont_decorate: list = ()):
     """
     decorate all methods of a class with one decorator
     """
-    ignored = ("__init__", "__new__")
 
     def decorate(cls):
         for attr in cls.__dict__:
-            if callable(getattr(cls, attr)) and attr not in ignored:
+            if callable(getattr(cls, attr)) and attr not in dont_decorate and not attr.startswith("_"):
                 setattr(cls, attr, decorator(getattr(cls, attr)))
         return cls
     return decorate

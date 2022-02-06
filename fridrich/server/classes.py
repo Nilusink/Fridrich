@@ -227,7 +227,7 @@ class User:
         return item == self.name or item == self.id
 
 
-@decorate_class(DEBUGGER.catch_traceback)
+@decorate_class(DEBUGGER.write_traceback)
 class UserList:
     def __init__(self, users: typing.List[User] | None = ...) -> None:
         """

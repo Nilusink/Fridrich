@@ -57,7 +57,7 @@ if __name__ == '__main__':
                     exec(compile(cmd, "backend_command", "exec"))
 
                 except (Exception,):
-                    print(ConsoleColors.FAIL+format_exc()+ConsoleColors.ENDC)
+                    continue
 
             except (Exception,):
-                print(ConsoleColors.FAIL + format_exc() + ConsoleColors.ENDC)
+                continue
