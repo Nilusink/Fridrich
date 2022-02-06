@@ -16,6 +16,7 @@ import sys
 from fridrich.cryption_tools import key_func, MesCryp
 from fridrich.server.accounts import Manager
 from fridrich.server import w_station_funcs
+from fridrich.server.server_funcs import *
 from fridrich.server import user_tools
 from fridrich.server import app_store
 from fridrich.server import *
