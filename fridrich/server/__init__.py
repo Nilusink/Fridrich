@@ -120,8 +120,6 @@ class Debug:
 
         def wrapper(*args, **kw) -> None:
             try:
-                if func.__name__ != "auto_reboot":
-                    print(f"executing function: {func.__name__=}")
                 return func(*args, **kw)
             except Exception as e:
                 err = f'\n\n\n######## - Exception "{e}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")} - ########\n\n{traceback.format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n'

@@ -203,12 +203,12 @@ class User:
             return
 
     def end(self, reason: str = ...) -> None:
-        print(f"Disconnecting: {self} {'('+reason+')' if reason is not ... else ''}, shutting down threads", end="")
+        print(f"Disconnecting: {self} {'('+reason+')' if reason is not ... else ''}, shutting down threads")
         self.__disconnect = True
         self.loop = False
         self.__client.close()
         self.__thread_pool.shutdown(wait=True)
-        print(" - done")
+        print(f"{self} is fully shut down and disconnected")
 
     def __getitem__(self, item) -> str:
         return dict(self)[item]

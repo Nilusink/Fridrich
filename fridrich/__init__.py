@@ -8,6 +8,7 @@ and a Client that connects to the Server
 Author:
 Nilusink
 """
+from optparse import OptionParser
 import inspect
 
 
@@ -18,10 +19,12 @@ def decorate_class(decorate_function):
     """
     decorate all methods of a class with one decorator
     """
+    ignored = ("__init__", "__new__")
+
     def wrapper(cls):
-        for name, method in inspect.getmembers(cls, inspect.ismethod):
-            print(f"adding decorator {decorate_function.__name__} to {name}")
-            setattr(cls, name, decorate_function(method))
+        for name, method in inspect.getmembers(OptionParser, predicate=inspect.isfunction):
+            if name not in ignored:
+                setattr(cls, name, decorate_function(method))
         return cls
     return wrapper
 

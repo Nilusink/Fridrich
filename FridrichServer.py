@@ -19,6 +19,7 @@ from fridrich.server import w_station_funcs
 from fridrich.server.server_funcs import *
 from fridrich.server import user_tools
 from fridrich.server import app_store
+from fridrich import decorate_class
 from fridrich.server import *
 from fridrich.errors import *
 
@@ -31,6 +32,7 @@ Users = UserList()
 debug = DEBUGGER
 
 
+@debug.catch_traceback
 def verify(username: str, password: str, cl: socket.socket, address: str) -> None:
     """
     verify the client and send result
@@ -55,6 +57,7 @@ def verify(username: str, password: str, cl: socket.socket, address: str) -> Non
     cl.send(mes)
 
 
+@debug.catch_traceback
 def debug_send_traceback(func: types.FunctionType) -> typing.Callable:
     """
     execute function and send traceback to client
@@ -205,6 +208,7 @@ def auto_reboot(r_time: str) -> None:
         sys.exit(0)
 
 
+@decorate_class(debug.catch_traceback)
 class DoubleVote:
     """
     Handle Double Votes
@@ -280,6 +284,7 @@ class DoubleVote:
         return False
 
 
+@decorate_class(debug.catch_traceback)
 class FunctionManager:
     """
     manages the requested functions
@@ -419,6 +424,7 @@ class FunctionManager:
             user.send(error, message_type="Error")
 
 
+@decorate_class(debug.catch_traceback)
 class AdminFuncs:
     """
     Manages the Admin Functions
@@ -500,6 +506,7 @@ class AdminFuncs:
             Users.remove(user)
 
 
+@decorate_class(debug.catch_traceback)
 class ClientFuncs:
     """
     Manages the Client Functions
@@ -773,6 +780,7 @@ class ClientFuncs:
             Users.remove(user)
 
 
+@debug.catch_traceback
 def receive() -> None:
     """
     Basically the whole server
@@ -781,6 +789,7 @@ def receive() -> None:
         client_handler()
 
 
+@debug.catch_traceback
 def update() -> None:
     """
     updates every few seconds
@@ -798,6 +807,7 @@ def update() -> None:
         time.sleep(1)
 
 
+@debug.catch_traceback
 def end(*_trash) -> None:
     """
     global function to end the server
