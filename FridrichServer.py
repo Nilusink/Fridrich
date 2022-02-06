@@ -32,7 +32,7 @@ Users = UserList()
 debug = DEBUGGER
 
 
-@debug.catch_traceback
+@debug.catch_traceback()
 def verify(username: str, password: str, cl: socket.socket, address: str) -> None:
     """
     verify the client and send result
@@ -57,7 +57,7 @@ def verify(username: str, password: str, cl: socket.socket, address: str) -> Non
     cl.send(mes)
 
 
-@debug.catch_traceback
+@debug.catch_traceback()
 def debug_send_traceback(func: types.FunctionType) -> typing.Callable:
     """
     execute function and send traceback to client
@@ -82,7 +82,7 @@ def debug_send_traceback(func: types.FunctionType) -> typing.Callable:
     return wrapper
 
 
-@debug.catch_traceback
+@debug.catch_traceback()
 def client_handler() -> None:
     """
     Handles communication with all clients
@@ -132,7 +132,7 @@ def client_handler() -> None:
         return
 
 
-@debug.catch_traceback
+@debug.catch_traceback()
 def zero_switch() -> None:
     """
     execute the switch
@@ -193,7 +193,7 @@ def zero_switch() -> None:
         DV.value.set(dVotes)
 
 
-@debug.catch_traceback
+@debug.catch_traceback()
 def auto_reboot(r_time: str) -> None:
     """
     if time is r_time, reboot the server (format is "HH:MM")
@@ -204,11 +204,13 @@ def auto_reboot(r_time: str) -> None:
         raise InvalidStringError('r_time needs to be formatted like this: HH:MM')
 
     if time.strftime('%H:%M') == r_time:
+        # wait so it doesn't reboot twice
+        time.sleep(55)
         reboot()
         sys.exit(0)
 
 
-@decorate_class(debug.catch_traceback)
+@decorate_class(debug.catch_traceback(catch_traceback=False))
 class DoubleVote:
     """
     Handle Double Votes
@@ -284,7 +286,7 @@ class DoubleVote:
         return False
 
 
-@decorate_class(debug.catch_traceback)
+@decorate_class(debug.catch_traceback())
 class FunctionManager:
     """
     manages the requested functions
@@ -424,7 +426,7 @@ class FunctionManager:
             user.send(error, message_type="Error")
 
 
-@decorate_class(debug.catch_traceback)
+@decorate_class(debug.catch_traceback(catch_traceback=False))
 class AdminFuncs:
     """
     Manages the Admin Functions
@@ -506,7 +508,7 @@ class AdminFuncs:
             Users.remove(user)
 
 
-@decorate_class(debug.catch_traceback)
+@decorate_class(debug.catch_traceback(catch_traceback=False))
 class ClientFuncs:
     """
     Manages the Client Functions
@@ -788,7 +790,7 @@ def receive() -> None:
         client_handler()
 
 
-@debug.catch_traceback
+@debug.catch_traceback()
 def update() -> None:
     """
     updates every few seconds

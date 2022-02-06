@@ -114,20 +114,23 @@ class Debug:
             for element in args:
                 out.write(str(element) + '\n')
 
-    def catch_traceback(self, func: types.FunctionType) -> typing.Callable:
+    def catch_traceback(self, raise_error: bool = False) -> typing.Callable:
         """
         execute function with traceback and debug all errors
         """
+        def decorator(func: types.FunctionType) -> typing.Callable:
+            def wrapper(*args, **kw) -> None:
+                try:
+                    return func(*args, **kw)
+                except Exception as e:
+                    err = f'{ConsoleColors.FAIL}\n\n\n######## - Exception "{e}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")} -' \
+                          f' ########\n\n{traceback.format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n{ConsoleColors.ENDC}'
+                    self.debug(err)
+                    if raise_error:
+                        raise
 
-        def wrapper(*args, **kw) -> None:
-            try:
-                return func(*args, **kw)
-            except Exception as e:
-                err = f'{ConsoleColors.FAIL}\n\n\n######## - Exception "{e}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")} -' \
-                      f' ########\n\n{traceback.format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n{ConsoleColors.ENDC}'
-                self.debug(err)
-
-        return wrapper
+            return wrapper
+        return decorator
 
     def write_traceback(self, error: type, from_user: str | None = ...) -> None:
         """
