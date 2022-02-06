@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 from typing import Dict, List
 import seaborn as sns
 import pandas as pd
-import json
 
 
 # Bot login
@@ -17,11 +16,11 @@ USERNAME: str = "StatsBot"
 PASSWORD: str = "IGetDaStats"
 
 # settings
-DATA_POINT: str = "temp"    # must be temp | hum | press
+DATA_POINT: str | tuple = "Temperature"    # data points to collect, when in tuple they are grouped, data_description for first point
 
 # default variables
 DATA_DESCRIPTION: Dict[str, str] = {    # label for the plot, mustn't be changed
-    "temp": "Temperature in °C",
+    "Temperature": "Temperature in °C",
     "hum": "Humidity in %",
     "press": "Pressure in hPa"
 }
@@ -46,8 +45,22 @@ def main() -> None:
                 short_date = ":".join(date.split(":")[:-1])
 
                 # append data for date
-                temp_graphs[station["station_name"]][short_date] = station_log[date][DATA_POINT]
-        print(f"{json.dumps(temp_graphs, indent=4)=}")
+                if type(DATA_POINT) == tuple:
+                    for point in DATA_POINT:
+                        if point in station_log[date]:
+                            temp_graphs[station["station_name"]][short_date] = station_log[date][point]
+                            break
+                    else:
+                        temp_graphs[station["station_name"]][short_date] = None
+
+                    continue
+
+                if DATA_POINT in station_log[date]:
+                    temp_graphs[station["station_name"]][short_date] = station_log[date][DATA_POINT]
+
+                else:
+                    temp_graphs[station["station_name"]][short_date] = None
+
         # combine all dates from every weather station
         all_dates: set = {date for station in temp_graphs for date in temp_graphs[station]}
 
@@ -65,13 +78,14 @@ def main() -> None:
     data.update({
         station: temp_graphs[station].values() for station in temp_graphs
     })
+    data.pop("HomeStation")
     data = pd.DataFrame(data)
 
     # make graph
     g = sns.lineplot(x="dates", y="value", hue="variable", data=pd.melt(data, ["dates"]), ci=None)
 
     # configure graph
-    g.set(ylabel=DATA_DESCRIPTION[DATA_POINT], xlabel="Date")
+    g.set(ylabel=DATA_DESCRIPTION[DATA_POINT[0] if type(DATA_POINT) == tuple else DATA_POINT], xlabel="Date")
 
     plt.xticks([all_dates[i] for i in range(0, len(all_dates), len(all_dates)//8)])
     plt.legend(title="Weather Station")

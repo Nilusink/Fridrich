@@ -1,4 +1,4 @@
-from fridrich.app_store import send_receive
+from fridrich.file_transfer import send_receive
 from fridrich.server.classes import User
 import json
 import os

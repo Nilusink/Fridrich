@@ -5,51 +5,66 @@ used to interface with a Fridrich Server
 Author: Nilusink
 """
 from concurrent.futures import ThreadPoolExecutor, Future
-from fridrich.classes import Future as nFuture, Daytime
-from typing import Dict, Callable, Iterable, List, Any
+from typing import Dict, Iterable, List, Any, Union
 from traceback import format_exc
 from contextlib import suppress
-from fridrich import app_store
 from hashlib import sha512
-from fridrich import *
+import typing
 import socket
 import struct
 import json
 import time
+import os
+
+# fridrich imports
+from fridrich.file_transfer import send_receive, download_program as now_download_program, download_progress as now_download_progress
+from fridrich.backend.debugging import Debugger
+from fridrich.classes import Daytime
+from fridrich import cryption_tools
+from fridrich.errors import *
+from fridrich import *
 
 
-# for information if the Server has updated the communication but the client hasn't yet
+############################################################################
+#                     global Variable definition                           #
+############################################################################
+# Protocol version information
 COMM_PROTOCOL_VERSION = "1.1.1"
 
-
-############################################################################
-#                             other functions                              #
-############################################################################
-def date_for_sort(message: dict) -> str:
-    """
-    go from format "hour:minute:second:millisecond - day.month.year" to "year.month.day - hour:minute:second:millisecond"
-    """
-    y = message['time'].split(' - ')    # split date and time
-    return '.'.join(reversed(y[1].split('.')))+' - '+y[0]   # reverse date and place time at end
-
-
-def debug(func: Callable) -> Callable:
-    def wrapper(*args, **kw):
-        try:
-            return func(*args, **kw)
-
-        except Exception:
-            with open("backend.err.log", 'a') as out:
-                out.write(format_exc())
-            raise
-    return wrapper
+# debugging
+DEBUGGER = Debugger(os.getcwd()+"/logs/fridrich.err", file_mode="a")
 
 
 ############################################################################
 #                      Server Communication Class                          #
 ############################################################################
+class FridrichFuture:
+    def __init__(self) -> None:
+        self.__value: typing.Any | None = ...
+
+    @property
+    def result(self) -> typing.Any:
+        if self.__value is not ...:
+            return self.__value
+        raise ValueError("No value received yet")
+
+    @result.setter
+    def result(self, value) -> None:
+        self.__value = value
+
+    def __repr__(self) -> str:
+        return f"<future: result={self.__value is not ...}>"
+
+    def __bool__(self) -> bool:
+        """
+        return True if AuthKey
+        """
+        return self.__value is not ...
+
+
+@decorate_class(DEBUGGER.catch_and_write(raise_error=True, print_traceback=True))
 class Connection:
-    def __init__(self, debug_mode: str | None = Off, host: str | None = ...) -> None:
+    def __init__(self, debug_mode: str | None = False, host: str | None = ...) -> None:
         """
         connect with any fridrich server
 
@@ -86,7 +101,7 @@ class Connection:
 
         # message pool
         self.__message_pool: list = []
-        self.__results_getters: Dict[str, Future] = {}
+        self.__results_getters: Dict[str, FridrichFuture] = {}
 
         # optimization variables
         self.__server_time_delta = None
@@ -268,17 +283,18 @@ class Connection:
             "content": self.__message_pool
         }
 
-        # reset message pool
-        self.__message_pool = []
-
         if self.__AuthKey:
             stringMes = json.dumps(message, ensure_ascii=True)
             mes = cryption_tools.MesCryp.encrypt(stringMes, key=self.__AuthKey.encode())
+
             try:
                 self.Server.send(mes)
+                # reset message pool only if the message was send successfully
+                self.__message_pool = []
 
             except BrokenPipeError:
-                return self.end(revive=True)
+                self.end(revive=True)
+                return -1
 
             if self._debug_mode in ('normal', 'full'):
                 print(ConsoleColors.OKCYAN+stringMes+ConsoleColors.ENDC)
@@ -289,6 +305,9 @@ class Connection:
 
         stringMes = json.dumps(message, ensure_ascii=False)
         self.Server.send(cryption_tools.MesCryp.encrypt(stringMes))
+
+        # reset message pool only if the message was send successfully
+        self.__message_pool = []
         if self._debug_mode in ('normal', 'full'):
             print(ConsoleColors.OKCYAN+stringMes+ConsoleColors.ENDC)
 
@@ -323,7 +342,6 @@ class Connection:
     def results_getters(self) -> dict:
         return self.__results_getters
 
-    @debug
     def receive(self):
         """
         receive messages from server, decrypt them and raise incoming errors (meant as thread, run by default)
@@ -524,7 +542,7 @@ class Connection:
         self.end(revive=True)
         return self.auth(username=self.__userN, password=self.__pwd_hash, pwd_hashed=True)
 
-    def get_sec_clearance(self, wait: bool = False) -> str | nFuture:
+    def get_sec_clearance(self, wait: bool = False) -> str | FridrichFuture:
         """
         if signed in, get security clearance
         """
@@ -532,7 +550,7 @@ class Connection:
 
         self._send(msg, wait=True)
 
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -555,12 +573,12 @@ class Connection:
 
         self._send(msg, wait=True)
 
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
 
-    def get_results(self, flag: str | None = 'now', wait: bool = False) -> dict | nFuture:
+    def get_results(self, flag: str | None = 'now', wait: bool = False) -> dict | FridrichFuture:
         """
         get results of voting\n
         flag can be "now", "last"\n
@@ -573,14 +591,14 @@ class Connection:
         }    # set message
         self._send(msg, wait=True)
 
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["f_name"]] = res
         if not wait:
             self.send()
             return res.result
         return res
 
-    def get_log(self, wait: bool = False) -> dict | nFuture:
+    def get_log(self, wait: bool = False) -> dict | FridrichFuture:
         """
         get list of recent GayKings
         """
@@ -589,7 +607,7 @@ class Connection:
         }   # set message
         self._send(msg, wait=True)
 
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -621,7 +639,7 @@ class Connection:
         names = "|".join([guy for guy in StreakGuys if StreakGuys[guy] == max_num])
         return names, max_num  # return results
 
-    def get_cal(self, wait: bool = False) -> dict | nFuture:
+    def get_cal(self, wait: bool = False) -> dict | FridrichFuture:
         """
         get Calendar in format {"date":listOfEvents}
         """
@@ -631,7 +649,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -650,7 +668,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -666,12 +684,12 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
 
-    def get_vote(self, flag: str | None = 'normal', voting: str | None = 'GayKing', wait: bool = False) -> str | nFuture:
+    def get_vote(self, flag: str | None = 'normal', voting: str | None = 'GayKing', wait: bool = False) -> str | FridrichFuture:
         """
         get current vote of user\n
         flag can be normal or double
@@ -685,14 +703,14 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["f_name"]] = res
         if not wait:
             self.send()
             return res.result
         return res
 
-    def get_version(self, wait: bool = False) -> str | nFuture:
+    def get_version(self, wait: bool = False) -> str | FridrichFuture:
         """
         get current version of GUI program
         """
@@ -702,7 +720,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -720,12 +738,12 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
 
-    def get_frees(self, wait: bool = False) -> int | nFuture:
+    def get_frees(self, wait: bool = False) -> int | FridrichFuture:
         """
         get free double votes
         """
@@ -735,14 +753,14 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
             return res.result
         return res
 
-    def get_online_users(self, wait: bool = False) -> list | nFuture:
+    def get_online_users(self, wait: bool = False) -> list | FridrichFuture:
         """
         get list of currently online users
         """
@@ -752,7 +770,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -770,12 +788,12 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
 
-    def get_chat(self, wait: bool = False) -> list | nFuture:
+    def get_chat(self, wait: bool = False) -> list | FridrichFuture:
         """
         get list of all chat messages
         """
@@ -785,14 +803,14 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
             return res.result
         return res
 
-    def get_weather_stations(self, wait: bool = False) -> List[Dict[str, str]] | nFuture:
+    def get_weather_stations(self, wait: bool = False) -> List[Dict[str, str]] | FridrichFuture:
         """
         get the names and locations of all registered weather stations
         """
@@ -802,28 +820,28 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
             return res.result
         return res
 
-    def get_temps_now(self, wait: bool = False) -> dict | nFuture:
+    def get_temps_now(self, wait: bool = False) -> dict | FridrichFuture:
         msg = {
             "type": "get_temps_now"
         }
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
             return res.result
         return res
 
-    def get_temps_log(self, station_name: str, wait: bool = False) -> dict | nFuture:
+    def get_temps_log(self, station_name: str, wait: bool = False) -> dict | FridrichFuture:
         msg = {
             "type": "get_temps_log",
             "station_name": station_name
@@ -831,7 +849,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -839,7 +857,7 @@ class Connection:
         return res
 
     # user controlled variables:
-    def get_all_vars(self, wait: bool = False) -> dict | nFuture:
+    def get_all_vars(self, wait: bool = False) -> dict | FridrichFuture:
         """
         get all user controlled variables inside a dict
         """
@@ -849,14 +867,14 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
             return res.result
         return res
 
-    def get_var(self, variable: str, wait: bool = False) -> Any | nFuture:
+    def get_var(self, variable: str, wait: bool = False) -> Any | FridrichFuture:
         """
         get a user controlled variable
         """
@@ -867,7 +885,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -887,7 +905,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -903,7 +921,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -926,7 +944,7 @@ class Connection:
         return self.del_var(item)
 
     # WeatherStation Funcs
-    def register_station(self, station_name: str, location: str, wait: bool = False) -> None | nFuture:
+    def register_station(self, station_name: str, location: str, wait: bool = False) -> Union[FridrichFuture, None]:
         """
         register a new weather station
         """
@@ -938,29 +956,27 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
             return res.result
         return res
 
-    def commit_weather_data(self, station_name: str, temperature: float | None = ..., humidity: float | None = ..., pressure: float | None = ..., wait: bool = False) -> None | nFuture:
+    def commit_weather_data(self, station_name: str, weather_data: dict, wait: bool = False) -> Union[None, FridrichFuture]:
         """
         Commit data to the WeatherStation database
         """
         msg = {
             "type": "commit",
             "time": time.strftime("%Y.%m.%d")+"-"+Daytime.now().to_string(),
-            "station_name": station_name,
-            "temp": None if temperature is ... else temperature,
-            "hum": None if humidity is ... else humidity,
-            "press": None if pressure is ... else pressure
+            "station_name": station_name
         }
+        msg.update(weather_data)
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -968,7 +984,7 @@ class Connection:
         return res
 
     # Admin Functions
-    def admin_get_users(self, wait: bool = False) -> list | nFuture:
+    def admin_get_users(self, wait: bool = False) -> list | FridrichFuture:
         """
         get list of all users with passwords and security clearance\n
         return format: [{"Name":username, "pwd":password, "sec":clearance}, ...]
@@ -979,7 +995,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -998,7 +1014,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -1015,7 +1031,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -1032,7 +1048,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -1050,7 +1066,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -1066,7 +1082,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -1081,7 +1097,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -1096,13 +1112,13 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
 
     # AppStore functions
-    def get_apps(self, wait: bool = False) -> list | nFuture:
+    def get_apps(self, wait: bool = False) -> list | FridrichFuture:
         """
         get all available apps and versions
         """
@@ -1112,7 +1128,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
@@ -1131,24 +1147,25 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         self.send()
         meta = res.result
 
         self.load_state = "Uploading"
         for _ in meta:
-            thread = app_store.send_receive(mode='receive', print_steps=False, download_directory=directory, thread=True, overwrite=True)
+            thread = send_receive(mode='receive', print_steps=False, download_directory=directory, thread=True, overwrite=True)
             while thread.running():
-                self.load_program = app_store.download_program
-                self.load_progress = app_store.download_progress
+                pass
+                self.load_program = now_download_program
+                self.load_progress = now_download_progress
         self.load_state = str()
         self.load_program = str()
         self.load_progress = float()
 
     def _send_app(self, files: list | tuple, app_name: str) -> None:
         for file in files:
-            thread = app_store.send_receive(mode="send", filename=file, destination=self.server_ip, print_steps=False, thread=True, overwrite=True)
+            thread = send_receive(mode="send", filename=file, destination=self.server_ip, print_steps=False, thread=True, overwrite=True)
             while thread.running():
                 self.load_program = app_name
         self.load_program = str()
@@ -1168,7 +1185,7 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         self.send()
 
@@ -1198,14 +1215,14 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         self.send()
 
         self._send_app(files, app_name)
 
     # tools
-    def ping(self, wait: bool = False) -> float | nFuture:
+    def ping(self, wait: bool = False) -> float | FridrichFuture:
         """
         ping the server to check the connection time
         :return: time in ms
@@ -1217,20 +1234,20 @@ class Connection:
         self._send(msg, wait=True)
 
         # result handling
-        res = nFuture()
+        res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
             self.send()
             return res.result
         return res
 
-    def get_server_time(self, wait: bool = False, reload: bool = False) -> dict | nFuture:
+    def get_server_time(self, wait: bool = False, reload: bool = False) -> dict | FridrichFuture:
         """
         get the current server time and voting time
         :param reload: if already called once and False, doesn't request new time from server (local update)
         :param wait: if reload is set, sets if waits for Connection.send()
         """
-        res = nFuture()
+        res = FridrichFuture()
         if not self.__server_time_delta or reload:
             msg = {
                 "type": "get_time"
@@ -1315,4 +1332,15 @@ class Connection:
             return
 
         self.executor.shutdown(wait=True)
-        app_store.executor.shutdown(wait=False)
+        # app_store.executor.shutdown(wait=False)
+
+
+############################################################################
+#                             helper functions                             #
+############################################################################
+def date_for_sort(message: dict) -> str:
+    """
+    go from format "hour:minute:second:millisecond - day.month.year" to "year.month.day - hour:minute:second:millisecond"
+    """
+    y = message['time'].split(' - ')    # split date and time
+    return '.'.join(reversed(y[1].split('.')))+' - '+y[0]   # reverse date and place time at end

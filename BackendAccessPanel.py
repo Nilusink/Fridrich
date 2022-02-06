@@ -4,18 +4,19 @@ already initialized (c)
 
 Author: Nilusink
 """
-from fridrich import backend
 from sys import platform
-from fridrich import *
 import socket
 import os
+
+from fridrich.backend import Connection
+from fridrich import ConsoleColors
 
 if platform == "win32":
     os.system("color")  # only for windows
 
 if __name__ == '__main__':
     from traceback import format_exc    # imports for shell
-    with backend.Connection(debug_mode=Off, host="0.0.0.0") as c:
+    with Connection(host="0.0.0.0") as c:
         while True:
             hostname = input(ConsoleColors.ENDC+"host: ")
             try:
@@ -33,7 +34,7 @@ if __name__ == '__main__':
             list all the functions of fridrich.backend.Connection
             """
             print(ConsoleColors.OKGREEN+'\nfunctions of Connection: '+ConsoleColors.ENDC)  # return all functions of the two classes
-            funcs = dir(backend.Connection)
+            funcs = dir(Connection)
             for element in funcs:
                 if not element.endswith('__'):
                     print('  - '+ConsoleColors.HEADER+element+ConsoleColors.ENDC)

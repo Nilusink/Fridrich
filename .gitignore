@@ -143,7 +143,9 @@ nSendFile.py
 
 
 # shortcuts
+fridrich_old/
 tests/
+logs/
 testFile.py
 test.file
 test.txt

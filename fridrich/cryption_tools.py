@@ -33,6 +33,7 @@ class Extra:
     """
     extra functions
     """
+
     @staticmethod
     def median(string: str, medians: int) -> str:
         """
@@ -40,11 +41,11 @@ class Extra:
         """
         parts = list()
         out = list()
-        for i in range(1, medians+1):
+        for i in range(1, medians + 1):
             if not i == medians:
-                parts.append([int((len(string)-1)/medians*(i-1)), int((len(string)-1)/medians*i)])
+                parts.append([int((len(string) - 1) / medians * (i - 1)), int((len(string) - 1) / medians * i)])
             else:
-                parts.append([int((len(string)-1)/medians*(i-1)), len(string)])
+                parts.append([int((len(string) - 1) / medians * (i - 1)), len(string)])
         for part in parts:
             out.append(string[::-1][part[0]:part[1]])
         return ''.join(out[::-1])
@@ -58,8 +59,8 @@ class Low:
         """
         out = str()
         for charter in string:
-            part = str(math.sqrt(ord(charter)-20))
-            out += str(base64.b85encode(part.encode('utf-16'))).lstrip("b'").rstrip("='")+' '
+            part = str(math.sqrt(ord(charter) - 20))
+            out += str(base64.b85encode(part.encode('utf-16'))).lstrip("b'").rstrip("='") + ' '
         return out
 
     @staticmethod
@@ -71,10 +72,10 @@ class Low:
             out = str()
             parts = string.split(' ')
             for part in parts:
-                s = (part+'=').encode()
+                s = (part + '=').encode()
                 if not s == b'=':
                     part = float(base64.b85decode(part).decode('utf-16'))
-                    out += chr(int(round(part**2+20, 0)))
+                    out += chr(int(round(part ** 2 + 20, 0)))
             return out
         except ValueError:
             raise DecryptionError('Not a valid encrypted string!')
@@ -88,13 +89,13 @@ class High:
         """
         temp1, temp2 = str(), str()
         for charter in string:
-            temp1 += Low.encrypt((Extra.median(charter, 3)+' '))+' '
+            temp1 += Low.encrypt((Extra.median(charter, 3) + ' ')) + ' '
         for charter in Extra.median(temp1, 13):
-            temp2 += str(ord(charter))+'|1|'
+            temp2 += str(ord(charter)) + '|1|'
         temp2 = Low.encrypt(temp2)
         out = Extra.median(Extra.median(temp2, 152), 72)
         return Extra.median(str(base64.b85encode(out.encode('utf-32'))).lstrip("b'").rstrip("='")[::-1], 327)
-    
+
     @staticmethod
     def decrypt(string: str) -> str:
         """
@@ -117,35 +118,31 @@ class High:
 
 
 try:
-    with open('data/KeyFile.enc', 'r') as inp:
-        defKey = Low.decrypt(inp.read())
+    with open(os.getcwd()+'/data/KeyFile.enc', 'r') as inp:
+        defKey = Low.decrypt(inp.read()).encode()
 
 except FileNotFoundError:
-    try:
-        from fridrich.server import Const
-        with open(Const.direc+"KeyFile.enc", 'r') as inp:
-            defKey = Low.decrypt(inp.read()).lstrip("b'").rstrip("'").encode()
+    raise FileNotFoundError("Cannot find file data/KeyFile.enc")
 
-    except ModuleNotFoundError:
-        raise FileNotFoundError("Cannot find file data/KeyFile.enc")
 
 class MesCryp:
     """
     encryption/decryption for messages
     """
+
     @staticmethod
     def encrypt(string: str, key=None) -> bytes:
         """
         encrypt a string
-        
+
         if a key is given, use it
         """
         if not key:
             key = defKey
         f = Fernet(key)
         encrypted = f.encrypt(string.encode('utf-8'))
-        return encrypted    # returns bytes
-    
+        return encrypted  # returns bytes
+
     @staticmethod
     def decrypt(byte: bytes, key: bytes | None = defKey) -> str:
         """
@@ -153,7 +150,7 @@ class MesCryp:
         """
         f = Fernet(key)
         decrypted = str(f.decrypt(byte)).lstrip("b'").rstrip("'")
-        return decrypted    # returns string
+        return decrypted  # returns string
 
 
 def try_decrypt(message: bytes, client_keys: dict | list, errors=True) -> str | None:
@@ -172,11 +169,11 @@ def try_decrypt(message: bytes, client_keys: dict | list, errors=True) -> str | 
         with contextlib.suppress(InvalidToken, ValueError):
             encMes = MesCryp.decrypt(message, key.encode() if type(key) == str else b'')
             break
-    
+
     if not encMes:
         with contextlib.suppress(InvalidToken):
             encMes = MesCryp.decrypt(message, defKey)
-    
+
     if not encMes:
         print(encMes)
         print(message)
@@ -198,8 +195,8 @@ def key_func(length=10) -> str:
     """
     generate random key
     """
-    String = 'abcdefghijklmnopqrstuvwxyz'                               # string for creating auth Keys
-    String += String.upper()+'1234567890ß´^°!"§$%&/()=?`+*#.:,;µ@€<>|'
+    String = 'abcdefghijklmnopqrstuvwxyz'  # string for creating auth Keys
+    String += String.upper() + '1234567890ß´^°!"§$%&/()=?`+*#.:,;µ@€<>|'
 
     password_provided = ''.join(random.sample(String, length))  # This is input in the form of a string
     password = password_provided.encode()  # Convert to type bytes
@@ -213,42 +210,3 @@ def key_func(length=10) -> str:
     )
     key = base64.urlsafe_b64encode(kdf.derive(password))  # Can only use kdf once
     return str(key).lstrip("b'").rstrip("'")
-
-
-if __name__ == '__main__':
-    from time import time
-    try:
-        while True:
-            st = input('\n\nSentence? ')
-            start = time()
-            c = Extra.median(Low.encrypt(Extra.median(st, 12)), 6)
-            e = Extra.median(Low.decrypt(Extra.median(c, 6)), 12)
-            end = time()
-            print('Low encryption:')
-            print(c)
-            print(e)
-            print('\nencrypting and decrypting took:', round(end-start, 2))
-            start = time()
-            c = MesCryp.encrypt(string=st)
-            e = MesCryp.decrypt(c, defKey.encode())
-            end = time()
-            print('Low encryption:')
-            print(c)
-            print(e)
-            print('\nencrypting and decrypting took:', round(end-start, 2))
-            input('Press enter to start High level encryption')
-            print('\nHigh encryption:')
-            start1 = time()
-            c1 = High.encrypt(st)
-            end1 = time()
-            e1 = High.decrypt(c1)
-            end2 = time()
-            print(c1)
-            print(e1)
-            print('\nencrypting took:', round(end1-start1, 2))
-            print('decrypting took:', round(end2-end1, 2))
-            input('\npress enter to continue\n\n')
-
-    except KeyboardInterrupt:
-        print('Closing Client...')
-        exit()

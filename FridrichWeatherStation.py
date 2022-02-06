@@ -1,13 +1,15 @@
 """
-Run on a device that can get weather data, replace lines 35 to 37 with your code.
+Requests weather data from an arduino (or a Fridrich Board)
+and forwards it to the server
 
 Author:
 Nilusink
 """
-from fridrich import AuthError, RegistryError
+from fridrich.errors import AuthError, RegistryError
 from fridrich.backend import Connection
 from fridrich.classes import Daytime
-from random import randint
+import binascii
+import serial
 import signal
 import time
 import sys
@@ -22,8 +24,39 @@ NAME = "WeatherStation1"
 LOCATION = "Somewhere"
 
 
-# default variables
+# default variables and class instances
 RUNNING: bool = True
+STATION = serial.Serial(port="/dev/ttyUSB0", baudrate=9600, timeout=.1)    # you probably have to change the USB port for your arduino
+
+
+def request_data():
+    """
+    send a ping to the arduino and wait for the
+    response, then parse from "name1:value1,name2:value2"
+    to {"name1": value1, "name2": value2}
+    """
+    data = ""
+    tries = 0
+    while data == "":
+        tries += 1
+        STATION.write(b"some data please")
+        time.sleep(0.3)
+        try:
+            data = STATION.readline().decode().rstrip("\n").rstrip("\r")
+
+        except (Exception,):
+            continue
+
+        if tries > 10:
+            raise ValueError("cannot read sensor")
+
+    # parse data
+    out: dict = {}
+    for element in data.split(","):
+        parts = element.split(":")
+        out[parts[0]] = float(parts[1])
+
+    return out
 
 
 def send_weather() -> None:
@@ -31,26 +64,38 @@ def send_weather() -> None:
     login to the server, send weather data, logout
     """
     print(f"Running send_weather ({Daytime.now().to_string()})")
-    with Connection(host="server.fridrich.xyz") as c:
-        c.auth(USERNAME, PASSWORD)
-        if not c:
-            raise AuthError("Invalid credentials")
-
-        # collect weather data, replace the random values with the way you want to get weather data
-        temp = randint(0, 40)
-        hum = randint(20, 90)
-        press = randint(800, 1100)
-
-        # commit data to the server
+    for _ in range(10):
         try:
-            c.commit_weather_data(station_name=NAME, temperature=temp, humidity=hum, pressure=press, wait=False)
+            with Connection(host="server.fridrich.xyz") as c:
+                # collect weather data, replace the random values with the way you want to get weather data
+                data = request_data()
+                print(f"{data=}")
 
-        except RegistryError:
-            print(f"Not registered, registering now")
-            c.register_station(station_name=NAME, location=LOCATION, wait=True)
-            c.commit_weather_data(station_name=NAME, temperature=temp, humidity=hum, pressure=press, wait=True)
+                # commit data to the server
+                try:
+                    c.auth(USERNAME, PASSWORD)
+                    if not c:
+                        raise AuthError("Invalid credentials")
 
-            c.send()
+                    c.commit_weather_data(station_name=NAME, weather_data=data, wait=True)  # if there was an error sending the message to the server, keep in buffer
+                    c.send()
+
+                except (RegistryError, ConnectionError):
+                    print(f"Not registered, registering now")
+                    c.register_station(station_name=NAME, location=LOCATION, wait=False)
+
+                    c.commit_weather_data(station_name=NAME, weather_data=data, wait=True)
+                    c.send()
+
+                return
+
+        except binascii.Error:
+            # try to avoid incorrect padding error
+            time.sleep(1)
+            continue
+
+    else:
+        raise ConnectionError("Error sending data")
 
 
 def main() -> None:

@@ -1,12 +1,10 @@
 """
-used for file-transfer and other AppStore
-functions like modifying and creating Apps
-(Server & Client)
+for sending and receiving files from a remote host.
 
-Author: Nilusink
+Author:
+Nilusink
 """
 from concurrent.futures import ThreadPoolExecutor, Future
-# from fridrich.server import classes
 import socket
 import struct
 import time

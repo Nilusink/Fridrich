@@ -4,26 +4,23 @@ main program for the Server
 
 Author: Nilusink
 """
+from cryptography.fernet import InvalidToken
 from traceback import format_exc
+from contextlib import suppress
 from threading import Thread
 import numpy as np
 import signal
 import sys
 
-from cryptography.fernet import InvalidToken
-
 # local imports
+from fridrich.cryption_tools import key_func, MesCryp
 from fridrich.server.accounts import Manager
-from fridrich.server.server_funcs import *
-from fridrich.server.classes import *
-from fridrich.classes import *
-
-from fridrich.server import WStationFuncs
-from fridrich.server import UserTools
+from fridrich.server import w_station_funcs
+from fridrich.server import user_tools
 from fridrich.server import app_store
 from fridrich.server import *
+from fridrich.errors import *
 
-from fridrich.cryption_tools import key_func, MesCryp
 
 COM_PROTOCOL_VERSIONS: set = {"1.1.0", "1.1.1"}
 
@@ -304,7 +301,7 @@ class FunctionManager:
                 'getVersion': ClientFuncs.set_version,
                 'gOuser': ClientFuncs.get_online_users,
 
-                "ping": UserTools.ping,
+                "ping": user_tools.ping,
                 "trigger_voting": AdminFuncs.manual_voting
             },
             'user': {                                  # instead of 5 billion if'S
@@ -335,11 +332,11 @@ class FunctionManager:
                 'create_app': app_store.receive_app,
                 "modify_app": app_store.modify_app,
 
-                "get_time":  UserTools.get_time,
+                "get_time":  user_tools.get_time,
 
-                "get_temps_now": WStationFuncs.get_now,
-                "get_temps_log": WStationFuncs.get_log,
-                "get_stations": WStationFuncs.get_stations
+                "get_temps_now": w_station_funcs.get_now,
+                "get_temps_log": w_station_funcs.get_log,
+                "get_stations": w_station_funcs.get_stations
             },
             'guest': {                                  # instead of 5 billion if'S
                 'CalEntry': ClientFuncs.calendar_handler,
@@ -350,9 +347,9 @@ class FunctionManager:
                 "gLog": ClientFuncs.get_log,
                 "gCal": ClientFuncs.get_cal,
 
-                "get_temps_now": WStationFuncs.get_now,
-                "get_temps_log": WStationFuncs.get_log,
-                "get_stations": WStationFuncs.get_stations
+                "get_temps_now": w_station_funcs.get_now,
+                "get_temps_log": w_station_funcs.get_log,
+                "get_stations": w_station_funcs.get_stations
             },
             'v_bot': {
                 'setVersion': ClientFuncs.set_version,
@@ -361,19 +358,19 @@ class FunctionManager:
             "s_bot": {
                 "gRes": ClientFuncs.results,
                 "gLog": ClientFuncs.get_log,
-                "get_time": UserTools.get_time,
+                "get_time": user_tools.get_time,
 
-                "get_temps_now": WStationFuncs.get_now,
-                "get_temps_log": WStationFuncs.get_log,
-                "get_stations": WStationFuncs.get_stations
+                "get_temps_now": w_station_funcs.get_now,
+                "get_temps_log": w_station_funcs.get_log,
+                "get_stations": w_station_funcs.get_stations
             },
             'w_station': {
-                "register": WStationFuncs.register,
-                "commit": WStationFuncs.commit_data
+                "register": w_station_funcs.register,
+                "commit": w_station_funcs.commit_data
             },
             "all": {
-                "secReq": UserTools.get_sec_clearance,
-                "ping": UserTools.ping,
+                "secReq": user_tools.get_sec_clearance,
+                "ping": user_tools.ping,
                 "end": ClientFuncs.end
             }
         }

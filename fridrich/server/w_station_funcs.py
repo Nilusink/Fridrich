@@ -66,29 +66,26 @@ def commit_data(message: dict, user: User, *_args) -> None:
         except (json.JSONDecodeError, FileNotFoundError):
             now_data = {}
 
-        now_data[message["station_name"]] = {
-            "time": message["time"],
-            "temp": message["temp"],
-            "hum": message["hum"],
-            "press": message["press"]
-        }
+        station_name = message["station_name"]
+        commit_time = message["time"]
+        message.pop("type")
+        message.pop("station_name")
+
+        now_data[station_name] = message.copy()  # copy so we don't get strange dependencies
 
         with open(Const.WeatherDir+"now.json", "w") as out_file:
             json.dump(now_data, out_file, indent=4)
 
         try:
-            station_data = json.load(open(Const.WeatherDir+message["station_name"]+".json", "r"))
+            station_data = json.load(open(Const.WeatherDir+station_name+".json", "r"))
 
         except (json.JSONEncoder, FileNotFoundError):
             station_data = {}
 
-        station_data[message["time"]] = {
-            "temp": message["temp"],
-            "hum": message["hum"],
-            "press": message["press"]
-        }
+        message.pop("time")
+        station_data[commit_time] = message.copy()
 
-        with open(Const.WeatherDir + message["station_name"]+".json", "w") as out_file:
+        with open(Const.WeatherDir + station_name+".json", "w") as out_file:
             json.dump(station_data, out_file, indent=4)
 
         send_success(user)
