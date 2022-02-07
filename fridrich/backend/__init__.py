@@ -62,7 +62,7 @@ class FridrichFuture:
         return self.__value is not ...
 
 
-@decorate_class(DEBUGGER.catch_and_write(raise_error=True, print_traceback=True))
+@decorate_class(DEBUGGER.catch_and_write(raise_error=True, print_traceback=False))
 class Connection:
     def __init__(self, debug_mode: str | None = False, host: str | None = ...) -> None:
         """

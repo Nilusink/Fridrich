@@ -120,7 +120,7 @@ class User:
                 self.send({'Error': 'NotEncryptedError'}, message_type="Error", force=True)
                 return
 
-            except TimeoutError:
+            except (TimeoutError, OSError):
                 continue
 
     def send(self, message: iter, message_type: str | None = 'function', force: bool | None = False) -> None:

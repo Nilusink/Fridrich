@@ -155,9 +155,7 @@ class Window:
         """
         users = c.admin_get_users(wait=True)
         o_users = c.get_online_users(wait=True)
-        print(0)
         c.send()
-        print(1)
 
         self.users = sort_user_list(users.result)
         self.onlineUsers = o_users.result
@@ -207,7 +205,7 @@ class Window:
                     tk.Label(self.mainFrame, width=18, font="Helvetica 15 bold", text='Name:', bg='grey', fg='white'),
                     tk.Label(self.mainFrame, width=18, font="Helvetica 15 bold", text=element, bg='grey', fg='white'),
                     tk.Label(self.mainFrame, width=18, font="Helvetica 15 bold", text='Count: '+str(UserNum[element]), bg='grey', fg='white'),
-                    tk.Button(self.mainFrame, width=3, text="X", bg="red", relief=tk.FLAT, command=lambda *_event, x=element: self.kick_user(element))
+                    tk.Button(self.mainFrame, width=3, text="X", bg="red", relief=tk.FLAT, command=lambda e=None, x=element: self.kick_user(x))
                 ))
 
                 isIn.append(element)
@@ -215,7 +213,7 @@ class Window:
                 self.userEs[-1][0].place(x=50, y=(i+j+3-notIn)*50+10)
                 self.userEs[-1][1].place(x=300, y=(i+j+3-notIn)*50+10)
                 self.userEs[-1][2].place(x=550, y=(i+j+3-notIn)*50+10)
-                self.userEs[-1][3].place(x=600, y=(i+j+3-notIn)*50+10)
+                self.userEs[-1][3].place(x=750, y=(i+j+3-notIn)*50+11)
 
             else:
                 notIn += 1
@@ -305,6 +303,7 @@ class Window:
         """
         kick one user
         """
+        print(f"kicking {username}")
         self.c.kick_user(username)
         self.update()
 
