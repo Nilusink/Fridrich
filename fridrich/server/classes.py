@@ -46,7 +46,7 @@ class User:
 
         # for auto-disconnect
         self.__last_connection = Daytime.now()
-        self.__timeout = Daytime(minute=2)  # if there wasn't any interaction with a client for 2 minutes, kick it (ping also counts as activity)
+        self.__timeout = Daytime(minute=5)  # if there wasn't any interaction with a client for 2 minutes, kick it (ping also counts as activity)
         self.__thread_pool = ThreadPoolExecutor(max_workers=2)
 
         # only if the user's security clearance requires auto-logout, start the thread
@@ -186,7 +186,7 @@ class User:
         """
         while self.loop:
             if Daytime.now()-self.__last_connection > self.__timeout:
-                print("disconnecting")
+                print(f"disconnecting {self.name}, last contact: {self.__last_connection}, now: {Daytime.now()} ({self.__timeout=})")
                 return self.end("timeout")
 
             time.sleep(.2)
