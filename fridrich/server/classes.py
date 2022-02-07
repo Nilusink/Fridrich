@@ -227,7 +227,7 @@ class User:
         return item == self.name or item == self.id
 
 
-@decorate_class(DEBUGGER.catch_traceback(raise_error=False), dont_decorate=["_garbage_collector"])
+@decorate_class(DEBUGGER.catch_traceback(raise_error=False), dont_decorate=["_garbage_collector", "__contains__", "get_user"])
 class UserList:
     def __init__(self, users: typing.List[User] | None = ...) -> None:
         """
@@ -297,7 +297,6 @@ class UserList:
 
         arguments are the same as for UserList.get_user
         """
-        print("removing by")
         self.remove(self.get_user(*args, **kw))
 
     def reset(self) -> None:
@@ -335,7 +334,6 @@ class UserList:
             yield element
 
     def __contains__(self, other: str) -> bool:
-        print("contains?")
         with suppress(KeyError):
             self.get_user(name=other, user_id=other)
             return True

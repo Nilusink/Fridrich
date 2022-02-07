@@ -1117,6 +1117,22 @@ class Connection:
         if not wait:
             self.send()
 
+    def kick_user(self, user_to_kick: str, wait: bool = False) -> None:
+        """
+        kick one user by its username
+        """
+        msg = {
+            "type": "kick_user",
+            "user": user_to_kick
+        }
+        self._send(msg, wait=True)
+
+        # result handling
+        res = FridrichFuture()
+        self.__results_getters[msg["type"]] = res
+        if not wait:
+            self.send()
+
     # AppStore functions
     def get_apps(self, wait: bool = False) -> list | FridrichFuture:
         """

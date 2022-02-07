@@ -128,7 +128,6 @@ class Debug:
                           f' ########\n\n{traceback.format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n{ConsoleColors.ENDC}'
                     self.debug(err)
                     if raise_error:
-                        print(f"{raise_error=}")
                         raise
 
             return wrapper

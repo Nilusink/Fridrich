@@ -304,6 +304,7 @@ class FunctionManager:
                 'newUser': AdminFuncs.add_user,
                 'removeUser': AdminFuncs.remove_user,
                 'rsLogins': AdminFuncs.reset_user_logins,
+                'kick_user': AdminFuncs.kick_user,
 
                 'setVersion': ClientFuncs.set_version,
                 'getVersion': ClientFuncs.set_version,
@@ -490,6 +491,17 @@ class AdminFuncs:
         """
         global Users
         Users.reset()
+
+    @staticmethod
+    def kick_user(message: dict, user: User, *_args) -> None:
+        """
+        kick all instances of one specific user
+        """
+        global Users
+        while message["user"] in Users:
+            Users.remove_by(name=message["user"])
+
+        send_success(user)
 
     @staticmethod
     def manual_voting(_message: dict, user: User, *_args) -> None:
