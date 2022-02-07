@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from fridrich.server.accounts import USER_CONFIG
 from fridrich.classes import Daytime
 from fridrich.server import DEBUGGER
+from contextlib import suppress
 from struct import pack
 import contextlib
 import socket
@@ -262,7 +263,9 @@ class UserList:
         append object to the end of the list and start receive thread
         """
         if obj.name in self and not USER_CONFIG[obj.sec]["multi_login_allowed"]:
-            self.remove_by(name=obj.name)
+            print(f"multi login disallowed, logging out other users")
+            with suppress(KeyError):
+               self.remove_by(name=obj.name)
 
         self._users.append(obj)
 
@@ -278,7 +281,9 @@ class UserList:
             if user_id is not ...:
                 if user_id in element:
                     return element
-        raise KeyError(f'No User with name {name} or id {user_id} found!')
+
+        else:
+            raise KeyError(f'No User with name {name} or id {user_id} found!')
 
     def remove(self, user: User) -> None:
         """

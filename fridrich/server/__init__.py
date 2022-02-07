@@ -124,7 +124,7 @@ class Debug:
                     return func(*args, **kw)
 
                 except Exception as e:
-                    err = f'{ConsoleColors.FAIL}\n\n\n######## - Exception "{e}"at function {func.__name__} on {datetime.datetime.now().strftime("%H:%M:%S.%f")} -' \
+                    err = f'{ConsoleColors.FAIL}\n\n\n######## - Exception "{e}" at function {func.__name__} on {datetime.datetime.now().strftime("%H:%M:%S.%f")} -' \
                           f' ########\n\n{traceback.format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n{ConsoleColors.ENDC}'
                     self.debug(err)
                     if raise_error:
