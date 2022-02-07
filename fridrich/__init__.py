@@ -20,7 +20,7 @@ def decorate_class(decorator, dont_decorate: list = ()):
 
     def decorate(cls):
         for attr in cls.__dict__:
-            if callable(getattr(cls, attr)) and attr not in dont_decorate and not attr.startswith("_"):
+            if callable(getattr(cls, attr)) and attr not in dont_decorate:
                 setattr(cls, attr, decorator(getattr(cls, attr)))
         return cls
     return decorate

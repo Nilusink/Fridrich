@@ -5,7 +5,6 @@ from fridrich.classes import Daytime
 from fridrich.server import DEBUGGER
 from contextlib import suppress
 from struct import pack
-import contextlib
 import socket
 import typing
 import time
@@ -228,7 +227,7 @@ class User:
         return item == self.name or item == self.id
 
 
-@decorate_class(DEBUGGER.catch_traceback(raise_error=False))
+@decorate_class(DEBUGGER.catch_traceback(raise_error=False), dont_decorate=["_garbage_collector"])
 class UserList:
     def __init__(self, users: typing.List[User] | None = ...) -> None:
         """
@@ -265,7 +264,7 @@ class UserList:
         if obj.name in self and not USER_CONFIG[obj.sec]["multi_login_allowed"]:
             print(f"multi login disallowed, logging out other users")
             with suppress(KeyError):
-               self.remove_by(name=obj.name)
+                self.remove_by(name=obj.name)
 
         self._users.append(obj)
 
@@ -298,6 +297,7 @@ class UserList:
 
         arguments are the same as for UserList.get_user
         """
+        print("removing by")
         self.remove(self.get_user(*args, **kw))
 
     def reset(self) -> None:
@@ -335,7 +335,8 @@ class UserList:
             yield element
 
     def __contains__(self, other: str) -> bool:
-        with contextlib.suppress(KeyError):
+        print("contains?")
+        with suppress(KeyError):
             self.get_user(name=other, user_id=other)
             return True
         return False
