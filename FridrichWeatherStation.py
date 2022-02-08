@@ -38,9 +38,11 @@ def request_data():
     data = ""
     tries = 0
     while data == "":
+        STATION.reset_input_buffer()
         tries += 1
-        STATION.write(b"some data please")
-        time.sleep(0.3)
+        STATION.write(b"some data please")  # ask politely for some weather data
+        STATION.flush()
+        time.sleep(.5)
         try:
             data = STATION.readline().decode().rstrip("\n").rstrip("\r")
 
@@ -68,7 +70,12 @@ def send_weather() -> None:
         try:
             with Connection(host="server.fridrich.xyz") as c:
                 # collect weather data, replace the random values with the way you want to get weather data
-                data = request_data()
+                try:
+                    data = request_data()
+
+                except ValueError:
+                    data = {}
+
                 print(f"{data=}")
 
                 # commit data to the server

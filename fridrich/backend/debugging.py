@@ -69,11 +69,15 @@ class Debugger:
                     e1, e2 = self.__calculate_sides(self.total_title_length, len(end))
 
                     trace = f"\n\n\n{h1*'#'} {title} {h2*'#'}\n\n{format_exc()}\n\n{e1*'#'} {end} {e2*'#'}\n\n\n"
-                    with open(self.__outfile, self.__file_mode) as out:
-                        out.write(trace)
+                    try:
+                        with open(self.__outfile, self.__file_mode) as out:
+                            out.write(trace)
 
-                    if print_traceback:
-                        print(f"{ConsoleColors.FAIL}{trace}{ConsoleColors.ENDC}")
+                        if print_traceback:
+                            print(f"{ConsoleColors.FAIL}{trace}{ConsoleColors.ENDC}")
+
+                    except NameError:
+                        return
 
                     if raise_error:
                         raise

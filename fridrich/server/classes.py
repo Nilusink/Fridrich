@@ -288,7 +288,7 @@ class UserList:
         """
         remove a user by its class
         """
-        user.end()
+        user.end(reason="deleted from list")
         self._users.remove(user)
 
     def remove_by(self, *args, **kw) -> None:

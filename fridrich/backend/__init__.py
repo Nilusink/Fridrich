@@ -62,7 +62,6 @@ class FridrichFuture:
         return self.__value is not ...
 
 
-@decorate_class(DEBUGGER.catch_and_write(raise_error=True, print_traceback=False))
 class Connection:
     def __init__(self, debug_mode: str | None = False, host: str | None = ...) -> None:
         """
@@ -187,6 +186,7 @@ class Connection:
                 except NameError:
                     raise ServerError(f'{error}:\n{st.lstrip(f"raise {error}(").rstrip(")")}')
 
+    @DEBUGGER.catch_and_write(raise_error=True, print_traceback=True)
     def response_handler(self, responses: Dict[str, Any]) -> Dict[str, Any]:
         """
         if necessary, process each result
@@ -342,6 +342,7 @@ class Connection:
     def results_getters(self) -> dict:
         return self.__results_getters
 
+    @DEBUGGER.catch_and_write(raise_error=True, print_traceback=True)
     def receive(self):
         """
         receive messages from server, decrypt them and raise incoming errors (meant as thread, run by default)
