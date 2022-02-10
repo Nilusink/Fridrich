@@ -11,18 +11,26 @@ from fridrich.classes import Daytime
 import binascii
 import serial
 import signal
+import json
 import time
 import sys
+import os
 
 
-# default login data for weather stations
-USERNAME = "WStation"
-PASSWORD = "ISetDaWeather"
+# load data from config file
+try:
+    with open(os.getcwd()+"/config/weather_station.json", "r") as inp:
+        config = json.load(inp)
+        # login data for weather station
+        USERNAME: str = config["fridrich_user"]
+        PASSWORD: str = config["fridrich_pwd"]
 
-# set the station name and location for THIS station
-NAME = "WeatherStation1"
-LOCATION = "Somewhere"
+        # load the station name and location for THIS station
+        NAME = config["station_name"]
+        LOCATION = config["station_location"]
 
+except KeyError:
+    raise KeyError("the weather_station config file doesn't contain the correct values!")
 
 # default variables and class instances
 RUNNING: bool = True
@@ -98,12 +106,16 @@ def send_weather() -> None:
                     c.commit_weather_data(station_name=NAME, weather_data=data, wait=True)  # if there was an error sending the message to the server, keep in buffer
                     c.send()
 
-                except (RegistryError, ConnectionError):
+                except RegistryError:
                     print(f"Not registered, registering now")
                     c.register_station(station_name=NAME, location=LOCATION, wait=False)
 
                     c.commit_weather_data(station_name=NAME, weather_data=data, wait=True)
                     c.send()
+
+                except ConnectionError:
+                    time.sleep(5)
+                    continue
 
                 return
 
@@ -131,6 +143,9 @@ def main() -> None:
 
         except KeyboardInterrupt:
             return end(0)
+
+        except AuthError:
+            continue
 
 
 def end(*signals) -> None:

@@ -23,13 +23,19 @@ import json
 import os
 
 try:
-    with open(os.getcwd()+"/config/discord_token.json", "r") as inp:
-        token_data = json.load(inp)
-        TOKEN = token_data["token"]
-        VOTINGS_CHANNEL_ID = token_data["channel"]
+    with open(os.getcwd()+"/config/discord_bot.json", "r") as inp:
+        config = json.load(inp)
+        # get discord bot info
+        TOKEN: str = config["token"]
+        VOTINGS_CHANNEL_ID: int = config["channel_id"]
+
+        # get fridrich bot info
+        USERNAME: str = config["fridrich_user"]
+        PASSWORD: str = config["fridrich_pwd"]
 
 except KeyError:
-    raise KeyError("the discord_token file doesn't contain the correct values!")
+    raise KeyError("the discord_bot config file doesn't contain the correct values!")
+
 
 VOTINGS_CHANNEL: Any = None
 

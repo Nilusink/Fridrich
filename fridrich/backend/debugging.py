@@ -7,6 +7,7 @@ Nilusink
 from typing import Callable, Tuple, Any
 from fridrich import ConsoleColors
 from traceback import format_exc
+import time
 import os
 
 
@@ -24,12 +25,17 @@ class Debugger:
         self.__outfile = outfile
         self.__file_mode = file_mode
 
-        print(f"File for debugging: \"{self.__outfile}\"")
-
         # check if the directory to save in already exists
         direc = os.path.split(self.__outfile)[0]
         if not os.path.isdir(direc):
             os.mkdir(direc)
+
+        with open(self.__outfile, file_mode) as out:
+            date = time.strftime("%Y.%m.%d - %%H:%M:%S")
+            side1, side2 = self.__calculate_sides(self.total_title_length, len(date))
+            out.write(f"\n\n\n\n{'#'*self.total_title_length}\n#{' '*side1}{date}{' '*side2}\n{'#'*self.total_title_length}")
+
+        print(f"File for debugging: \"{self.__outfile}\"")
 
     @staticmethod
     def __calculate_sides(total_length: int, string_length: int, spaces: int | None = 2) -> Tuple[int, int]:
