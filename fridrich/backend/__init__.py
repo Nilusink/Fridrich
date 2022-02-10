@@ -645,7 +645,7 @@ class Connection:
         get Calendar in format {"date":listOfEvents}
         """
         msg = {
-               'type': 'calReq'
+               'type': 'gCal'
         }   # set message
         self._send(msg, wait=True)
 
