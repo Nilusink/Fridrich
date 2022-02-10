@@ -146,6 +146,7 @@ nSendFile.py
 fridrich_old/
 tests/
 logs/
+config/
 testFile.py
 test.file
 test.txt
