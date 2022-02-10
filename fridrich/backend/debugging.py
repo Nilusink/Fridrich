@@ -31,9 +31,9 @@ class Debugger:
             os.mkdir(direc)
 
         with open(self.__outfile, file_mode) as out:
-            date = time.strftime("%Y.%m.%d - %%H:%M:%S")
+            date = time.strftime("%Y.%m.%d - %H:%M:%S")
             side1, side2 = self.__calculate_sides(self.total_title_length, len(date))
-            out.write(f"\n\n\n\n{'#'*self.total_title_length}\n#{' '*side1}{date}{' '*side2}\n{'#'*self.total_title_length}")
+            out.write(f"\n\n\n\n{'#'*self.total_title_length}\n#{' '*side1}{date}{' '*side2}#\n{'#'*self.total_title_length}")
 
         print(f"File for debugging: \"{self.__outfile}\"")
 
