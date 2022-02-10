@@ -1315,7 +1315,7 @@ class Connection:
         return True
 
     def __del__(self) -> None:
-        self.end()
+        self.end(revive=False)
 
     def __eq__(self, other: "Connection") -> bool:
         if not type(other) == Connection:

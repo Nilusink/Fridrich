@@ -5,7 +5,6 @@ the correct ID for your channel on your Server
 
 Author: Nilusink
 """
-from fridrich.cryption_tools import Low
 from fridrich.backend import Connection
 from fridrich.classes import Daytime
 from fridrich.errors import Error
@@ -20,11 +19,18 @@ import pandas as pd
 import binascii
 import discord
 import asyncio
+import json
 import os
 
-TOKEN = Low.decrypt('|Nb`sE&w(FH~=vKF#t3GH2^mNGypdMH~=;PH~=;PFaS6J |Nb}tE&wn9 |Nb`sE&wtBH~=sJF#s?CIRH2SH~={SG5|OLFaR|GF#tFK |Nb!mFaRz9FaR_FIRH2SHvlyNHUKgJF#s_DG5|0DH~={S |Nb`sE&w(FH~=vKF#t3GH2^mNGypdMH~=;PH~=;PFaS6J |Nb@rE&w?IG5|OLG5|0DGXOFGGXO9EG5|LKH2^gLFaS9K |Nb`sE&wtBH~=sJF#s?CIRH2SH~={SG5|OLFaR|GF#tFK |Nc1uE&w?IGypjOH~=>QGypRIHvlmJFaS0HHUKgJ |Nb`sE&w(FH~=vKF#t3GH2^mNGypdMH~=;PH~=;PFaS6J |Nb}tE&wn9 |Nb`sE&w$EGypjOH~=#MGypUJGXOOJG5|LKFaS3IH2? |Nb!mFaRz9FaR_FIRH2SHvlyNHUKgJF#s_DG5|0DH~={S |Nb`sE&w$EGypjOH~=#MGypUJGXOOJG5|LKFaS3IH2? |Nb@rE&w?IG5|OLG5|0DGXOFGGXO9EG5|LKH2^gLFaS9K |Nb`sE&wn9 |Nc1uE&w?IGypjOH~=>QGypRIHvlmJFaS0HHUKgJ |Nb`sE&w$EGypjOH~=#MGypUJGXOOJG5|LKFaS3IH2? |Nb}tE&wn9 |Nb`sE&wn9 |Nb=qE&wwCH~=*OF#t9IGypgNFaS3IF#t0FGypXKFaR_F |Nb`sE&w$EGypjOH~=#MGypUJGXOOJG5|LKFaS3IH2? |Nb@rE&w?IG5|OLG5|0DGXOFGGXO9EG5|LKH2^gLFaS9K |Nc1uE&wqAF#s?CGypRIGXOOJHvl;RF#t3GGypRI |Nb!mFaRz9FaS9KIRG^PFaR_FIRG;NH~=#MHUKgJFaS3IHvj |Nb=qE&wn9IRH5TFaR+CIRG^PF#t0FH2^sPG5|LKH~=&NH2? |Nb}tE&wwCFaS0HHUKgJGXOXMHUKgJIRG&LH~=sJHvlyN |Nb}tE&w<HH~=^RF#tILGypUJF#tCJGXOCFH2^gLH~={S |Nb`sE&wtBF#s_DF#s?CG5|FIH2^RGIRG*MHvl;RHvl*Q |Nb@rE&w+GH~=yLGXOFGIRH5TH~=#MF#s|EH2^XIHUKyP |Nb@rE&wn9H~=yLHvl#OG5|FIGXO9EG5|RMH~=yLF#tIL |Nc1uE&w?IGypjOH~=>QGypRIHvlmJFaS0HHUKgJ |Nb=qE&wn9IRH5TFaR+CIRG^PF#t0FH2^sPG5|LKH~=&NH2? |Nb}tE&wqAG5|CHFaR?EH~=&NFaR_FHUKjKH2^sPHUI |Nb@rE&w<HH2^gLHUKpMGypaLFaR(BGypIFF#s?CGypUJ |Nb@rE&w+GH~=yLGXOFGIRH5TH~=#MF#s|EH2^XIHUKyP |Nb`sE&wqAGypLGGypOHH~=&NG5|OLH2^dKG5|OLH2? |Nb`sE&wzDF#t9IF#tILH~=&NH~=>QFaS9KH2^jMHUKjK |Nc1uE&wn9 |Nc1uE&w(FIRG^PGXOOJIRG~RF#t3GH~=#MG5|IJH2^sP |Nc1uE&w<HIRH5TGypjOGypjOGXORKHUKdIF#t9IHUKpM |Nb@rE&w?IG5|OLG5|0DGXOFGGXO9EG5|LKH2^gLFaS9K |Nb`sE&wtBF#s_DF#s?CG5|FIH2^RGIRG*MHvl;RHvl*Q |Nb=qE&wtBIRG&LH2^RGG5|IJG5|6FF#s|EIRG&LH~=vK |Nc1uE&wzDH~=;PH~=#MG5|RMH~=sJH2^RGH2^UHGXOXM |Nb`sE&wzDF#t9IF#tILH~=&NH~=>QFaS9KH2^jMHUKjK |Nc1uE&w(FIRG^PGXOOJIRG~RF#t3GH~=#MG5|IJH2^sP |Nb`sE&w?IGXOULG5|FIGXOaNGXOIHF#tILGXOULHvlpK |Nb=qE&w<HGXO9EIRG^PF#tFKIRG>OH~=&NH2^aJFaR+C |Nb`sE&wzDH~=#MGXOCFGypdMHvlsLH2^dKHvl*QH~=#M |Nb=qE&w$EHUKvOHvl#OGypRIHUKgJH~=#MFaR(BG5|3EH2? |Nb`sE&wn9HvlmJFaS0HHvl*QF#s_DH~=;PH2^dKHvlyNH2? |Nb`sE&w(FH~=vKF#t3GH2^mNGypdMH~=;PH~=;PFaS6J |Nc1uE&w<HGypgNH~=*OHvl*QFaR+CHvl;RHUKdIFaR_F |Nb@rE&wn9 |Nb=qE&w?IF#t9IFaS3IIRG~RH~=#MFaS9KIRG{QF#t9I |Nc1uE&w$EIRG&LHUKsNGXO9EGypaLHUKgJH2^dKGXOXM |Nc1uE&wwCG5|LKGXOULIRG#KH2^aJFaS6JH~=^RF#t9I |Nb}tE&wtBGypaLG5|3EF#s|EH2^UHG5|9GH2^aJG5|3E |Nb=qE&wtBIRG&LH2^RGG5|IJG5|6FF#s|EIRG&LH~=vK ')
+try:
+    with open(os.getcwd()+"/config/discord_token.json", "r") as inp:
+        token_data = json.load(inp)
+        TOKEN = token_data["token"]
+        VOTINGS_CHANNEL_ID = token_data["channel"]
 
-VOTINGS_CHANNEL_ID = 922820312968605806
+except KeyError:
+    raise KeyError("the discord_token file doesn't contain the correct values!")
+
 VOTINGS_CHANNEL: Any = None
 
 bot = commands.Bot(command_prefix='!')
@@ -39,7 +45,9 @@ USER_TIMEOUT = Daytime(minute=2)
 DATA_DESCRIPTION: Dict[str, str] = {    # label for the plot, mustn't be changed
     "Temperature": "Temperature in °C",
     "hum": "Humidity in %",
+    "Humidity": "Humidity in %",
     "press": "Pressure in hPa",
+    "Pressure": "Pressure in hPa",
     "Temperature Index": "Felt temperature in °C"
 }
 
@@ -117,15 +125,24 @@ def make_graph(values: int, outfile: str, data_point) -> None:
     data.update({
         station: new_data[station] for station in new_data
     })
+    all_points = [value for values in data.values() for value in values if type(value) in (int, float)]
+    min_max = int(max(all_points) - min(all_points))
+    if min_max < 8:
+        min_max = 8
+
     data = pd.DataFrame(data)
 
     # make graph
+    x_scale = min_max*(values/100)
+    plt.figure(figsize=(16, 8))
     g = sns.lineplot(x="dates", y="value", hue="variable", data=pd.melt(data, ["dates"]), ci=None)
 
     # configure graph
-    g.set(ylabel=DATA_DESCRIPTION[data_point[0] if type(data_point) == tuple else data_point], xlabel="Date")
+    p = data_point[0] if type(data_point) == tuple else data_point
+    g.set(ylabel=DATA_DESCRIPTION[p] if p in DATA_DESCRIPTION else data_point , xlabel="Date")
 
-    plt.xticks([all_dates[i] for i in range(0, len(all_dates), len(all_dates) // 8)])
+    # print(f"how many: {round(x_scale/3, 0)}, {values=}, {x_scale=}, {min_max=}")
+    plt.xticks([all_dates[i] for i in range(0, values, values // 6)])
     plt.legend(title="Weather Station")
 
     # save graph
@@ -387,6 +404,7 @@ class WeatherStations(commands.Cog):
             await ctx.send("creating graph...")
 
             make_graph(values, "tmp.png", data_point)
+
             await ctx.send(file=discord.File("tmp.png"))
 
             # wait for a little bit and then remove the file

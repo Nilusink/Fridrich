@@ -152,6 +152,7 @@ test.txt
 ChatElement.pyw
 direct_voting.py
 todo_list.py
+discord_token.json
 
 # didn't work for some reason
 setup.py

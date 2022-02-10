@@ -83,48 +83,7 @@ And optionally:
 python3 /path/do/your/server/FridrichDiscordBot.py &
 ```
 ## Description
-The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It saves all the data in files and accepts requests, handles events like the 0 o'clock vote and some other "cool" stuff. The basic File Layout for the Server should look like this:  
-<pre>
-|  
-|---♦ data
-|   |---♦ logs
-|   |   |---♦ All of the voting logs (generated, directory must exist)
-|   |
-|   |---♦ chat.json
-|   |---♦ Calendar.json
-|   |---♦ dVotes.json
-|   |---♦ KeyFile.enc
-|   |---♦ now.json
-|   |---♦ strikes.json
-|   |---♦ tempData.json
-|   |---♦ users.enc
-|   |---♦ Version
-|   |---♦ yes.json
-|
-|---♦ weather
-|   |---♦ all.json
-|   |---♦ now.json
-|   |---♦ individual log for each station (generated)
-|
-|---♦ fridrich  
-|   |---♦ server
-|   |   |---♦ __init__.py
-|   |   |---♦ accounts.py
-|   |   |---♦ ClientFuncs.py
-|   |   |---♦ server_funcs.py
-|   |   |---♦ settings.json
-|   |   |---♦ UserTools.py
-|   |   |---♦ WStationFuncs.py
-|   |
-|   |---♦ __init__.py
-|   |---♦ app_store.py
-|   |---♦ cryption_tools.py
-|   |---♦ classes.py
-|   |---♦ useful.py
-|  
-|---♦ FridrichServer.py
-|---♦ FridrichDiscordBot.py (optional)
-</pre>
+The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It saves all the data in files and accepts requests, handles events like the 0 o'clock vote and some other "cool" stuff.
 <br><br><br>
 The **Calendar.json** file saves the configurations of the calendar in a dict:
 ```Python 

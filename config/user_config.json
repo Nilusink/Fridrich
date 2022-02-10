@@ -13,7 +13,7 @@
     },
     "v_bot": {
         "multi_login_allowed": true,
-        "auto_logout": false
+        "auto_logout": true
     },
     "s_bot": {
         "multi_login_allowed": true,
@@ -21,6 +21,6 @@
     },
     "w_station": {
         "multi_login_allowed": true,
-        "auto_logout": false
+        "auto_logout": true
     }
 }

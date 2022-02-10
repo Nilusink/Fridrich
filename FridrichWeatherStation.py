@@ -26,10 +26,21 @@ LOCATION = "Somewhere"
 
 # default variables and class instances
 RUNNING: bool = True
-STATION = serial.Serial(port="/dev/ttyUSB0", baudrate=9600, timeout=.1)    # you probably have to change the USB port for your arduino
+STATION: serial.Serial = ...
+for _ in range(5):
+    try:
+        STATION = serial.Serial(port="/dev/ttyUSB0", baudrate=9600, timeout=.1)    # you probably have to change the USB port for your arduino
+        STATION.flush()
+        break
+
+    except (Exception,):
+        continue
+
+if STATION is ...:
+    exit(-1)
 
 
-def request_data():
+def request_data() -> dict:
     """
     send a ping to the arduino and wait for the
     response, then parse from "name1:value1,name2:value2"
