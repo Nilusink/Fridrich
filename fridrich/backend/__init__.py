@@ -964,13 +964,14 @@ class Connection:
             return res.result
         return res
 
-    def commit_weather_data(self, station_name: str, weather_data: dict, wait: bool = False) -> Union[None, FridrichFuture]:
+    def commit_weather_data(self, station_name: str, weather_data: dict,
+                            wait: bool = False, set_time: str | None = ...) -> Union[None, FridrichFuture]:
         """
         Commit data to the WeatherStation database
         """
         msg = {
             "type": "commit",
-            "time": time.strftime("%Y.%m.%d")+"-"+Daytime.now().to_string(),
+            "time": time.strftime("%Y.%m.%d")+"-"+Daytime.now().to_string() if set_time is ... else set_time,
             "station_name": station_name
         }
         msg.update(weather_data)

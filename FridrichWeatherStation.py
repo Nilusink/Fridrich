@@ -72,12 +72,16 @@ def request_data() -> dict:
             raise ValueError("cannot read sensor")
 
     # parse data
-    out: dict = {}
-    for element in data.split(","):
-        parts = element.split(":")
-        out[parts[0]] = float(parts[1])
+    try:
+        out: dict = {}
+        for element in data.split(","):
+            parts = element.split(":")
+            out[parts[0]] = float(parts[1])
 
-    return out
+        return out
+    
+    except IndexError:
+        return {}
 
 
 def send_weather() -> None:
@@ -85,17 +89,24 @@ def send_weather() -> None:
     login to the server, send weather data, logout
     """
     print(f"Running send_weather ({Daytime.now().to_string()})")
+    try:
+        data = request_data()
+
+    except ValueError:
+        data = {}
+
+    print(f"{data=}")
     for _ in range(10):
         try:
             with Connection(host="server.fridrich.xyz") as c:
+                # try to send data backed up from the last time it couldn't be sent
+                if os.path.exists("temp_weather.json"):
+                    with open("temp_weather.json", "r") as in_file:
+                        for line in in_file.readlines():
+                            t, wd = line.rstrip("\n").split("|||")
+                            c.commit_weather_data(station_name=NAME, weather_data=json.loads(wd), wait=True, set_time=t)
+
                 # collect weather data, replace the random values with the way you want to get weather data
-                try:
-                    data = request_data()
-
-                except ValueError:
-                    data = {}
-
-                print(f"{data=}")
 
                 # commit data to the server
                 try:
@@ -125,7 +136,10 @@ def send_weather() -> None:
             continue
 
     else:
-        raise ConnectionError("Error sending data")
+        with open("temp_weather.json", "a") as out:
+            now_time = time.strftime("%Y.%m.%d")+"-"+Daytime.now().to_string()
+            out.write(f"{now_time}|||{json.dumps(data)}")
+        time.sleep(60)
 
 
 def main() -> None:
