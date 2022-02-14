@@ -60,4 +60,5 @@ if __name__ == '__main__':
                     continue
 
             except (Exception,):
+                print(format_exc())
                 continue

@@ -6,7 +6,6 @@ Author: Nilusink
 """
 from cryptography.fernet import InvalidToken
 from traceback import format_exc
-from contextlib import suppress
 from threading import Thread
 import numpy as np
 import signal
@@ -38,22 +37,25 @@ def verify(username: str, password: str, cl: socket.socket, address: str) -> Non
     verify the client and send result
     """
     resp, logged_in_user = AccManager.verify(username, password)
-    IsValid = False
+    is_valid = False
     key = None
     new_user = None
     if resp is None:
         print(f"invalid auth from {address} ({username})")
-        Communication.send(cl, {'Error': 'SecurityNotSet', 'info': f'no information about security clearance for user {username}'}, encryption=MesCryp.encrypt)
+        Communication.send(cl, {'Error': 'SecurityNotSet',
+                                'info': f'no information about security clearance for user {username}'},
+                           encryption=MesCryp.encrypt)
         return
 
     elif resp:
-        IsValid = True
+        is_valid = True
         key = key_func(length=30)
         new_user = User(name=logged_in_user["Name"], sec=logged_in_user["sec"], key=key, user_id=logged_in_user["id"], cl=cl, ip=address, function_manager=FunManager.exec, debugger=debug)
         Users.append(new_user)
-        
-    debug.debug(f"Connected to {new_user}, {IsValid=}")   # print out username, if connected successfully or not and if it is a bot
-    mes = cryption_tools.MesCryp.encrypt(json.dumps({'Auth': IsValid, 'AuthKey': key}))
+
+    # print out username, if connected successfully or not and if it is a bot
+    debug.debug(f"Connected to {new_user}, {is_valid=}")
+    mes = cryption_tools.MesCryp.encrypt(json.dumps({'Auth': is_valid, 'AuthKey': key}))
     cl.send(mes)
 
 
@@ -395,7 +397,7 @@ class FunctionManager:
 
             elif message["type"] in self.switch["all"]:
                 self.switch["all"][message['type']](message, user)
-            
+
             else:
                 isIn = False
                 req = list()
@@ -403,14 +405,14 @@ class FunctionManager:
                     if message['type'] in self.switch[element]:
                         isIn = True
                         req.append(element)
-                
+
                 if isIn:
                     debug.debug(f'user {user.sec} tried to use function {message["type"]} ({req})')
                     error = {
                         "Error": "AccessError",
                         "info": f'Clearance required: {" | ".join(req)}'
                     }
-                
+
                 else:
                     error = {
                         "Error": "InvalidRequest",
@@ -438,7 +440,7 @@ class AdminFuncs:
         get all users | passwords | clearances
         """
         user.send(AccManager.get_accounts())  # sending list to client
-    
+
     @staticmethod
     def set_password(message: dict, user: User, *_args) -> None:
         """
@@ -454,7 +456,7 @@ class AdminFuncs:
         """
         AccManager.set_username(message['OldUser'], message['NewUser'])  # change account name
         send_success(user)  # send success
-    
+
     @staticmethod
     def set_security(message: dict, user: User, *_args) -> None:
         """
@@ -475,7 +477,7 @@ class AdminFuncs:
             user.send({"Error": "NameError", "info": "user already exists"}, message_type="Error")
 
         send_success(user)
-    
+
     @staticmethod
     def remove_user(message: dict, user: User, *_args) -> None:
         """
@@ -609,7 +611,9 @@ class ClientFuncs:
         get the calendar dictionary
         """
         with open(Const.CalFile, 'r') as inp:
-            user.send(json.load(inp))
+            cal_val = json.load(inp)
+            print(f"{len(cal_val)=}")
+            user.send(cal_val)
 
     @staticmethod
     def change_pwd(message: dict, user: User, *_args) -> None:
