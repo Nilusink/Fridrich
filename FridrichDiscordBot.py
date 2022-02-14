@@ -132,6 +132,9 @@ def make_graph(values: int, outfile: str, data_point) -> None:
         station: new_data[station] for station in new_data
     })
     all_points = [value for values in data.values() for value in values if type(value) in (int, float)]
+    if len(all_points) == 0:
+        raise ValueError("No points for selected range")
+
     min_max = int(max(all_points) - min(all_points))
     if min_max < 8:
         min_max = 8
@@ -409,7 +412,12 @@ class WeatherStations(commands.Cog):
         with print_traceback():
             await ctx.send("creating graph...")
 
-            make_graph(values, "tmp.png", data_point)
+            try:
+                make_graph(values, "tmp.png", data_point)
+
+            except ValueError:
+                await ctx.send("Cannot make graph: no data points for selected arguments")
+                return
 
             await ctx.send(file=discord.File("tmp.png"))
 
