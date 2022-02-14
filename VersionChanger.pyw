@@ -2,7 +2,8 @@
 GUI program to change the
 Version variable
 
-Author: Nilusink
+Author:
+Nilusink
 """
 from tkinter import messagebox
 import tkinter as tk
@@ -11,24 +12,24 @@ import tkinter as tk
 from fridrich.backend import Connection
 
 
-class Window:
-    def __init__(self, connection_instance: Connection) -> None:
+class Window(Connection):
+    def __init__(self, host: str) -> None:
         """
         create a new window
         """
+        super().__init__(host=host)
         # variable definitions
         self.userEs = list()
         self.version = str()
 
         # tkinter
-        self.c = connection_instance
         self.root = tk.Tk()
         self.root.title('Fridrich Version Changer')
         
         self.root.minsize(width=600, height=150)
         self.root.maxsize(width=600, height=150)
 
-        self.root.bind('<Escape>', self.end)
+        self.root.bind('<Escape>', self._end)
 
         # mainframe
         self.mainFrame = tk.Frame(self.root, bg='grey', width=600, height=700)
@@ -70,7 +71,7 @@ class Window:
         """
         login
         """
-        if not self.c.auth('VersionChanger', 'IChangeDaVersion'):
+        if not self.auth('VersionChanger', 'IChangeDaVersion'):
             messagebox.showerror('Error', 'bot login used for this application is not valid anymore (quitting)!')
             exit()
 
@@ -80,7 +81,7 @@ class Window:
         """
         refresh version and enter it into the entry
         """
-        self.version = self.c.get_version()
+        self.version = self.get_version()
         self.versionEntry.delete(0, 'end')
         self.versionEntry.insert(0, self.version)
 
@@ -90,9 +91,9 @@ class Window:
         """
         nv = self.versionEntry.get()
         if self.version != nv:
-            self.c.set_version(nv)
+            self.set_version(nv)
 
-    def end(self, *_args) -> None:
+    def _end(self, *_args) -> None:
         """
         end the connection and close the window
         """
@@ -100,6 +101,5 @@ class Window:
 
 
 if __name__ == '__main__':
-    with Connection(host="192.168.10.15") as c:
-        w = Window(c)
+    with Window(host="server.fridrich.xyz") as w:
         w.run()

@@ -13,15 +13,16 @@ import json
 
 @decorate_class(DEBUGGER.catch_traceback())
 class User:
-    def __init__(self, name: str, sec: str, key: str, user_id: int, cl: socket.socket, ip: str, function_manager: typing.Callable, debugger) -> None:
+    def __init__(self, name: str, sec: str, key: str, user_id: int, cl: socket.socket, ip: str,
+                 function_manager: typing.Callable, debugger) -> None:
         """
         :param name: Name of the client
         :param sec: security clearance
         :param key: encryption key of client
-        :param cl: the users socket instance
+        :param cl: the users' socket instance
         :param ip: the users host ip
         :param function_manager: the manager class for executing functions
-        :param debugger: a instance of server_funcs.Debug
+        :param debugger: an instance of server_funcs.Debug
         """
         self.__name = name
         self.__sec = sec
@@ -46,7 +47,8 @@ class User:
 
         # for auto-disconnect
         self.__last_connection = Daytime.now()
-        self.__timeout = Daytime(minute=3)  # if there wasn't any interaction with a client for 2 minutes, kick it (ping also counts as activity)
+        # if there wasn't any interaction with a client for 2 minutes, kick it (ping also counts as activity)
+        self.__timeout = Daytime(minute=3) 
         self.__thread_pool = ThreadPoolExecutor(max_workers=2)
 
         # only if the user's security clearance requires auto-logout, start the thread
@@ -103,13 +105,16 @@ class User:
                 mes = json.loads(mes)
 
                 # create message pool for request
-                self.__message_pool_names = tuple(func_name["f_name"] if "f_name" in func_name else func_name["type"] for func_name in mes["content"])
+                names = [func_name["f_name"] if "f_name" in func_name else func_name["type"] 
+                         for func_name in mes["content"]]
+                self.__message_pool_names = tuple(*names)
                 self.__message_pool_max = len(mes["content"])
                 self.__message_pool_time = mes["time"]
                 self.__message_pool_index = 0
 
                 if not mes or mes is None:
-                    self.send({'Error': 'MessageError', 'info': 'Invalid Message/AuthKey'}, message_type="Error", force=True)
+                    self.send({'Error': 'MessageError', 'info': 'Invalid Message/AuthKey'},
+                              message_type="Error", force=True)
                     continue
 
                 for message in mes["content"]:
@@ -130,7 +135,8 @@ class User:
         message = {
             "content": message
         }
-        if self.__message_pool_max == sum([0 if element is None else 1 for element in self.__message_pool]) and not force:
+        if self.__message_pool_max == sum([0 if element is None else 1 
+                                           for element in self.__message_pool]) and not force:
             print(f"Pool error: {self.__message_pool=}, {self.__message_pool_names=}, {message=}")
             raise IndexError("trying to send message but no pool index is out of range")
 
@@ -140,7 +146,8 @@ class User:
             self.__message_pool[self.__message_pool_names[self.__message_pool_index]] = message
             self.__message_pool_index += 1
 
-        except IndexError:  # if used with "force", appends the message in case of a IndexError (if the pool hasn't been created or something)
+        # if used with "force", appends the message in case of a IndexError (pool not created)
+        except IndexError:
             if force:
                 self.__message_pool["forced"] = message
             else:
@@ -161,8 +168,8 @@ class User:
             "content": self.__message_pool,
             "time": self.__message_pool_time
         }
-        stringMes = json.dumps(mes)
-        mes = cryption_tools.MesCryp.encrypt(stringMes, key=self.__key.encode())
+        string_mes = json.dumps(mes)
+        mes = cryption_tools.MesCryp.encrypt(string_mes, key=self.__key.encode())
         length = pack('>Q', len(mes))   # get message length
 
         # send to client
@@ -186,7 +193,8 @@ class User:
         """
         while self.loop:
             if Daytime.now()-self.__last_connection > self.__timeout:
-                print(f"disconnecting {self.name}, last contact: {self.__last_connection}, now: {Daytime.now()} ({self.__timeout=})")
+                print(f"disconnecting {self.name}, last contact: {self.__last_connection},"
+                      f"now: {Daytime.now()} ({self.__timeout=})")
                 return self.end("timeout")
 
             time.sleep(.2)
@@ -227,7 +235,8 @@ class User:
         return item == self.name or item == self.id
 
 
-@decorate_class(DEBUGGER.catch_traceback(raise_error=False), dont_decorate=["_garbage_collector", "__contains__", "get_user"])
+@decorate_class(DEBUGGER.catch_traceback(raise_error=False),
+                dont_decorate=["_garbage_collector", "__contains__", "get_user"])
 class UserList:
     def __init__(self, users: typing.List[User] | None = ...) -> None:
         """
@@ -350,158 +359,3 @@ class UserList:
         return True if AuthKey
         """
         return self.loop
-
-
-class FileVar:
-    def __init__(self, value: str | dict, files: str | list | tuple) -> None:
-        """
-        create a variable synced to one or more files
-        """
-        # filter all items that are not a string
-        self.files = [file if type(file) == str else ... for file in files] if type(files) in (list, tuple) else [files]
-        # remove all non standard items
-        while ... in self.files:
-            self.files.remove(...)
-
-        self.value = value
-        self.type = type(value)
-
-        self.set(value)  # assign variable
-
-    def __repr__(self) -> str:
-        self.get()
-        return repr(self.value)
-
-    def __len__(self) -> int:
-        """
-        return the length of ``self.value``
-        """
-        self.get()
-        return len(self.value)
-
-    def __str__(self) -> str:
-        """
-        return string of ``self.value``
-        """
-        self.get()
-        return str(self.value)
-
-    # str options
-    def __add__(self, other: str) -> str:
-        self.get()
-        self.check_type(str)
-
-        self.set(self.value + other)
-
-        return self.value
-
-    # dict options
-    def __getitem__(self, key: str) -> typing.Any:
-        """get an item if ``self.value`` is a dict
-        """
-        self.get()  # update variable in case something in the file has changed
-        self.check_type(dict)
-        if key not in self.value:
-            raise KeyError(f'"{key}" not in dict "{self.value}"')
-        return self.value[key]
-
-    def __setitem__(self, key, value) -> dict:
-        """
-        set an item of a dict
-        """
-        self.get()
-        self.check_type(dict)
-        self.value[key] = value
-        self.set(self.value)
-        return self.value
-
-    def __delitem__(self, key: str) -> None:
-        self.get()
-        self.check_type(dict)
-
-        del self.value[key]
-
-    def __iter__(self) -> typing.Iterator:
-        self.get()
-        self.check_type(dict)
-
-        for key, item in self.value.items():
-            yield key, item
-
-    # general options
-    def __eq__(self, other) -> bool:
-        """
-        check if the ``==`` given value is the same as either the whole class or the value
-        """
-        self.get()
-        if type(other) == FileVar:
-            return other.value == self.value and list(other.files) == list(self.files)
-
-        return other == self.value
-
-    def __contains__(self, other) -> bool:
-        self.get()
-        return other in self.value
-
-    def set(self, value: str | dict) -> None:
-        """
-        set the variable (update files)
-        """
-        self.value = value
-        self.type = type(value)
-
-        for file in self.files:
-            for _ in range(5):  # check five times if a file is already opened, if failed then pass
-                try:
-                    with open(file, 'w') as out:
-                        if self.type == dict:
-                            json.dump(self.value, out, indent=4)
-                            break
-                        out.write(self.value)
-                        break
-
-                except IOError:
-                    time.sleep(.2)
-
-                except json.JSONDecodeError:
-                    with open(file, "w") as out_p:
-                        json.dump({}, out_p)
-
-            else:
-                raise IOError(f"Can't access file {file}")
-
-    def get(self) -> str | dict:
-        """
-        get the variable in its original type
-        """
-        file = self.files[0]
-        for _ in range(5):
-            try:
-                with open(file, 'r') as inp:
-                    try:
-                        self.value = json.load(inp)
-
-                    except json.JSONDecodeError:
-                        self.value = inp.read()
-
-                self.type = type(self.value)
-
-                return self.value
-
-            except IOError:
-                time.sleep(.2)
-
-            except json.JSONDecodeError:
-                with open(file, "w") as out_p:
-                    json.dump({}, out_p)
-
-        else:
-            raise IOError(f"Can't access file {file}")
-
-    def check_type(self, wanted_type: typing.Type[str] | typing.Type[dict]) -> None:
-        """
-        if type is wrong, raise an error
-        """
-        if not self.type == wanted_type:
-            raise TypeError(
-                f'Expected {wanted_type}, got {self.type}. This function is not available for the given variable type')

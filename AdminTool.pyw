@@ -1,7 +1,8 @@
 """
 GUI program used to manage Accounts
 
-Author: Nilusink
+Author:
+Nilusink
 """
 from contextlib import suppress
 from tkinter import messagebox
@@ -10,7 +11,7 @@ import tkinter as tk
 # local imports
 from fridrich.backend import Connection
 
-secEquals = ('admin', 'bot', 'user', 'guest')    # for sorting the users
+secEquals: tuple = ('admin', 'bot', 'user', 'guest')    # for sorting the users
 
 
 def sort_user_list(lst: list, flag='sec') -> list:
@@ -27,41 +28,44 @@ def sort_user_list(lst: list, flag='sec') -> list:
     return list(values)
 
 
-class Window:
+class Window(Connection):
     """
     class for the main window
     """
-    def __init__(self, connection_instance: Connection) -> None:
+    def __init__(self, host: str) -> None:
         """
         ConnectionInstance: instance of fridirch.FridrichBackend.Connection
         """
+        super().__init__(host=host)
         # variable definitions
-        self.userEs = list()
-        self.users = list()
-        self.onlineUsers = list()
-        self.default_pwd = "<set>"
+        self.userEs: list = []
+        self.users: list = []
+        self.onlineUsers: list = []
+        self.default_pwd: str = "<set>"
+        self.host = host
 
         # tkinter
-        self.c = connection_instance  # setup root
         self.root = tk.Tk()
         self.root.title('Fridrich AdminTool')
         
         self.root.minsize(width=600, height=500)
         self.root.maxsize(width=600, height=500)
 
-        self.root.bind('<Escape>', self.end)
+        self.root.bind('<Escape>', self._end)
         self.root.bind('<F5>', self.update)
 
         #   login Frame
         self.loginFrame = tk.Frame(self.root, bg='black', width=600, height=700)
 
         # username label and button
-        tk.Label(self.loginFrame, text='Username', font="Helvetica 50 bold", bg='black', fg='white').place(x=137, y=50)  # Username Label
+        tk.Label(self.loginFrame, text='Username', font="Helvetica 50 bold",
+                 bg='black', fg='white').place(x=137, y=50)  # Username Label
         self.loginUsername = tk.Entry(self.loginFrame, width=20, font="Helvetica 25 bold")  # Username entry
         self.loginUsername.place(x=115, y=150)
         self.loginUsername.insert(0, 'Admin')
 
-        tk.Label(self.loginFrame, text='Password', font="Helvetica 50 bold", bg='black', fg='white').place(x=137, y=250)  # Password Label
+        tk.Label(self.loginFrame, text='Password', font="Helvetica 50 bold",
+                 bg='black', fg='white').place(x=137, y=250)  # Password Label
         self.loginPassword = tk.Entry(self.loginFrame, width=20, font="Helvetica 25 bold", show='*')  # Password entry
         self.loginPassword.place(x=115, y=350)
 
@@ -77,7 +81,7 @@ class Window:
 
         self.loginFrame.place(x=0, y=0, anchor='nw')
 
-        self.root.bind("<Return>", self.login)  # bind Return to login
+        self.root.bind("<Return>", self.login)  # bind Return to log in
 
         # mainframe
         self.mainFrame = tk.Frame(self.root, bg='grey', width=800, height=700)
@@ -110,11 +114,11 @@ class Window:
                                    font="Helvetica 15"
                                    )
         
-        if self.c == 'CantConnect':
+        if self == 'CantConnect':
             messagebox.showerror('Fatal Error', 'Not Connected to Fridrich Wifi! (attempt to connect failed)')
             exit()
 
-        elif self.c == 'ServerNotReachable':
+        elif self == 'ServerNotReachable':
             messagebox.showerror('Fatal Error', 'Cant reach Fridrich Server!')
             exit()
 
@@ -126,17 +130,17 @@ class Window:
 
     def login(self, *_args) -> None:
         """
-        try to login with username and password
+        try to log in with username and password
         """
         name = self.loginUsername.get()
         pwd = self.loginPassword.get()
 
-        if not self.c.auth(name, pwd):
+        if not self.auth(name, pwd):
             messagebox.showerror('Error', 'Invalid Username/Password')
             return
 
-        print(self.c)
-        sec = self.c.get_sec_clearance()
+        print(self)
+        sec: str = self.get_sec_clearance()
         print(sec)
         if sec != 'admin':
             messagebox.showerror('Error', f'Account is not admin ({sec})')
@@ -153,9 +157,9 @@ class Window:
         """
         refresh the window
         """
-        users = c.admin_get_users(wait=True)
-        o_users = c.get_online_users(wait=True)
-        c.send()
+        users = self.admin_get_users(wait=True)
+        o_users = self.get_online_users(wait=True)
+        self.send()
 
         self.users = sort_user_list(users.result)
         self.onlineUsers = o_users.result
@@ -194,35 +198,37 @@ class Window:
                 self.userEs[-1][0].config(state=tk.DISABLED)
                 self.userEs[-1][2].config(state=tk.DISABLED)
         
-        UserNum = {user: self.onlineUsers.count(user) for user in self.onlineUsers}
-        isIn = list()
-        notIn = int()
+        user_num = {user: self.onlineUsers.count(user) for user in self.onlineUsers}
+        is_in = list()
+        not_in = int()
 
         j = int()
         for j, element in enumerate(self.onlineUsers):
-            if element not in isIn:
+            if element not in is_in:
                 self.userEs.append((
                     tk.Label(self.mainFrame, width=18, font="Helvetica 15 bold", text='Name:', bg='grey', fg='white'),
                     tk.Label(self.mainFrame, width=18, font="Helvetica 15 bold", text=element, bg='grey', fg='white'),
-                    tk.Label(self.mainFrame, width=18, font="Helvetica 15 bold", text='Count: '+str(UserNum[element]), bg='grey', fg='white'),
-                    tk.Button(self.mainFrame, width=3, text="X", bg="red", relief=tk.FLAT, command=lambda e=None, x=element: self.kick_user(x))
+                    tk.Label(self.mainFrame, width=18, font="Helvetica 15 bold", text='Count: '+str(user_num[element]),
+                             bg='grey', fg='white'),
+                    tk.Button(self.mainFrame, width=3, text="X", bg="red", relief=tk.FLAT,
+                              command=lambda e=None, x=element: self.kick_a_user(x))
                 ))
 
-                isIn.append(element)
+                is_in.append(element)
 
-                self.userEs[-1][0].place(x=50, y=(i+j+3-notIn)*50+10)
-                self.userEs[-1][1].place(x=300, y=(i+j+3-notIn)*50+10)
-                self.userEs[-1][2].place(x=550, y=(i+j+3-notIn)*50+10)
-                self.userEs[-1][3].place(x=750, y=(i+j+3-notIn)*50+11)
+                self.userEs[-1][0].place(x=50, y=(i+j+3-not_in)*50+10)
+                self.userEs[-1][1].place(x=300, y=(i+j+3-not_in)*50+10)
+                self.userEs[-1][2].place(x=550, y=(i+j+3-not_in)*50+10)
+                self.userEs[-1][3].place(x=750, y=(i+j+3-not_in)*50+11)
 
             else:
-                notIn += 1
+                not_in += 1
                 
-        newWindowHeight = (i+j+2-notIn)*50+100
-        newWindowHeight = newWindowHeight if newWindowHeight < 1000 else 1000
-        self.root.maxsize(width=800, height=newWindowHeight)
-        self.root.minsize(width=800, height=newWindowHeight)
-        self.mainFrame.config(height=newWindowHeight)
+        new_window_height = (i+j+2-not_in)*50+100
+        new_window_height = new_window_height if new_window_height < 1000 else 1000
+        self.root.maxsize(width=800, height=new_window_height)
+        self.root.minsize(width=800, height=new_window_height)
+        self.mainFrame.config(height=new_window_height)
 
         self.delButton.place(x=350, y=(i+2)*50+10)
 
@@ -248,16 +254,16 @@ class Window:
 
                 try:
                     if name != o_name and name:
-                        self.c.admin_set_username(o_name, name, wait=True)
+                        self.admin_set_username(o_name, name, wait=True)
                     
                     if pwd != o_pwd and pwd and pwd != self.default_pwd:
-                        self.c.admin_set_password(name, pwd, wait=True)
+                        self.admin_set_password(name, pwd, wait=True)
                     
                     if sec != o_sec and sec:
-                        self.c.admin_set_security(name, sec, wait=True)
+                        self.admin_set_security(name, sec, wait=True)
 
                     with suppress(ValueError):
-                        c.send()
+                        self.send()
 
                 except NameError:
                     messagebox.showerror('Error', 'Name already exists')
@@ -270,7 +276,7 @@ class Window:
         """
         remove user
         """
-        self.c.admin_remove_user(user)
+        self.admin_remove_user(user)
         self.update()
 
     def add_user(self) -> None:
@@ -279,7 +285,7 @@ class Window:
         """
         self.update()
         try:
-            self.c.admin_add_user('new_user', 'new_password', 'None')
+            self.admin_add_user('new_user', 'new_password', 'None')
             self.update()
 
         except NameError:
@@ -293,21 +299,21 @@ class Window:
         ans = messagebox.askyesno('Confirm', 'Clear all users (logout)')
         if ans:
             with suppress(ConnectionAbortedError):
-                self.c.admin_reset_logins()
-                self.c.end(revive=True)
+                self.admin_reset_logins()
+                self.end(revive=True)
 
             w.root.destroy()
-            w = Window(c)
+            w = Window(host=self.host)
 
-    def kick_user(self, username: str) -> None:
+    def kick_a_user(self, username: str) -> None:
         """
         kick one user
         """
         print(f"kicking {username}")
-        self.c.kick_user(username)
+        self.kick_a_user(username)
         self.update()
 
-    def end(self, *_args) -> None:
+    def _end(self, *_args) -> None:
         """
         end connection to fridrich and destroy the tkinter.root
         """
@@ -319,6 +325,5 @@ class Window:
 
 
 if __name__ == '__main__':
-    with Connection(host='server.fridrich.xyz') as c:
-        w = Window(c)
+    with Window(host='server.fridrich.xyz') as w:
         w.run()

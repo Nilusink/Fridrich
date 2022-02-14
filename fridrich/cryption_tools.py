@@ -1,6 +1,6 @@
 """
 used for any type on en/decryption
-for fridrich (ex. End to End encryption,
+for fridrich (ex. End-to-End encryption,
 password hashing, private config files
 for the Client, ...)
 (Server & Client)
@@ -35,7 +35,7 @@ class Extra:
     """
 
     @staticmethod
-    def median(string: str, medians: int) -> str:
+    def median(string_: str, medians: int) -> str:
         """
         split in medians number of parts and then reverse
         """
@@ -43,34 +43,34 @@ class Extra:
         out = list()
         for i in range(1, medians + 1):
             if not i == medians:
-                parts.append([int((len(string) - 1) / medians * (i - 1)), int((len(string) - 1) / medians * i)])
+                parts.append([int((len(string_) - 1) / medians * (i - 1)), int((len(string_) - 1) / medians * i)])
             else:
-                parts.append([int((len(string) - 1) / medians * (i - 1)), len(string)])
+                parts.append([int((len(string_) - 1) / medians * (i - 1)), len(string_)])
         for part in parts:
-            out.append(string[::-1][part[0]:part[1]])
+            out.append(string_[::-1][part[0]:part[1]])
         return ''.join(out[::-1])
 
 
 class Low:
     @staticmethod
-    def encrypt(string: str) -> str:
+    def encrypt(string_: str) -> str:
         """
-        encrypt a string
+        encrypt a string_
         """
         out = str()
-        for charter in string:
+        for charter in string_:
             part = str(math.sqrt(ord(charter) - 20))
             out += str(base64.b85encode(part.encode('utf-16'))).lstrip("b'").rstrip("='") + ' '
         return out
 
     @staticmethod
-    def decrypt(string: str) -> str:
+    def decrypt(string_: str) -> str:
         """
-        decrypt a string
+        decrypt a string_
         """
         try:
             out = str()
-            parts = string.split(' ')
+            parts = string_.split(' ')
             for part in parts:
                 s = (part + '=').encode()
                 if not s == b'=':
@@ -78,17 +78,17 @@ class Low:
                     out += chr(int(round(part ** 2 + 20, 0)))
             return out
         except ValueError:
-            raise DecryptionError('Not a valid encrypted string!')
+            raise DecryptionError('Not a valid encrypted string_!')
 
 
 class High:
     @staticmethod
-    def encrypt(string: str) -> str:
+    def encrypt(string_: str) -> str:
         """
-        encrypt a string
+        encrypt a string_
         """
         temp1, temp2 = str(), str()
-        for charter in string:
+        for charter in string_:
             temp1 += Low.encrypt((Extra.median(charter, 3) + ' ')) + ' '
         for charter in Extra.median(temp1, 13):
             temp2 += str(ord(charter)) + '|1|'
@@ -97,16 +97,16 @@ class High:
         return Extra.median(str(base64.b85encode(out.encode('utf-32'))).lstrip("b'").rstrip("='")[::-1], 327)
 
     @staticmethod
-    def decrypt(string: str) -> str:
+    def decrypt(string_: str) -> str:
         """
-        decrypt a string
+        decrypt a string_
         """
         temp1, temp2 = str(), str()
-        string = Extra.median(string, 327)[::-1]
-        string = base64.b85decode(string).decode('utf-32')
-        string = Extra.median(Extra.median(string, 72), 152)
-        string = Low.decrypt(string)
-        parts = string.split('|1|')
+        string_ = Extra.median(string_, 327)[::-1]
+        string_ = base64.b85decode(string_).decode('utf-32')
+        string_ = Extra.median(Extra.median(string_, 72), 152)
+        string_ = Low.decrypt(string_)
+        parts = string_.split('|1|')
         for part in parts:
             with contextlib.suppress(ValueError):
                 temp1 += chr(int(part))
@@ -131,16 +131,16 @@ class MesCryp:
     """
 
     @staticmethod
-    def encrypt(string: str, key=None) -> bytes:
+    def encrypt(string_: str, key=None) -> bytes:
         """
-        encrypt a string
+        encrypt a string_
 
         if a key is given, use it
         """
         if not key:
             key = defKey
         f = Fernet(key)
-        encrypted = f.encrypt(string.encode('utf-8'))
+        encrypted = f.encrypt(string_.encode('utf-8'))
         return encrypted  # returns bytes
 
     @staticmethod
@@ -150,12 +150,12 @@ class MesCryp:
         """
         f = Fernet(key)
         decrypted = str(f.decrypt(byte)).lstrip("b'").rstrip("'")
-        return decrypted  # returns string
+        return decrypted  # returns string_
 
 
 def try_decrypt(message: bytes, client_keys: dict | list, errors=True) -> str | None:
     """
-    try to decrypt a string with multiple methods
+    try to decrypt a string_ with multiple methods
     """
     with contextlib.suppress(json.JSONDecodeError):
         mes = json.loads(message)
@@ -164,41 +164,41 @@ def try_decrypt(message: bytes, client_keys: dict | list, errors=True) -> str | 
         print(mes)
         return mes
 
-    encMes = None
+    enc_mes = None
     for key in client_keys:
         with contextlib.suppress(InvalidToken, ValueError):
-            encMes = MesCryp.decrypt(message, key.encode() if type(key) == str else b'')
+            enc_mes = MesCryp.decrypt(message, key.encode() if type(key) == str else b'')
             break
 
-    if not encMes:
+    if not enc_mes:
         with contextlib.suppress(InvalidToken):
-            encMes = MesCryp.decrypt(message, defKey)
+            enc_mes = MesCryp.decrypt(message, defKey)
 
-    if not encMes:
-        print(encMes)
+    if not enc_mes:
+        print(enc_mes)
         print(message)
         return None
 
     try:
-        jsonMes = json.loads(encMes)
+        json_mes = json.loads(enc_mes)
 
     except json.JSONDecodeError:
         try:
-            jsonMes = json.loads(message)
+            json_mes = json.loads(message)
 
         except json.JSONDecodeError:
             return None
-    return jsonMes
+    return json_mes
 
 
 def key_func(length=10) -> str:
     """
     generate random key
     """
-    String = 'abcdefghijklmnopqrstuvwxyz'  # string for creating auth Keys
-    String += String.upper() + '1234567890ß´^°!"§$%&/()=?`+*#.:,;µ@€<>|'
+    string = 'abcdefghijklmnopqrstuvwxyz'  # string for creating auth Keys
+    string += string.upper() + '1234567890ß´^°!"§$%&/()=?`+*#.:,;µ@€<>|'
 
-    password_provided = ''.join(random.sample(String, length))  # This is input in the form of a string
+    password_provided = ''.join(random.sample(string, length))  # This is input in the form of a string_
     password = password_provided.encode()  # Convert to type bytes
     salt = os.urandom(16)
     kdf = PBKDF2HMAC(

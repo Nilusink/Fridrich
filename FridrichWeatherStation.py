@@ -8,6 +8,7 @@ Nilusink
 from fridrich.errors import AuthError, RegistryError
 from fridrich.backend import Connection
 from fridrich.classes import Daytime
+from contextlib import suppress
 import binascii
 import serial
 import signal
@@ -102,7 +103,11 @@ def send_weather() -> None:
                 # try to send data backed up from the last time it couldn't be sent
                 if os.path.exists("temp_weather.json"):
                     with open("temp_weather.json", "r") as in_file:
-                        for line in in_file.readlines():
+                        for i, line in enumerate(in_file.readlines()):
+                            if "|||" not in line:
+                                print(f"Warning: \"|||\" not found in file \"temp_weather.json\" at line {i}, skipping line")
+                                continue
+
                             t, wd = line.rstrip("\n").split("|||")
                             c.commit_weather_data(station_name=NAME, weather_data=json.loads(wd), wait=True, set_time=t)
 
@@ -128,6 +133,10 @@ def send_weather() -> None:
                     time.sleep(5)
                     continue
 
+                # since the data could be sent, try to delete any existing temporary files
+                with suppress(FileNotFoundError):
+                    os.remove("temp_weather.json")
+
                 return
 
         except binascii.Error:
@@ -136,6 +145,7 @@ def send_weather() -> None:
             continue
 
     else:
+        # if the data couldn't be sent, saved it to a temporary file
         with open("temp_weather.json", "a") as out:
             now_time = time.strftime("%Y.%m.%d")+"-"+Daytime.now().to_string()
             out.write(f"{now_time}|||{json.dumps(data)}")
@@ -169,7 +179,7 @@ def end(*signals) -> None:
     global RUNNING
     print("shutting down...")
     RUNNING = False
-    sys.exit(signals[0])
+    sys.exit(signals[0] if len(signals) > 1 else 0)
 
 
 if __name__ == "__main__":

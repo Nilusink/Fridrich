@@ -17,7 +17,8 @@ import time
 import os
 
 # fridrich imports
-from fridrich.file_transfer import send_receive, download_program as now_download_program, download_progress as now_download_progress
+from fridrich.file_transfer import send_receive, download_program as now_download_program
+from fridrich.file_transfer import download_progress as now_download_progress
 from fridrich.backend.debugging import Debugger
 from fridrich.classes import Daytime
 from fridrich import cryption_tools
@@ -230,8 +231,10 @@ class Connection:
 
                         for voting in res:
                             attendants = dict()  # create dictionary with all attendants: votes
-                            nowVoting = res[voting]
-                            for element in [nowVoting[element] for element in nowVoting] + (['Lukas', 'Niclas', 'Melvin'] if voting == 'GayKing' else []):
+                            now_voting = res[voting]
+                            everyone = [now_voting[element] for element in now_voting]
+                            everyone += (['Lukas', 'Niclas', 'Melvin'] if voting == 'GayKing' else [])
+                            for element in everyone:
                                 attendants[element] = 0
 
                             votes = int()
@@ -284,12 +287,12 @@ class Connection:
         }
 
         if self.__AuthKey:
-            stringMes = json.dumps(message, ensure_ascii=True)
-            mes = cryption_tools.MesCryp.encrypt(stringMes, key=self.__AuthKey.encode())
+            string_mes = json.dumps(message, ensure_ascii=True)
+            mes = cryption_tools.MesCryp.encrypt(string_mes, key=self.__AuthKey.encode())
 
             try:
                 self.Server.send(mes)
-                # reset message pool only if the message was send successfully
+                # reset message pool only if the message was sent successfully
                 self.__message_pool = []
 
             except BrokenPipeError:
@@ -297,19 +300,19 @@ class Connection:
                 return -1
 
             if self._debug_mode in ('normal', 'full'):
-                print(ConsoleColors.OKCYAN+stringMes+ConsoleColors.ENDC)
+                print(ConsoleColors.OKCYAN+string_mes+ConsoleColors.ENDC)
             if self._debug_mode == 'full':
                 print(ConsoleColors.WARNING+str(mes)+ConsoleColors.ENDC)
 
             return message["time"]
 
-        stringMes = json.dumps(message, ensure_ascii=False)
-        self.Server.send(cryption_tools.MesCryp.encrypt(stringMes))
+        string_mes = json.dumps(message, ensure_ascii=False)
+        self.Server.send(cryption_tools.MesCryp.encrypt(string_mes))
 
-        # reset message pool only if the message was send successfully
+        # reset message pool only if the message was sent successfully
         self.__message_pool = []
         if self._debug_mode in ('normal', 'full'):
-            print(ConsoleColors.OKCYAN+stringMes+ConsoleColors.ENDC)
+            print(ConsoleColors.OKCYAN+string_mes+ConsoleColors.ENDC)
 
         return message["time"]
 
@@ -328,7 +331,8 @@ class Connection:
             raise ValueError("results not set")
 
         for element in results.keys():
-            if not set(results.keys()) & set(self.__results_getters.keys()) & {element}:    # check if the element is in both list (using sets)
+            # check if the element is in both list (using sets)
+            if not set(results.keys()) & set(self.__results_getters.keys()) & {element}:
                 raise ValueError(f"element {element} not in results and getters")
 
             if self._debug_mode == "full":
@@ -428,7 +432,7 @@ class Connection:
         """
         wait for the server message to be received.
         :param time_sent: the time the message was sent
-        :param timeout: raise a error if no correct message was received (seconds)
+        :param timeout: raise an error if no correct message was received (seconds)
         :param delay: The delay for the while loop when checking self.messages
         :return: message(dict)
         """
@@ -514,9 +518,9 @@ class Connection:
         self.__userN = username
         self.__pwd_hash = msg["pwd"]
         self.__AuthKey = None  # reset AuthKey
-        stringMes = json.dumps(msg, ensure_ascii=False)
+        string_mes = json.dumps(msg, ensure_ascii=False)
 
-        mes = cryption_tools.MesCryp.encrypt(stringMes)
+        mes = cryption_tools.MesCryp.encrypt(string_mes)
         self.Server.send(mes)
 
         mes = json.loads(cryption_tools.MesCryp.decrypt(self.Server.recv(2048)))
@@ -623,21 +627,22 @@ class Connection:
         got voted
         :return: (Name, Streak)
         """
-        sorted_log = {x: log[x] for x in sorted(log, key=lambda x: '.'.join(reversed(x.split('.'))))}    # sort list by year, month, date
+        # sort list by year, month, date
+        sorted_log = {x: log[x] for x in sorted(log, key=lambda x: '.'.join(reversed(x.split('.'))))}
         try:
-            StreakGuys: dict = {guy: 0 for guy in sorted_log[list(sorted_log.keys())[-1]].split("|")}
+            streak_guys: dict = {guy: 0 for guy in sorted_log[list(sorted_log.keys())[-1]].split("|")}
         except AttributeError:
             raise ValueError("Please only pass one voting per time")
 
-        for guy in StreakGuys.keys():
+        for guy in streak_guys.keys():
             for date in reversed(sorted_log.keys()):
-                if guy in sorted_log[date] and StreakGuys[guy] != -1:
-                    StreakGuys[guy] += 1
+                if guy in sorted_log[date] and streak_guys[guy] != -1:
+                    streak_guys[guy] += 1
                     continue
                 break
 
-        max_num = max(list(StreakGuys.values()))
-        names = "|".join([guy for guy in StreakGuys if StreakGuys[guy] == max_num])
+        max_num = max(list(streak_guys.values()))
+        names = "|".join([guy for guy in streak_guys if streak_guys[guy] == max_num])
         return names, max_num  # return results
 
     def get_cal(self, wait: bool = False) -> dict | FridrichFuture:
@@ -690,7 +695,8 @@ class Connection:
         if not wait:
             self.send()
 
-    def get_vote(self, flag: str | None = 'normal', voting: str | None = 'GayKing', wait: bool = False) -> str | FridrichFuture:
+    def get_vote(self, flag: str | None = 'normal', voting: str | None = 'GayKing',
+                 wait: bool = False) -> str | FridrichFuture:
         """
         get current vote of user\n
         flag can be normal or double
@@ -1172,7 +1178,8 @@ class Connection:
 
         self.load_state = "Uploading"
         for _ in meta:
-            thread = send_receive(mode='receive', print_steps=False, download_directory=directory, thread=True, overwrite=True)
+            thread = send_receive(mode='receive', print_steps=False, download_directory=directory, thread=True,
+                                  overwrite=True)
             while thread.running():
                 pass
                 self.load_program = now_download_program
@@ -1183,7 +1190,8 @@ class Connection:
 
     def _send_app(self, files: list | tuple, app_name: str) -> None:
         for file in files:
-            thread = send_receive(mode="send", filename=file, destination=self.server_ip, print_steps=False, thread=True, overwrite=True)
+            thread = send_receive(mode="send", filename=file, destination=self.server_ip, print_steps=False,
+                                  thread=True, overwrite=True)
             while thread.running():
                 self.load_program = app_name
         self.load_program = str()
@@ -1210,7 +1218,8 @@ class Connection:
         self.load_state = "Uploading"
         self._send_app(files, app_name)
 
-    def modify_app(self, old_app_name: str, app_name: str, app_version: str, app_info: str, files: list | tuple, to_delete: list | tuple) -> None:
+    def modify_app(self, old_app_name: str, app_name: str, app_version: str, app_info: str,
+                   files: list | tuple, to_delete: list | tuple) -> None:
         """
         configure an already existing app
 
@@ -1219,7 +1228,7 @@ class Connection:
         :param app_version: the version of the app
         :param app_info: the info of the app
         :param files: a list with files to update (full path, overwriting old files)
-        :param to_delete: a list with App-Files that should be deleted (if the exist!)
+        :param to_delete: a list with App-Files that should be deleted (if the app exist!)
         """
         msg = {
             "type": "modify_app",
@@ -1321,7 +1330,9 @@ class Connection:
     def __eq__(self, other: "Connection") -> bool:
         if not type(other) == Connection:
             return self.__bool__()
-        return all([str(self) == str(other), bool(self) is bool(other), self.server_ip == other.server_ip, self.port == other.port])
+
+        return all([str(self) == str(other), bool(self) is bool(other), self.server_ip == other.server_ip,
+                    self.port == other.port])
 
     # the end
     def end(self, revive: bool = False) -> None:
@@ -1339,7 +1350,7 @@ class Connection:
         self.__login_time = None
 
         if revive:
-            # waiting for receive thread to shutdown
+            # waiting for receive thread to shut down
             while not self.receive_thread.done():
                 time.sleep(.1)
 
@@ -1358,7 +1369,8 @@ class Connection:
 ############################################################################
 def date_for_sort(message: dict) -> str:
     """
-    go from format "hour:minute:second:millisecond - day.month.year" to "year.month.day - hour:minute:second:millisecond"
+    go from format
+    "hour:minute:second:millisecond - day.month.year" to "year.month.day - hour:minute:second:millisecond"
     """
     y = message['time'].split(' - ')    # split date and time
     return '.'.join(reversed(y[1].split('.')))+' - '+y[0]   # reverse date and place time at end

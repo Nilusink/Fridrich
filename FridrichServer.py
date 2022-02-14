@@ -19,6 +19,7 @@ from fridrich.server.server_funcs import *
 from fridrich.server import user_tools
 from fridrich.server import app_store
 from fridrich import decorate_class
+from fridrich.classes import *
 from fridrich.server import *
 from fridrich.errors import *
 
@@ -50,7 +51,9 @@ def verify(username: str, password: str, cl: socket.socket, address: str) -> Non
     elif resp:
         is_valid = True
         key = key_func(length=30)
-        new_user = User(name=logged_in_user["Name"], sec=logged_in_user["sec"], key=key, user_id=logged_in_user["id"], cl=cl, ip=address, function_manager=FunManager.exec, debugger=debug)
+        new_user = User(name=logged_in_user["Name"], sec=logged_in_user["sec"], key=key,
+                        user_id=logged_in_user["id"], cl=cl, ip=address,
+                        function_manager=FunManager.exec, debugger=debug)
         Users.append(new_user)
 
     # print out username, if connected successfully or not and if it is a bot
@@ -73,9 +76,9 @@ def debug_send_traceback(func: types.FunctionType) -> typing.Callable:
             with suppress(BrokenPipeError):
                 error = str(type(ex)).split("'")[1]
                 info = str(ex)
-                fullTraceback = format_exc()
+                full_traceback = format_exc()
                 with suppress(UnboundLocalError):
-                    Communication.send(client, {'Error': error, 'info': info, 'full': fullTraceback})
+                    Communication.send(client, {'Error': error, 'info': info, 'full': full_traceback})
                 with suppress(OSError, AttributeError, UnboundLocalError):
                     client.close()
 
@@ -105,7 +108,7 @@ def client_handler() -> None:
         t_mes = cryption_tools.MesCryp.decrypt(b)
 
     except InvalidToken:
-        debug.debug(f"Received Message (undecryptable): {b}")
+        debug.debug(f"Received Message (un-decrypt-able): {b}")
         Communication.send(cl, {'error': 'MessageError', 'info': "Couldn'T decrypt message with default key"},
                            encryption=MesCryp.encrypt)
         return
@@ -120,7 +123,8 @@ def client_handler() -> None:
     if "type" in mes and mes['type'] == 'auth':   # authorization function
         # instantly raise an error if the COM_PROTOCOL_VERSION is not compatible
         if mes["com_protocol_version"] not in COM_PROTOCOL_VERSIONS:
-            debug.debug(f"Client tried to connect with COM_PROTOCOL_VERSION == {mes['com_protocol_version']}, allowed: {COM_PROTOCOL_VERSIONS}")
+            debug.debug("Client tried to connect with COM_PROTOCOL_VERSION == "
+                        f"{mes['com_protocol_version']}, allowed: {COM_PROTOCOL_VERSIONS}")
             Communication.send(cl, {
                 "Error": "RuntimeError",
                 "info": f"Invalid COM_PROTOCOL_VERSION"
@@ -130,7 +134,8 @@ def client_handler() -> None:
         return
 
     else:
-        Communication.send(cl, {'Error': 'AuthError', 'info': 'user must be logged in to user functions'}, encryption=MesCryp.encrypt)
+        Communication.send(cl, {'Error': 'AuthError', 'info': 'user must be logged in to user functions'},
+                           encryption=MesCryp.encrypt)
         return
 
 
@@ -153,7 +158,7 @@ def zero_switch() -> None:
         m_max = max([x for x in np.unique(res_arr, return_counts=True)[1]])
         masters = [master for master in np.unique(res_arr) if vote_res.count(master) == m_max]
 
-        # if a person was vote from all contestants (and there were more than one contestants)
+        # if a person was vote from all contestants (and there were more than one contestant)
         strike = {res[list(res.keys())[0]]}.intersection(*[{element} for element in res.values()])
         if strike and len(res) > 1:
             strike = "|".join(strike)
@@ -189,10 +194,10 @@ def zero_switch() -> None:
     print("done voting")
 
     if time.strftime('%a') == Const.DoubleVoteResetDay:  # if reset day, reset double votes
-        dVotes = DV.value.get()
-        for element in dVotes:
-            dVotes[element] = Const.DoubleVotes
-        DV.value.set(dVotes)
+        d_votes = DV.value.get()
+        for element in d_votes:
+            d_votes[element] = Const.DoubleVotes
+        DV.value.set(d_votes)
 
 
 @debug.catch_traceback()
@@ -228,8 +233,8 @@ class DoubleVote:
 
         except FileNotFoundError:
             value = dict()
-            validUsers = json.load(open(Const.crypFile, 'r'))
-            for element in validUsers:
+            valid_users = json.load(open(Const.crypFile, 'r'))
+            for element in valid_users:
                 value[element['Name']] = 1
 
         self.value = FileVar(value, self.filePath)
@@ -315,7 +320,7 @@ class FunctionManager:
                 "ping": user_tools.ping,
                 "trigger_voting": AdminFuncs.manual_voting
             },
-            'user': {                                  # instead of 5 billion if'S
+            'user': {                                  # instead of 5 billion ifs
                 'vote': ClientFuncs.vote,
                 'unvote': ClientFuncs.unvote,
                 'dvote': ClientFuncs.double_vote,
@@ -349,7 +354,7 @@ class FunctionManager:
                 "get_temps_log": w_station_funcs.get_log,
                 "get_stations": w_station_funcs.get_stations
             },
-            'guest': {                                  # instead of 5 billion if'S
+            'guest': {                                  # instead of 5 billion ifs
                 'CalEntry': ClientFuncs.calendar_handler,
                 'getVersion': ClientFuncs.get_version,
                 'getVote': ClientFuncs.get_vote,
@@ -399,14 +404,14 @@ class FunctionManager:
                 self.switch["all"][message['type']](message, user)
 
             else:
-                isIn = False
+                is_in = False
                 req = list()
                 for element in self.switch:
                     if message['type'] in self.switch[element]:
-                        isIn = True
+                        is_in = True
                         req.append(element)
 
-                if isIn:
+                if is_in:
                     debug.debug(f'user {user.sec} tried to use function {message["type"]} ({req})')
                     error = {
                         "Error": "AccessError",
@@ -572,7 +577,7 @@ class ClientFuncs:
 
             json.dump(calendar, open(Const.CalFile, 'w'))  # update fil
             debug.debug(
-                f'got Calender: {message["date"]} - "{message["event"]}"')  # notify that there has been a calendar entry
+                f'got Calender: {message["date"]} - "{message["event"]}"')
 
         send_success(user)
 
@@ -618,15 +623,15 @@ class ClientFuncs:
     @staticmethod
     def change_pwd(message: dict, user: User, *_args) -> None:
         """
-        change the password of the user (only for logged in user)
+        change the password of the user (only for logged-in user)
         """
-        validUsers = AccManager.get_accounts()
-        for element in validUsers:
+        valid_users = AccManager.get_accounts()
+        for element in valid_users:
             if element['id'] == user.id:
                 element['pwd'] = message['newPwd']
 
         with open(Const.crypFile, 'w') as output:
-            fstring = json.dumps(validUsers, ensure_ascii=False)
+            fstring = json.dumps(valid_users, ensure_ascii=False)
             c_string = cryption_tools.Low.encrypt(fstring)
             output.write(c_string)
 
@@ -650,9 +655,9 @@ class ClientFuncs:
         if name not in Vote[message['voting']]:
             user.send({'Error': 'NotVoted'}, message_type="Error")
             return
-        cVote = Vote[message['voting']][name]
+        c_vote = Vote[message['voting']][name]
 
-        user.send(cVote)
+        user.send(c_vote)
 
     @staticmethod
     def get_version(_message: dict, user: User, *_args) -> None:
@@ -698,7 +703,7 @@ class ClientFuncs:
     @staticmethod
     def get_free_votes(_message: dict, user: User, *_args) -> None:
         """
-        get free double votes of logged in user
+        get free double votes of logged-in user
         """
         global DV
         user_id = user.id
@@ -713,7 +718,7 @@ class ClientFuncs:
     @staticmethod
     def get_online_users(_message: dict, user: User, *_args) -> None:
         """
-        get all logged in users
+        get all logged-in users
         """
         user.send(list([t_user.name for t_user in Users]))
 
@@ -898,7 +903,9 @@ if __name__ == '__main__':
     except Exception as e:
         with suppress(Exception):
             Users.end()
-        with open(Const.errFile, 'a') as out:   # debug to file because there may be an error before the debug class was initialized
-            out.write(f'######## - Exception "{e}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")} - ########\n\n{format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n')
+
+        with open(Const.errFile, 'a') as out:
+            out.write(f'######## - Exception "{e}" on {datetime.datetime.now().strftime("%H:%M:%S.%f")}'
+                      f' - ########\n\n{format_exc()}\n\n######## - END OF EXCEPTION - ########\n\n\n')
 
         end()

@@ -2,7 +2,7 @@
 used for managing user Accounts
 (Server)
 
-Author: Nilusink
+author: Nilusink
 """
 from contextlib import suppress
 from typing import List
@@ -63,18 +63,18 @@ class Manager:
         """
         change username
         """
-        UsedNames = self.names
-        UsedNames.remove(old_user)
+        used_names = self.names
+        used_names.remove(old_user)
 
         element = str()
         i = int()
 
-        if new_user not in UsedNames + [name + '2' for name in
-                                        UsedNames]:  # name+'2' because the double-vote agent uses this for their votes
+        # name+'2' because the double-vote agent uses this for their votes
+        if new_user not in used_names + [name + '2' for name in used_names]:
             for i, element in enumerate(self.__accounts):
                 if element['Name'] == old_user:
                     element['Name'] = new_user  # if user is selected user, change its password
-                    continue  # to not further iterate all users and get i value of element
+                    continue
 
             self.__accounts[i] = element  # make sure the new element is in list and on correct position
 
@@ -92,7 +92,7 @@ class Manager:
         for i, element in enumerate(self.__accounts):
             if element['Name'] == username:
                 element['sec'] = security_clearance  # if user is selected user, change its security clearance
-                continue  # to not further iterate all users and get i value of element
+                continue
 
         self.__accounts[i] = element  # make sure the new element is in list and on correct position
         self.__write_accounts(self.__accounts)
@@ -146,19 +146,19 @@ class Manager:
         return False or user security Clearance
         """
         users = self.get_accounts()  # get accounts
-        Auth = False
+        auth = False
         user = {}
         for element in users:  # iterate users
             if username == element['Name'] and password == element['pwd']:  # if username is account name
                 if 'sec' in element:
                     if element['sec'] == '':
-                        Auth = None
+                        auth = None
                         continue
                     user = element
-                    Auth = True
+                    auth = True
                     break
 
-        return Auth, user  # return result
+        return auth, user  # return result
 
 
 # user configuration

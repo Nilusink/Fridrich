@@ -5,6 +5,7 @@ defines functions for the Server
 Author: Nilusink
 """
 from fridrich.server.classes import *
+from fridrich.classes import FileVar
 from fridrich.server import Const
 from sys import platform
 from os import system
@@ -108,10 +109,10 @@ class Communication:
         """
         send message to client
         """
-        stringMes = json.dumps(message, ensure_ascii=False)
-        print(stringMes)
+        string_mes = json.dumps(message, ensure_ascii=False)
+        print(string_mes)
         if encryption:
-            mes = encryption(stringMes, key=key)
+            mes = encryption(string_mes, key=key)
             # print(mes)
             with contextlib.suppress(OSError, AttributeError):
                 client.send(mes)
@@ -120,14 +121,12 @@ class Communication:
             return
 
         with contextlib.suppress(OSError, AttributeError):
-            print(f'sent to client ({client}): {stringMes.encode("utf-8")}')
-            client.send(stringMes.encode('utf-8'))
+            print(f'sent to client ({client}): {string_mes.encode("utf-8")}')
+            client.send(string_mes.encode('utf-8'))
 
     @staticmethod
-    def receive(server: socket.socket, debugging_method, keys: list | typing.Generator) -> typing.Tuple[
-                                                                                               socket.socket, str] | \
-                                                                                           typing.Tuple[
-                                                                                               None, None] | bool:
+    def receive(server: socket.socket, debugging_method, keys: list | typing.Generator
+                ) -> typing.Tuple[socket.socket, str] | typing.Tuple[None, None] | bool:
         """
         receive message from client
         """

@@ -16,7 +16,8 @@ USERNAME: str = "StatsBot"
 PASSWORD: str = "IGetDaStats"
 
 # settings
-DATA_POINT: str | tuple = "Temperature"    # data points to collect, when in tuple they are grouped, data_description for first point
+# data points to collect, when in tuple they are grouped, data_description for first point
+DATA_POINT: str | tuple = "Temperature"
 
 # default variables
 DATA_DESCRIPTION: Dict[str, str] = {    # label for the plot, mustn't be changed
@@ -149,7 +150,6 @@ def main() -> None:
         # remove all stations that don't actually have data for this period
         if cnt == 0:
             new_data.pop(station)
-
 
     data = {"dates": all_dates}
     data.update({

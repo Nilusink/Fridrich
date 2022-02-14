@@ -135,20 +135,15 @@ def make_graph(values: int, outfile: str, data_point) -> None:
     if len(all_points) == 0:
         raise ValueError("No points for selected range")
 
-    min_max = int(max(all_points) - min(all_points))
-    if min_max < 8:
-        min_max = 8
-
     data = pd.DataFrame(data)
 
     # make graph
-    x_scale = min_max*(values/100)
     plt.figure(figsize=(16, 8))
     g = sns.lineplot(x="dates", y="value", hue="variable", data=pd.melt(data, ["dates"]), ci=None)
 
     # configure graph
     p = data_point[0] if type(data_point) == tuple else data_point
-    g.set(ylabel=DATA_DESCRIPTION[p] if p in DATA_DESCRIPTION else data_point , xlabel="Date")
+    g.set(ylabel=DATA_DESCRIPTION[p] if p in DATA_DESCRIPTION else data_point, xlabel="Date")
 
     # print(f"how many: {round(x_scale/3, 0)}, {values=}, {x_scale=}, {min_max=}")
     plt.xticks([all_dates[i] for i in range(0, values, values // 6)])
@@ -187,7 +182,7 @@ async def check_if_channel(ctx) -> bool:
 
 async def check_if_dm(ctx) -> bool:
     """
-    check if the channel is dm
+    check if the channel is dm channel
     """
     if not isinstance(ctx.channel, discord.channel.DMChannel):
         with suppress(discord.errors.Forbidden):
@@ -235,7 +230,9 @@ class General(commands.Cog):
                 out = "♦ VOTING STATUS ♦"
                 for voting in res:
                     if res[voting]["totalVotes"]:
-                        p_format = "    - " + "\n    - ".join([f"{guy}: {res[voting]['results'][guy]}" for guy in res[voting]["results"] if res[voting]["results"][guy] > 0])
+                        p_format = "    - " + "\n    - ".join(
+                            [f"{guy}: {res[voting]['results'][guy]}"
+                             for guy in res[voting]["results"] if res[voting]["results"][guy] > 0])
                         out += f"\n{voting}:\n{p_format}\n"
 
                 await ctx.send(out+"\n")
@@ -257,7 +254,8 @@ class General(commands.Cog):
                 out = "♦ LOG ♦"
                 for voting in now_log:
                     if now_log[voting]:
-                        p_format = "    - " + "\n    - ".join([f"{day}: {now_log[voting][day]}" for day in list(now_log[voting].keys())[:-11:-1]])
+                        p_format = "    - " + "\n    - ".join([f"{day}: {now_log[voting][day]}"
+                                                               for day in list(now_log[voting].keys())[:-11:-1]])
                         out += f"\n{voting}:\n{p_format}\n"
 
                 await ctx.send(out+"\n")
@@ -319,7 +317,8 @@ class Voting(commands.Cog):
 
             if username is ... or password is ...:
                 if ctx.author not in LOGGED_IN_USERS:
-                    await ctx.send("You haven't logged in since the last server reboot, please provide username and password")
+                    await ctx.send("You haven't logged in since the last server reboot,"
+                                   "please provide username and password")
                     return
 
                 if LOGGED_IN_USERS[ctx.author].re_auth():
@@ -407,7 +406,8 @@ class WeatherStations(commands.Cog):
 
             await ctx.send(out)
 
-    @weather.command(name="graph", help="create a graph from the [values]s last measurements (default is 288 because every 5 minutes is a measurement * 288 = 1 day")
+    @weather.command(name="graph", help="create a graph from the [values]s last measurements"
+                                        "(default is 288 because every 5 minutes is a measurement * 288 = 1 day")
     async def graph(self, ctx, values: int = 288, data_point: str = "Temperature") -> None:
         with print_traceback():
             await ctx.send("creating graph...")
@@ -421,7 +421,7 @@ class WeatherStations(commands.Cog):
 
             await ctx.send(file=discord.File("tmp.png"))
 
-            # wait for a little bit and then remove the file
+            # wait for a little and then remove the file
             await asyncio.sleep(1)
             os.remove("tmp.png")
 
@@ -438,7 +438,8 @@ async def on_message(message):
         if VOTINGS_CHANNEL is None:
             VOTINGS_CHANNEL = bot.get_channel(VOTINGS_CHANNEL_ID)
 
-        if message.channel == VOTINGS_CHANNEL and not message.content.startswith("!") and not message.author == bot.user:
+        if message.channel == VOTINGS_CHANNEL and not message.content.startswith("!")\
+                and not message.author == bot.user:
             with suppress(discord.errors.Forbidden):
                 await message.delete()
 
@@ -448,7 +449,7 @@ async def on_message(message):
 @bot.event
 async def on_command_error(ctx, error) -> None:
     """
-    run if there was an error running an command
+    run if there was an error running a command
     """
     with print_traceback():
         if isinstance(error, commands.errors.CheckFailure):

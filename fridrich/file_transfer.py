@@ -18,7 +18,8 @@ executor = ThreadPoolExecutor()
 
 
 def send_receive(mode: str, filename: str | None = ..., destination: str | None = ..., print_steps: bool | None = False,
-                 download_directory: str | None = ..., thread: bool | None = False, overwrite: bool | None = False) -> None | Future:
+                 download_directory: str | None = ..., thread: bool | None = False, overwrite: bool | None = False
+                 ) -> None | Future:
     """
     send and receive files (function version)
 
@@ -33,8 +34,9 @@ def send_receive(mode: str, filename: str | None = ..., destination: str | None 
     """
     global download_progress, download_program
     if thread:
-        return executor.submit(send_receive, mode=mode, filename=filename, destination=destination, print_steps=print_steps,
-                               download_directory=download_directory, thread=False, overwrite=overwrite)
+        return executor.submit(send_receive, mode=mode, filename=filename, destination=destination,
+                               print_steps=print_steps, download_directory=download_directory, thread=False,
+                               overwrite=overwrite)
 
     if mode in ('r', 'receive'):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

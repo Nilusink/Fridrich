@@ -5,8 +5,8 @@ Author: Nilusink
 """
 from typing import Dict, List, Tuple, Iterable
 import matplotlib.pyplot as plt
+from fridrich.errors import *
 from fridrich import backend
-from fridrich import *
 import seaborn as sns
 import tkinter as tk
 import pandas as pd
@@ -96,7 +96,8 @@ def votes_per_month(values: Dict[str, List[str] | Tuple[str]]) -> Dict[str, Dict
     :param values: a dictionary formatted like: {month: list of votes}
     :returns: dictionary every person for every month
     """
-    all_persons = set([person.lower().replace(" ", "") for element in values.values() for persons in element for person in persons.split("|")])
+    all_persons = set([person.lower().replace(" ", "") for element in values.values()
+                       for persons in element for person in persons.split("|")])
 
     out = {}
     for month in values:
@@ -129,7 +130,8 @@ def plot_3d(values: list) -> None:
     plt.show()
 
 
-def plot_2d(x: list, y: Iterable | dict, x_label: str | None = ..., y_label: str | None = ..., x_ticks: int | None = ..., y_ticks: int | None = ...) -> None:
+def plot_2d(x: list, y: Iterable | dict, x_label: str | None = ..., y_label: str | None = ...,
+            x_ticks: int | None = ..., y_ticks: int | None = ...) -> None:
     if type(y) == dict:
         all_persons = set(
             [person.lower().replace(" ", "") for element in y.values() for persons in element for person in

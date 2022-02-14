@@ -2,9 +2,9 @@ cryptography==3.3.2
 numpy
 
 # only for GayHistoryAnalyser
-# matplotlib
-# seaborn
-# pandas
+matplotlib
+seaborn
+pandas
 
 # only for FridrichDiscordBot
-# discord.py
+discord.py

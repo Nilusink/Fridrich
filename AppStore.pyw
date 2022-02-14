@@ -1,5 +1,5 @@
 """
-AppStore is used to download Apps from
+Fridrich AppStore is used to download Apps from
 the Fridrich server.
 The apps available are unique to
 every Fridrich server, since they are
@@ -17,7 +17,6 @@ from fridrich.classes import FileVar
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
-from fridrich import *
 import tkinter as tk
 import json
 import sys
@@ -148,11 +147,13 @@ class Window:
         self.loginFrame = tk.Frame(self.root, bg='black', width=600, height=700)
 
         # username label and button
-        tk.Label(self.loginFrame, text='Username', font="Helvetica 50 bold", bg='black', fg='white').place(x=137, y=50)  # Username Label
+        tk.Label(self.loginFrame, text='Username', font="Helvetica 50 bold",
+                 bg='black', fg='white').place(x=137, y=50)  # Username Label
         self.loginUsername = tk.Entry(self.loginFrame, width=20, font="Helvetica 25 bold")  # Username entry
         self.loginUsername.place(x=115, y=150)
 
-        tk.Label(self.loginFrame, text='Password', font="Helvetica 50 bold", bg='black', fg='white').place(x=137, y=250)  # Password Label
+        tk.Label(self.loginFrame, text='Password', font="Helvetica 50 bold",
+                 bg='black', fg='white').place(x=137, y=250)  # Password Label
         self.loginPassword = tk.Entry(self.loginFrame, width=20, font="Helvetica 25 bold", show='*')  # Password entry
         self.loginPassword.place(x=115, y=350)
 
@@ -168,7 +169,7 @@ class Window:
 
         self.loginFrame.place(x=0, y=0, anchor='nw')
 
-        self.root.bind("<Return>", self.login)  # bind Return to login
+        self.root.bind("<Return>", self.login)  # bind Return to log in
 
         # main frame
         self.main_frame = tk.Frame(self.root)
@@ -178,7 +179,8 @@ class Window:
         self.main_frame.grid_columnconfigure(2, weight=1)
 
         self.side_menu = tk.Canvas(self.main_frame, bg="black", width=300)
-        self.downloading_name = self.side_menu.create_text(10, self.main_frame.winfo_height()-80, text="Downloading: ", anchor=tk.NW, fill="white")
+        self.downloading_name = self.side_menu.create_text(10, self.main_frame.winfo_height()-80,
+                                                           text="Downloading: ", anchor=tk.NW, fill="white")
         self.pb = ttk.Progressbar(
             self.side_menu,
             orient='horizontal',
@@ -189,15 +191,18 @@ class Window:
 
         self.app_canvas = VerticalScrolledFrame(self.main_frame)
         self.app_canvas.grid(row=0, column=1, columnspan=2, sticky=tk.NSEW)
-        self.add_app = tk.Button(self.app_canvas.interior, bg="lightgreen", text="+", font="Helvetica 30 bold", width=10, command=self.upload_app)
+        self.add_app = tk.Button(self.app_canvas.interior, bg="lightgreen", text="+",
+                                 font="Helvetica 30 bold", width=10, command=self.upload_app)
 
         self.app_info = tk.Canvas(self.main_frame, bg="white", width=400)
         self.info = self.app_info.create_text(10, 10, anchor=tk.NW, font="Helvetica 15")
         self.info_buttons = tk.Canvas(self.app_info)
         self.info_buttons.columnconfigure(0, weight=1)
         self.info_buttons.columnconfigure(1, weight=1)
-        self.du_button = tk.Button(self.info_buttons, text="Download", bg="green", font="Helvetica 30 bold", relief=tk.FLAT)
-        self.mod_button = tk.Button(self.info_buttons, text="Modify", bg="yellow", font="Helvetica 30 bold", relief=tk.FLAT)
+        self.du_button = tk.Button(self.info_buttons, text="Download", bg="green",
+                                   font="Helvetica 30 bold", relief=tk.FLAT)
+        self.mod_button = tk.Button(self.info_buttons, text="Modify", bg="yellow",
+                                    font="Helvetica 30 bold", relief=tk.FLAT)
         self.du_button.grid(column=0, row=0, sticky=tk.SW)
         self.app_info.grid(row=0, column=3, sticky=tk.NSEW)
 
@@ -218,18 +223,24 @@ class Window:
 
         # create app
         # meta info
-        self.app_name_frame = tk.Canvas(self.window, width=self.u_width, height=self.u_height, bg="grey20", bd=0, highlightthickness=0, relief=tk.RIDGE)
+        self.app_name_frame = tk.Canvas(self.window, width=self.u_width, height=self.u_height,
+                                        bg="grey20", bd=0, highlightthickness=0, relief=tk.RIDGE)
         self.app_name_frame.pack()
 
-        tk.Button(self.app_name_frame, text="Cancel", font="Helvetica 15 bold", bg="grey20", fg="red", relief=tk.FLAT, command=self.__new_app_reset).place(x=00, y=self.u_height, anchor=tk.SW)
-        tk.Button(self.app_name_frame, text="Next", font="Helvetica 15 bold", bg="grey20", fg="green", relief=tk.FLAT, command=self.__new_app_iter).place(x=self.u_width, y=self.u_height, anchor=tk.SE)
+        tk.Button(self.app_name_frame, text="Cancel", font="Helvetica 15 bold", bg="grey20", fg="red",
+                  relief=tk.FLAT, command=self.__new_app_reset).place(x=00, y=self.u_height, anchor=tk.SW)
+        tk.Button(self.app_name_frame, text="Next", font="Helvetica 15 bold", bg="grey20", fg="green",
+                  relief=tk.FLAT, command=self.__new_app_iter).place(x=self.u_width, y=self.u_height, anchor=tk.SE)
 
-        tk.Label(self.app_name_frame, text="Add a new App", font=("Segoe Print", 50), bg="grey20", fg="white").place(x=self.u_width/2, y=60, anchor=tk.CENTER)
+        tk.Label(self.app_name_frame, text="Add a new App", font=("Segoe Print", 50),
+                 bg="grey20", fg="white").place(x=self.u_width/2, y=60, anchor=tk.CENTER)
 
-        self.new_app_info_label = tk.Label(self.app_name_frame, font=("Ink Free", 30), bg="grey20", fg="white", justify=tk.LEFT)
+        self.new_app_info_label = tk.Label(self.app_name_frame, font=("Ink Free", 30),
+                                           bg="grey20", fg="white", justify=tk.LEFT)
         self.new_app_info_label.place(x=30, y=100, anchor=tk.NW)
 
-        self.new_app_entry_title = tk.Label(self.app_name_frame, text="Name", font="Helvetica 30 bold", bg="grey20", fg="white")
+        self.new_app_entry_title = tk.Label(self.app_name_frame, text="Name", font="Helvetica 30 bold",
+                                            bg="grey20", fg="white")
         self.new_app_entry_title.place(x=(self.u_width/2)-180, y=(self.u_height/2)-25, anchor=tk.CENTER)
 
         self.new_app_entry = ttk.Entry(self.app_name_frame, font=("Ink Free", 30), width=20)
@@ -240,47 +251,64 @@ class Window:
         self.new_app_entry.bind("<Return>", self.__new_app_iter)
 
         # file info
-        self.files_window = tk.Canvas(self.window, width=self.u_width, height=self.u_height, bg="grey20", bd=0, highlightthickness=0, relief=tk.RIDGE)
+        self.files_window = tk.Canvas(self.window, width=self.u_width, height=self.u_height, bg="grey20",
+                                      bd=0, highlightthickness=0, relief=tk.RIDGE)
 
-        tk.Label(self.files_window, text="Add a new App", font=("Segoe Print", 50), bg="grey20", fg="white").place(x=self.u_width/2, y=60, anchor=tk.CENTER)
+        tk.Label(self.files_window, text="Add a new App", font=("Segoe Print", 50), bg="grey20",
+                 fg="white").place(x=self.u_width/2, y=60, anchor=tk.CENTER)
 
-        tk.Button(self.files_window, text="Cancel", font="Helvetica 15 bold", bg="grey20", fg="red", relief=tk.FLAT, command=self.__new_app_reset).place(x=00, y=self.u_height, anchor=tk.SW)
-        tk.Button(self.files_window, text="Done", font="Helvetica 15 bold", bg="grey20", fg="green", relief=tk.FLAT, command=self.__new_app_iter).place(x=self.u_width, y=self.u_height, anchor=tk.SE)
+        tk.Button(self.files_window, text="Cancel", font="Helvetica 15 bold", bg="grey20", fg="red",
+                  relief=tk.FLAT, command=self.__new_app_reset).place(x=00, y=self.u_height, anchor=tk.SW)
+        tk.Button(self.files_window, text="Done", font="Helvetica 15 bold", bg="grey20", fg="green",
+                  relief=tk.FLAT, command=self.__new_app_iter).place(x=self.u_width, y=self.u_height, anchor=tk.SE)
 
-        tk.Button(self.files_window, text="Select Files", font="Helvetica 20 bold", bg="grey20", fg="white", relief=tk.FLAT, command=self.__select_new_app_files).place(x=self.u_width/2, y=150, anchor=tk.CENTER)
+        tk.Button(self.files_window, text="Select Files", font="Helvetica 20 bold", bg="grey20", fg="white",
+                  relief=tk.FLAT, command=self.__select_new_app_files).place(x=self.u_width/2, y=150, anchor=tk.CENTER)
 
         self.upload_files = tk.Label(self.files_window, font=("Ink Free", 30), bg="grey20", fg="white")
         self.upload_files.place(x=self.u_width/2, y=250, anchor=tk.CENTER)
 
         # configure app
-        self.configure_window = tk.Canvas(self.window, width=self.u_width, height=self.u_height, bg="grey20", bd=0, highlightthickness=0, relief=tk.RIDGE)
+        self.configure_window = tk.Canvas(self.window, width=self.u_width, height=self.u_height, bg="grey20", bd=0,
+                                          highlightthickness=0, relief=tk.RIDGE)
 
-        tk.Label(self.configure_window, text="Configure App", font=("Segoe Print", 50), bg="grey20", fg="white").place(x=self.u_width/2, y=60, anchor=tk.CENTER)
+        tk.Label(self.configure_window, text="Configure App", font=("Segoe Print", 50), bg="grey20",
+                 fg="white").place(x=self.u_width/2, y=60, anchor=tk.CENTER)
 
-        tk.Button(self.configure_window, text="Cancel", font="Helvetica 15 bold", bg="grey20", fg="red", relief=tk.FLAT, command=self.__new_app_reset).place(x=00, y=self.u_height, anchor=tk.SW)
-        tk.Button(self.configure_window, text="Done", font="Helvetica 15 bold", bg="grey20", fg="green", relief=tk.FLAT, command=self.__done_configure).place(x=self.u_width, y=self.u_height, anchor=tk.SE)
+        tk.Button(self.configure_window, text="Cancel", font="Helvetica 15 bold", bg="grey20", fg="red",
+                  relief=tk.FLAT, command=self.__new_app_reset).place(x=00, y=self.u_height, anchor=tk.SW)
+        tk.Button(self.configure_window, text="Done", font="Helvetica 15 bold", bg="grey20", fg="green",
+                  relief=tk.FLAT, command=self.__done_configure).place(x=self.u_width, y=self.u_height, anchor=tk.SE)
 
-        tk.Label(self.configure_window, text="Name", font="Helvetica 20", bg="grey20", fg="white").place(x=30, y=150, anchor=tk.W)
+        tk.Label(self.configure_window, text="Name", font="Helvetica 20", bg="grey20", fg="white"
+                 ).place(x=30, y=150, anchor=tk.W)
         self.config_name_entry = ttk.Entry(self.configure_window, font=("Ink Free", 30), width=25)
         self.config_name_entry.place(x=self.u_width/2+50, y=150, anchor=tk.CENTER)
 
-        tk.Label(self.configure_window, text="Version", font="Helvetica 20", bg="grey20", fg="white").place(x=30, y=200, anchor=tk.W)
+        tk.Label(self.configure_window, text="Version", font="Helvetica 20", bg="grey20", fg="white"
+                 ).place(x=30, y=200, anchor=tk.W)
         self.config_version_entry = ttk.Entry(self.configure_window, font=("Ink Free", 30), width=25)
         self.config_version_entry.place(x=self.u_width/2+50, y=200, anchor=tk.CENTER)
 
-        tk.Label(self.configure_window, text="Info", font="Helvetica 20", bg="grey20", fg="white").place(x=30, y=260, anchor=tk.W)
+        tk.Label(self.configure_window, text="Info", font="Helvetica 20", bg="grey20", fg="white"
+                 ).place(x=30, y=260, anchor=tk.W)
         self.config_info_text = tk.Text(self.configure_window, font=("Ink Free", 30), width=25, height=3)
         self.config_info_text.place(x=self.u_width/2+50, y=240, anchor=tk.N)
 
         # Configure Files
-        self.configure_files = tk.Canvas(self.window, width=self.u_width, height=self.u_height, bg="grey20", bd=0, highlightthickness=0, relief=tk.RIDGE)
+        self.configure_files = tk.Canvas(self.window, width=self.u_width, height=self.u_height, bg="grey20", bd=0,
+                                         highlightthickness=0, relief=tk.RIDGE)
 
-        tk.Label(self.configure_files, text="Configure App", font=("Segoe Print", 50), bg="grey20", fg="white").place(x=self.u_width/2, y=60, anchor=tk.CENTER)
+        tk.Label(self.configure_files, text="Configure App", font=("Segoe Print", 50), bg="grey20", fg="white"
+                 ).place(x=self.u_width/2, y=60, anchor=tk.CENTER)
 
-        tk.Button(self.configure_files, text="Cancel", font="Helvetica 15 bold", bg="grey20", fg="red", relief=tk.FLAT, command=self.__new_app_reset).place(x=00, y=self.u_height, anchor=tk.SW)
-        tk.Button(self.configure_files, text="Done", font="Helvetica 15 bold", bg="grey20", fg="green", relief=tk.FLAT, command=self.__done_configure).place(x=self.u_width, y=self.u_height, anchor=tk.SE)
+        tk.Button(self.configure_files, text="Cancel", font="Helvetica 15 bold", bg="grey20", fg="red", relief=tk.FLAT,
+                  command=self.__new_app_reset).place(x=00, y=self.u_height, anchor=tk.SW)
+        tk.Button(self.configure_files, text="Done", font="Helvetica 15 bold", bg="grey20", fg="green", relief=tk.FLAT,
+                  command=self.__done_configure).place(x=self.u_width, y=self.u_height, anchor=tk.SE)
 
-        tk.Button(self.configure_files, text="Select Files", font="Helvetica 20 bold", bg="grey20", fg="white", relief=tk.FLAT, command=self.__configure_open_files).place(x=self.u_width/2, y=150, anchor=tk.CENTER)
+        tk.Button(self.configure_files, text="Select Files", font="Helvetica 20 bold", bg="grey20", fg="white",
+                  relief=tk.FLAT, command=self.__configure_open_files).place(x=self.u_width/2, y=150, anchor=tk.CENTER)
 
         self.configure_app_files = tk.Canvas(self.configure_files, bg="red")
         self.configure_app_files.place(x=self.u_width/2, y=200, anchor=tk.N)
@@ -303,7 +331,7 @@ class Window:
 
     def login(self, *_args) -> None:
         """
-        try to login with username and password
+        try to log in with username and password
         """
         name = self.loginUsername.get()
         pwd = self.loginPassword.get()
@@ -373,14 +401,16 @@ class Window:
             self.__app_done = True
 
         else:
-            self.threads.submit(self.c.create_app, app_name=self.__app_name, app_version=self.__app_version, app_info=self.__app_info, files=self.__upload_files)
+            self.threads.submit(self.c.create_app, app_name=self.__app_name, app_version=self.__app_version,
+                                app_info=self.__app_info, files=self.__upload_files)
             self.__new_app_reset()
 
     def __select_new_app_files(self, _event=None) -> None:
         """
         Select the files that should be uploaded to the appstore
         """
-        self.__upload_files = filedialog.askopenfilenames(parent=self.window, title="Choose Archives to upload", filetypes=[('Archives', '*.zip')])
+        self.__upload_files = filedialog.askopenfilenames(parent=self.window, title="Choose Archives to upload",
+                                                          filetypes=[('Archives', '*.zip')])
         self.upload_files["text"] = "\n".join([file.split("/")[-1] for file in self.__upload_files])
 
     def __new_app_reset(self, _event=None) -> None:
@@ -468,7 +498,8 @@ class Window:
         """
         open files
         """
-        files = list(filedialog.askopenfilenames(parent=self.window, title="Choose Archives to upload", filetypes=[('Archives', '*.zip')]))
+        files = list(filedialog.askopenfilenames(parent=self.window, title="Choose Archives to upload",
+                                                 filetypes=[('Archives', '*.zip')]))
         filenames = [file.split("/")[-1] for file in files]
 
         for file in self.__update_files:  # check if file is already in list
@@ -499,16 +530,21 @@ class Window:
 
         for file in self.__update_files:
             curr_row = self.__update_files.index(file)
-            tk.Label(self.configure_app_files, text=file["name"], font=("Ink Free", 20), bg="grey20", fg="white").grid(row=curr_row, column=0, sticky=tk.NSEW)
+            tk.Label(self.configure_app_files, text=file["name"], font=("Ink Free", 20), bg="grey20", fg="white"
+                     ).grid(row=curr_row, column=0, sticky=tk.NSEW)
             match file["tag"]:
                 case "keep":
-                    tmp = tk.Button(self.configure_app_files, text="keep", font=("Ink Free", 20), bg="grey20", fg="white", relief=tk.FLAT)
+                    tmp = tk.Button(self.configure_app_files, text="keep", font=("Ink Free", 20),
+                                    bg="grey20", fg="white", relief=tk.FLAT)
                 case "overwrite":
-                    tmp = tk.Button(self.configure_app_files, text="overwrite", font=("Ink Free", 20), bg="grey20", fg="yellow", relief=tk.FLAT)
+                    tmp = tk.Button(self.configure_app_files, text="overwrite", font=("Ink Free", 20),
+                                    bg="grey20", fg="yellow", relief=tk.FLAT)
                 case "new":
-                    tmp = tk.Button(self.configure_app_files, text="new", font=("Ink Free", 20), bg="grey20", fg="green", relief=tk.FLAT)
+                    tmp = tk.Button(self.configure_app_files, text="new", font=("Ink Free", 20),
+                                    bg="grey20", fg="green", relief=tk.FLAT)
                 case "delete":
-                    tmp = tk.Button(self.configure_app_files, text="delete", font=("Ink Free", 20), bg="grey20", fg="red", relief=tk.FLAT)
+                    tmp = tk.Button(self.configure_app_files, text="delete", font=("Ink Free", 20),
+                                    bg="grey20", fg="red", relief=tk.FLAT)
                 case _:
                     raise ValueError(f"Invalid tag: {file['tag']}")
 
@@ -543,7 +579,7 @@ class Window:
         update the download/upload progressbar and label
         :param _event: trash variable if called by tkinter events
         :param thread: if true runs as thread
-        :param loop: if true runs in a endless loop
+        :param loop: if true runs in an endless loop
         """
         if thread:
             return self.threads.submit(self.update_update, thread=False, loop=loop)
@@ -604,7 +640,7 @@ class Window:
 
     def download_app(self, app_name, directory: str | None = ...) -> None:
         """
-        download a app from the server
+        download an app from the server
         :param app_name: the app to download
         :param directory: if given, doesn't ask for directory to download
         """
@@ -669,7 +705,8 @@ by {app["publisher"]}
 
         if app_version and app_version != app["version"]:
             self.du_button["text"] = "Update"
-            self.du_button["command"] = lambda _e=None: self.download_app(app_name, directory=installed_apps[app["name"]]["path"])
+            self.du_button["command"] = lambda _e=None: self.download_app(app_name,
+                                                                          directory=installed_apps[app["name"]]["path"])
 
         elif app_version and app_version == app["version"]:
             self.du_button["text"] = "Newest"
@@ -689,7 +726,7 @@ def main() -> None:
     """
     main program
     """
-    with Connection(debug_mode=Off, host="server.fridrich.xyz") as c:
+    with Connection(debug_mode="off", host="server.fridrich.xyz") as c:
         w = Window(c)
         w.run()
 
