@@ -24,7 +24,7 @@ from fridrich.server import *
 from fridrich.errors import *
 
 
-COM_PROTOCOL_VERSIONS: set = {"1.1.0", "1.1.1"}
+COM_PROTOCOL_VERSIONS: set = {"1.1.2"}
 
 client: socket.socket
 Users = UserList()

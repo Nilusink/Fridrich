@@ -9,11 +9,9 @@ from fridrich.errors import AuthError, RegistryError
 from fridrich.backend import Connection
 from fridrich.classes import Daytime
 from contextlib import suppress
-from traceback import print_exc
 import binascii
 import serial
 import signal
-import socket
 import json
 import time
 import sys
@@ -45,7 +43,8 @@ RUNNING: bool = True
 STATION: serial.Serial = ...
 for _ in range(5):
     try:
-        STATION = serial.Serial(port="/dev/ttyUSB0", baudrate=9600, timeout=.1)    # you probably have to change the USB port for your arduino
+        # you probably have to change the USB port for your arduino
+        STATION = serial.Serial(port="/dev/ttyUSB0", baudrate=9600, timeout=.1)
         STATION.flush()
         break
 
@@ -82,8 +81,8 @@ def request_data() -> dict:
     # parse data
     try:
         out: dict = {}
-        for element in data.split(","):
-            parts = element.split(":")
+        for dp in data.split(","):
+            parts = dp.split(":")
             out[parts[0]] = float(parts[1])
 
         return out
@@ -113,14 +112,12 @@ def send_weather() -> None:
                     with open("temp_weather.json", "r") as in_file:
                         for i, line in enumerate(in_file.readlines()):
                             if "|||" not in line:
-                                print(f"Warning: \"|||\" not found in file \"temp_weather.json\" at line {i}, skipping line")
+                                print(f"Warning: \"|||\" not found in file \"temp_weather.json\""
+                                      f"at line {i}, skipping line")
                                 continue
 
                             t, wd = line.rstrip("\n").split("|||")
                             c.commit_weather_data(station_name=NAME, weather_data=json.loads(wd), wait=True, set_time=t)
-
-                # collect weather data, replace the random values with the way you want to get weather data
-
 
                 # commit data to the server
                 try:
@@ -128,7 +125,7 @@ def send_weather() -> None:
                     if not c:
                         raise AuthError("Invalid credentials")
 
-                    c.commit_weather_data(station_name=NAME, weather_data=data, wait=True, set_time=now)  # if there was an error sending the message to the server, keep in buffer
+                    c.commit_weather_data(station_name=NAME, weather_data=data, wait=True, set_time=now)
                     c.send()
 
                 except RegistryError:
@@ -150,9 +147,8 @@ def send_weather() -> None:
             time.sleep(1)
             continue
 
-        except (socket.gaierror,):
-            # when the station can't connect to the server (no internet)
-            print("gaierror")
+        except (Exception,):
+            # when the station can't connect to the server (no internet, ...)
             time.sleep(5)
             continue
 

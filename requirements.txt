@@ -9,3 +9,6 @@ pandas
 
 # only for FridrichDiscordBot
 discord.py
+
+# only for weather-station
+pyserial

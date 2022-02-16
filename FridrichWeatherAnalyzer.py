@@ -7,7 +7,6 @@ Nilusink
 from fridrich.backend import Connection
 import matplotlib.pyplot as plt
 from typing import Dict, List
-import seaborn as sns
 import pandas as pd
 import numpy as np
 
@@ -28,7 +27,7 @@ DATA_DESCRIPTION: Dict[str, str] = {    # label for the plot, mustn't be changed
     "Temperature Index": "Felt temperature in °C"
 }
 MISSING_VALUE = np.inf
-NUM_LABELS: int = 10
+NUM_LABELS: int = 9
 
 
 def main() -> None:
@@ -47,8 +46,9 @@ def main() -> None:
             temp_graphs[station["station_name"]]: dict = {}
 
             # append all log-times to the list
+            print(f"getting {station['station_name']}")
             station_log = c.get_temps_log(station["station_name"])
-            for date in station_log:
+            for date in list(station_log)[-288::]:
                 # remove second from date
                 short_date = ":".join(date.split(":")[:-1])
 
@@ -95,6 +95,8 @@ def main() -> None:
         if cnt == 0:
             new_data.pop(station)
 
+    all_values = [value for station in new_data for value in new_data[station] if value !=  MISSING_VALUE]
+
     data = {"Dates": all_dates}
 
     data.update({
@@ -106,9 +108,25 @@ def main() -> None:
     # make graph
     data.plot()
 
-    plt.xticks(range(0, len(all_dates), len(all_dates)//NUM_LABELS), [all_dates[i] for i in range(0, len(all_dates), len(all_dates)//NUM_LABELS)])
-    plt.legend(title="Weather Station")
+    # configure graph
+    plt.xticks(range(0, len(all_dates), len(all_dates)//NUM_LABELS),
+               [all_dates[i] for i in range(0, len(all_dates), len(all_dates)//NUM_LABELS)])
 
+    # calculate the step for the y-axis
+    lower_limit = int(min(all_values)-1)
+    upper_limit = int(max(all_values)+1)
+    potential_steps = (.1, .2, .5, 1, 2, 5, 10)
+    max_values = 40
+    step: float = .1
+    for step in potential_steps:
+        if (upper_limit-lower_limit) / step < max_values:
+            break
+
+    plt.yticks(np.arange(lower_limit, upper_limit, step))
+    plt.legend(title="Weather Station")
+    plt.grid()
+
+    # show graph
     plt.show()
 
 

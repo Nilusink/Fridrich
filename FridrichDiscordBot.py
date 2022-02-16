@@ -145,9 +145,10 @@ def make_graph(values: int, outfile: str, data_point) -> None:
     p = data_point[0] if type(data_point) == tuple else data_point
     g.set(ylabel=DATA_DESCRIPTION[p] if p in DATA_DESCRIPTION else data_point, xlabel="Date")
 
-    # print(f"how many: {round(x_scale/3, 0)}, {values=}, {x_scale=}, {min_max=}")
-    plt.xticks([all_dates[i] for i in range(0, values, values // 6)])
+    labels = 8
+    plt.xticks([all_dates[i] for i in range(0, values, int((values//labels)*(1+(1/labels))))])
     plt.legend(title="Weather Station")
+    plt.grid()
 
     # save graph
     plt.savefig(outfile)
@@ -503,6 +504,11 @@ async def looper() -> None:
             # send both requests at one time
             log = stats_c.get_log(wait=True)
             res = stats_c.get_results(flag="last", wait=True)
+            if not res:
+                channel = bot.get_channel(VOTINGS_CHANNEL_ID)
+                await channel.send("No votes for yesterday!")
+                return
+
             stats_c.send()
 
             # get results

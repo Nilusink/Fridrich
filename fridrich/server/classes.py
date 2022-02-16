@@ -1,6 +1,7 @@
 from fridrich import cryption_tools, decorate_class
 from concurrent.futures import ThreadPoolExecutor
 from fridrich.server.accounts import USER_CONFIG
+from fridrich.errors import MessageError
 from fridrich.classes import Daytime
 from fridrich.server import DEBUGGER
 from contextlib import suppress
@@ -9,6 +10,9 @@ import socket
 import typing
 import time
 import json
+
+
+CONTROL_CHARACTER: bytes = b"|-|"
 
 
 @decorate_class(DEBUGGER.catch_traceback())
@@ -97,12 +101,17 @@ class User:
         self.__client.settimeout(.2)
         while self.loop:
             try:
-                mes = cryption_tools.MesCryp.decrypt(self.__client.recv(2048), self.__key.encode())
+                mes = self.__client.recv(2048)
 
                 # refresh auto-disconnect
                 self.__last_connection = Daytime.now()
 
-                mes = json.loads(mes)
+                if not mes.startswith(CONTROL_CHARACTER) and mes.endswith(CONTROL_CHARACTER):
+                    raise MessageError("Message got lost - only a part arrived")
+
+                cl = len(CONTROL_CHARACTER)
+                mes = mes[cl:-cl]
+                mes = json.loads(cryption_tools.MesCryp.decrypt(mes, self.__key.encode()))
 
                 # create message pool for request
                 names = [func_name["f_name"] if "f_name" in func_name else func_name["type"] 
@@ -170,7 +179,7 @@ class User:
             "time": self.__message_pool_time
         }
         string_mes = json.dumps(mes)
-        mes = cryption_tools.MesCryp.encrypt(string_mes, key=self.__key.encode())
+        mes = CONTROL_CHARACTER+cryption_tools.MesCryp.encrypt(string_mes, key=self.__key.encode())+CONTROL_CHARACTER
         length = pack('>Q', len(mes))   # get message length
 
         # send to client

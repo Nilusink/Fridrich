@@ -29,8 +29,9 @@ from fridrich import *
 ############################################################################
 #                     global Variable definition                           #
 ############################################################################
-# Protocol version information
-COMM_PROTOCOL_VERSION = "1.1.1"
+# Protocol version and information
+COMM_PROTOCOL_VERSION = "1.1.2"
+CONTROL_CHARACTER: bytes = b"|-|"
 
 # debugging
 DEBUGGER = Debugger(os.getcwd()+"/logs/fridrich.err", file_mode="a")
@@ -293,7 +294,9 @@ class Connection:
 
         if self.__AuthKey:
             string_mes = json.dumps(message, ensure_ascii=True)
-            mes = cryption_tools.MesCryp.encrypt(string_mes, key=self.__AuthKey.encode())
+            # add CONTROL_CHARACTER in front and back for easy checking if the whole message arrived
+            mes = CONTROL_CHARACTER+cryption_tools.MesCryp.encrypt(string_mes,
+                                                                   key=self.__AuthKey.encode())+CONTROL_CHARACTER
 
             try:
                 self.Server.send(mes)
@@ -388,14 +391,22 @@ class Connection:
             if self._debug_mode == "full":
                 print("received data")
 
+            if not data.startswith(CONTROL_CHARACTER) or not data.endswith(CONTROL_CHARACTER):
+                raise MessageError("Message got lost - only a part arrived")
+
+            if self._debug_mode == "full":
+                print(f"starts and ends correctly, \"{data[:5]}\" : \"{data[-5::]}\"")
+
             try:
-                mes = cryption_tools.MesCryp.decrypt(data, self.__AuthKey.encode())
+                cl = len(CONTROL_CHARACTER)
+                mes = cryption_tools.MesCryp.decrypt(data[cl:-cl], self.__AuthKey.encode())
+
             except (cryption_tools.InvalidToken, AttributeError):
-                self._messages["Error"] = {"Error": "MessageError", "info": f"cant decrypt: {data}"}
+                self._messages["Error"] = {"Error": "MessageError", "info": f"cant decrypt: \"{data[:5]}\" : \"{data[-5::]}\""}
                 continue
 
             if self._debug_mode in ("full", "normal"):
-                print(f"decrypted data: {mes=}")
+                print(f"decrypted data: {mes}")
 
             try:
                 for _ in range(2):
