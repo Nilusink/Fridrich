@@ -211,13 +211,13 @@ class User:
             self.debugger.write_traceback(e, from_user=self.name)
             return
 
-    def end(self, reason: str = ...) -> None:
-        print(f"Disconnecting: {self} {'('+reason+')' if reason is not ... else ''}, shutting down threads")
+    def end(self, reason: str = "kick") -> None:
+        print(f"Disconnecting: {self} ({reason}), shutting down threads")
         # send disconnect message to client
         self.send({
             "reason": "timeout"
         },
-            message_type="disconnect",
+            message_type=reason,
             force=True
         )
         self.__disconnect = True
