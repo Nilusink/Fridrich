@@ -19,7 +19,14 @@ This step is going to be different for every OS. Here is an example for rasbian:
 <br>
 [python3.10 installation for raspberry-pi](https://raspberrytips.com/install-latest-python-raspberry-pi/)
 <br>
-### Step 3: Installing the python libraries
+### Step 3: Installing the python libraries (pip)
+you can easily install the fridrich module and dependencies with pip:
+```bash
+pip install fridrich
+```
+if you install the package this way, you can delete the ```fridrich``` folder in your
+directory
+### Setp 3: Installing the python libraries (manual)
 If you plan on using FridrichDiscordBot, edit *requirements.txt* and uncomment everything after **# only for FridrichDiscordBot**:
 ```bash
 cryptography==3.3.2
@@ -86,25 +93,25 @@ python3 /path/do/your/server/FridrichDiscordBot.py &
 The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It saves all the data in files and accepts requests, handles events like the 0 o'clock vote and some other "cool" stuff.
 <br><br><br>
 The **Calendar.json** file saves the configurations of the calendar in a dict:
-```Python 
+```json 
 {'10.10.2005' : ['stuff happened', 'some other things happened as well'], '11.10.2005' : []}
 ```
 **dVotes.json** stores all the data about how many double votes each user has left in this week:
-```Python
-{'User1': 1, 'User2': 0}
+```json
+{"User1": 1, "User2": 0}
 ```
 The **KeyFile.enc** is the default key if the client hasn't yet authenticated or sends errors. It is encrypted with the cryption_tools.low class.
-**KingLog.json** is the file where all the GayKings are saved (basically a *log*):
-```Python
+**logs/*** are the files where all the voting results are stored (basically a *log*):
+```json
 {
     "00.00.0000": "jesus",
     "30.05.2021": "John",
     "31.05.2021": "Will|John|Jack",
-    "01.06.2021": "Jack",
+    "01.06.2021": "Jack"
 }
 ```
 The file **now.json** is used to save all current Votes (in case of a server restart/power off) and in newer versions generally used as the *Votes* Variable. It stores information like this:
-```Python
+```json
 {
     "GayKing":
     {
@@ -118,10 +125,7 @@ The file **now.json** is used to save all current Votes (in case of a server res
     }
 }
 ```
-**tempData.json** is used to transfer temperature data between the main program and the CPUHeatHandler:
-```Python
-{"temp": 29.0, "cptemp": 38.628, "hum": 39.0}
-```
+
 In **users.enc** is a fridrich.cryption_tools.low encrypted dictionary with all users and passwords (low encryption because of speed)<br><br>
 The **Version** file stores information about the current version: *Version:0.3.7,MaxLen:20* (Managed by the GUI developer).
 **yes.json** is basically the same file as *now.json* but from yesterday.<br><br>
@@ -145,13 +149,13 @@ The File Layout is straightforward:
 |   |---♦ KeyFile.enc
 |  
 |---♦ fridrich
-|   |---♦ server
-|   |   |---♦__init_.py
+|   |---♦ backend
+|   |   |---♦ __init_.py
+|   |   |---♦ debugging.py
 |   |
 |   |---♦ __init__.py
-|   |---♦ app_store.py
-|   |---♦ backend.py
 |   |---♦ classes.py
+|   |---♦ errors.py
 |   |---♦ cryption_tools.py
 |  
 |---♦ YourProgram.py  
@@ -180,24 +184,24 @@ docker pull |name of container|:|container version|
 Instead of *container version*, you can also use *latest* to ensure you have the latest updates of the container.
 
 example:
-<pre>
+```bash
 docker pull nilusink/fridrich_server:latest
-</pre>
+```
 To then *run* the container, type:
-<pre>
+```bash
 docker run --rm -it |name of container|:|container version|
-</pre>
+```
 For the server add 
-<pre>
+```bash
 -p 12345:12345
-</pre>
+```
 Before the docker name (so you can access the port the server uses)<br>
 To look up the newest version for each container, follow [this](https://hub.docker.com/u/nilusink) link and click  on the desired repository.
 
 example:
-<pre>
+```bash
 docker run --rm -it -p 12345:12345 nilusink/fridrich_server:latest
-</pre>
+```
 
 # **Attention!**
 This project uses Python-3.10 Syntax (Server and backend), so it won't run on anything else than Python-3.10 or Higher!

@@ -143,7 +143,6 @@ def plot_2d(x: list, y: Iterable | dict, x_label: str | None = ..., y_label: str
         df = pd.DataFrame(df)
 
         g = sns.lmplot('Dates', 'value', data=pd.melt(df, ['Dates']), hue='variable', ci=None, order=5, truncate=True)
-        g.set_xticklabels([""]+x+[""])
         g.set(ylabel="Votes per month")
 
     else:

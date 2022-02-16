@@ -133,14 +133,15 @@ class User:
         save the message(s) for sending
         """
         message = {
-            "content": message
+            "content": message,
+            "type": message_type
         }
+
+        # no fucking clue what this does
         if self.__message_pool_max == sum([0 if element is None else 1 
                                            for element in self.__message_pool]) and not force:
             print(f"Pool error: {self.__message_pool=}, {self.__message_pool_names=}, {message=}")
             raise IndexError("trying to send message but no pool index is out of range")
-
-        message['type'] = message_type
 
         try:
             self.__message_pool[self.__message_pool_names[self.__message_pool_index]] = message
@@ -212,6 +213,13 @@ class User:
 
     def end(self, reason: str = ...) -> None:
         print(f"Disconnecting: {self} {'('+reason+')' if reason is not ... else ''}, shutting down threads")
+        # send disconnect message to client
+        self.send({
+            "reason": "timeout"
+        },
+            message_type="disconnect",
+            force=True
+        )
         self.__disconnect = True
         self.loop = False
         self.__client.close()

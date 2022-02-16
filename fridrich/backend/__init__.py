@@ -414,8 +414,8 @@ class Connection:
                             self._messages["Error"] = message["content"]
 
                         case "disconnect":
-                            self._messages["disconnect"] = True
-                            self.end()
+                            print(f"Server disconnect! reason: {message['content']['reason']}")
+                            self.end(revive=True)
 
                         case "ServerRequest":
                             self._server_messages[mes['time']] = message

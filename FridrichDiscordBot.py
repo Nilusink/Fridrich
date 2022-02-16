@@ -500,11 +500,20 @@ async def looper() -> None:
         # 00:00 switch
         if left < Daytime(second=2):
             await asyncio.sleep(2)
-            res = stats_c.get_log()
+            # send both requests at one time
+            log = stats_c.get_log(wait=True)
+            res = stats_c.get_results(flag="last", wait=True)
+            stats_c.send()
+
+            # get results
+            log, res = log.result(), res.result()
+
             mes = f"♦ Voting results ♦"
-            for voting in res:
-                dat = res[voting][list(res[voting])[-1]]
-                mes += f"\n{voting}: {dat}"
+            for voting in log:
+                # only append the voting if there was a vote
+                if res[voting]["totalvotes"] > 0:
+                    dat = log[voting][list(log[voting])[-1]]
+                    mes += f"\n{voting}: {dat}"
 
             channel = bot.get_channel(VOTINGS_CHANNEL_ID)
             await channel.send(mes)

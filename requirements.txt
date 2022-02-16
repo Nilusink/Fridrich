@@ -1,5 +1,6 @@
-cryptography==3.3.2
 numpy
+# this specific version of cryptography because I had problems installing others
+cryptography==3.3.2
 
 # only for GayHistoryAnalyser
 matplotlib
