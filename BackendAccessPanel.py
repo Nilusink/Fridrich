@@ -48,7 +48,8 @@ if __name__ == '__main__':
         cmd: str
         while True:  # shell for debugging
             try:
-                cmd = input('>> ')  # take input command as string
+                cmd = input(f'{ConsoleColors.OKBLUE}>> {ConsoleColors.OKCYAN}')  # take input command as string
+                print(end=ConsoleColors.ENDC)
                 if cmd == "help":
                     list_funcs()
                     continue

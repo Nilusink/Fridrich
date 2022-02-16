@@ -249,7 +249,7 @@ class Connection:
 
         return responses
 
-    def _send(self, dictionary: dict, wait: bool = False) -> float | None:
+    def _send(self, dictionary: dict, wait: bool = False, check_auth: bool = True) -> float | None:
         """
         send messages to server
 
@@ -259,15 +259,19 @@ class Connection:
         """
         self.__message_pool.append(dictionary)
         if not wait:
-            return self.__send()
+            return self.__send(check_auth=check_auth)
 
-    def __send(self) -> float:
+    def __send(self, check_auth: bool = True) -> float:
         """
         the actual sending process
         """
         # check errors before executing
-        if not self:
-            raise AuthError("Cannot send message - not authenticated yet!")
+
+        # we need those calls to happen after each other, so there are 2 ifs
+        if check_auth and not self:
+            print(f"{check_auth=}")
+            if not self.re_auth():
+                raise AuthError("Cannot send message - not authenticated yet!")
 
         if not self.server_ip:
             raise Error("no host set")
@@ -543,6 +547,9 @@ class Connection:
         """
         if a user has already been logged in, you can now try to re-login
         """
+        if self._debug_mode in ("normal", "full"):
+            print("re-authing")
+
         if self.__userN is None or self.__pwd_hash is None:
             return False
 
@@ -1319,7 +1326,7 @@ class Connection:
         """
         try:
             return bool(self.__AuthKey)
-        except:
+        except (Exception,):
             return False
 
     def __enter__(self) -> "Connection":
@@ -1347,7 +1354,7 @@ class Connection:
                'type': 'end'
         }    # set message
         with suppress(ConnectionResetError, ConnectionAbortedError, AuthError):
-            self._send(msg, wait=False)  # send message
+            self._send(msg, wait=False, check_auth=False)  # send message
 
         self.loop = False
         self.__AuthKey = None

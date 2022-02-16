@@ -310,7 +310,7 @@ class Window(Connection):
         kick one user
         """
         print(f"kicking {username}")
-        self.kick_a_user(username)
+        self.kick_user(username, wait=False)
         self.update()
 
     def _end(self, *_args) -> None:

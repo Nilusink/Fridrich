@@ -31,6 +31,11 @@ try:
         # load the station name and location for THIS station
         NAME = config["station_name"]
         LOCATION = config["station_location"]
+        for element in ["fridrich_username", "fridrich_pwd", "station_name", "station_location"]:
+            config.pop(element)
+
+        EXTRA_DATA: dict = config.copy()
+
 
 except KeyError:
     raise KeyError("the weather_station config file doesn't contain the correct values!")
@@ -128,7 +133,7 @@ def send_weather() -> None:
 
                 except RegistryError:
                     print(f"Not registered, registering now")
-                    c.register_station(station_name=NAME, location=LOCATION, wait=False)
+                    c.register_station(station_name=NAME, location=LOCATION, wait=False, **EXTRA_DATA)
 
                     c.commit_weather_data(station_name=NAME, weather_data=data, wait=True, set_time=now)
                     c.send()
