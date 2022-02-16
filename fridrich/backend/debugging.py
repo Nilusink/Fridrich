@@ -36,7 +36,7 @@ class Debugger:
 
             # create "heading" every time the program restarts
             out.write(f"\n\n\n\n{'#'*self.total_title_length}\n#{' '*side1}{date}"
-                      f"{' '*side2}#\n{'#'*self.total_title_length}")
+                      f"{' '*side2}#\n{'#'*self.total_title_length}\n")
 
         print(f"File for debugging: \"{self.__outfile}\"")
 

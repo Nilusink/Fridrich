@@ -31,7 +31,7 @@ try:
         # load the station name and location for THIS station
         NAME = config["station_name"]
         LOCATION = config["station_location"]
-        for element in ["fridrich_username", "fridrich_pwd", "station_name", "station_location"]:
+        for element in ["fridrich_user", "fridrich_pwd", "station_name", "station_location"]:
             config.pop(element)
 
         EXTRA_DATA: dict = config.copy()
