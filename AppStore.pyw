@@ -123,10 +123,10 @@ class Window:
 
         self.info_line_length = 40
         try:
-            temp = open("data/AppStore.config", 'r')
+            temp = open("data/AppStore.json", 'r')
         except FileNotFoundError:
             temp = {}
-        self.settings = FileVar(json.load(temp), "data/AppStore.config")
+        self.settings = FileVar(json.load(temp), "data/AppStore.json")
 
         # for threads
         self.threads = ThreadPoolExecutor()

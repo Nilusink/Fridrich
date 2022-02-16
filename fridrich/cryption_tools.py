@@ -118,11 +118,11 @@ class High:
 
 
 try:
-    with open(os.getcwd()+'/data/KeyFile.enc', 'r') as inp:
+    with open(os.getcwd()+'/config/KeyFile.enc', 'r') as inp:
         defKey = Low.decrypt(inp.read()).encode()
 
 except FileNotFoundError:
-    raise FileNotFoundError("Cannot find file data/KeyFile.enc")
+    raise FileNotFoundError(f"Cannot find file \"{os.getcwd()+'/config/KeyFile.enc'}\"")
 
 
 class MesCryp:

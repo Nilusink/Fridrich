@@ -257,8 +257,6 @@ class Connection:
         :param wait: don't send the messages immediately and wait
         :return: time of sending
         """
-        if not self:
-            raise AuthError("Cannot send message - not authenticated yet!")
         self.__message_pool.append(dictionary)
         if not wait:
             return self.__send()
@@ -268,6 +266,9 @@ class Connection:
         the actual sending process
         """
         # check errors before executing
+        if not self:
+            raise AuthError("Cannot send message - not authenticated yet!")
+
         if not self.server_ip:
             raise Error("no host set")
 
@@ -356,35 +357,36 @@ class Connection:
                 bs = self.Server.recv(8)    # receive message length
                 (length,) = struct.unpack('>Q', bs)
 
+                if self._debug_mode == "full":
+                    print(f"new message, receiving now")
+
+                data = b''
+                no_rec = 0
+                to_read = 0
+                while len(data) < length:  # receive message in patches so size doesn't matter
+                    o_to_read = to_read
+                    to_read = length - len(data)
+                    data += self.Server.recv(
+                        4096 if to_read > 4096 else to_read
+                    )
+
+                    if to_read == o_to_read:  # check if new packages were received
+                        no_rec += 1
+                    else:
+                        no_rec = 0
+
+                    if no_rec >= 100:  # if for 100 loops no packages were received, raise connection loss
+                        raise socket.error('Failed receiving data - connection loss')
+
             except (ConnectionResetError, struct.error, socket.timeout):
                 continue
-            if self._debug_mode == "full":
-                print(f"new message, receiving now")
-
-            data = b''
-            no_rec = 0
-            to_read = 0
-            while len(data) < length:   # receive message in patches so size doesn't matter
-                o_to_read = to_read
-                to_read = length - len(data)
-                data += self.Server.recv(
-                                    4096 if to_read > 4096 else to_read
-                                    )
-
-                if to_read == o_to_read:    # check if new packages were received
-                    no_rec += 1
-                else:
-                    no_rec = 0
-
-                if no_rec >= 100:          # if for 100 loops no packages were received, raise connection loss
-                    raise socket.error('Failed receiving data - connection loss')
 
             if self._debug_mode == "full":
                 print("received data")
 
             try:
                 mes = cryption_tools.MesCryp.decrypt(data, self.__AuthKey.encode())
-            except cryption_tools.InvalidToken:
+            except (cryption_tools.InvalidToken, AttributeError):
                 self._messages["Error"] = {"Error": "MessageError", "info": f"cant decrypt: {data}"}
                 continue
 
@@ -951,7 +953,8 @@ class Connection:
         return self.del_var(item)
 
     # WeatherStation Funcs
-    def register_station(self, station_name: str, location: str, wait: bool = False) -> Union[FridrichFuture, None]:
+    def register_station(self, station_name: str, location: str,
+                         wait: bool = False, **station_info) -> Union[FridrichFuture, None]:
         """
         register a new weather station
         """
@@ -960,6 +963,7 @@ class Connection:
             "station_name": station_name,
             "location": location
         }
+        msg.update(station_info)
         self._send(msg, wait=True)
 
         # result handling
@@ -1313,7 +1317,10 @@ class Connection:
         """
         return True if AuthKey
         """
-        return bool(self.__AuthKey)
+        try:
+            return bool(self.__AuthKey)
+        except:
+            return False
 
     def __enter__(self) -> "Connection":
         return self
@@ -1323,9 +1330,6 @@ class Connection:
         if exception_type is not None:
             return False
         return True
-
-    def __del__(self) -> None:
-        self.end(revive=False)
 
     def __eq__(self, other: "Connection") -> bool:
         if not type(other) == Connection:

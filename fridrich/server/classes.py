@@ -107,7 +107,7 @@ class User:
                 # create message pool for request
                 names = [func_name["f_name"] if "f_name" in func_name else func_name["type"] 
                          for func_name in mes["content"]]
-                self.__message_pool_names = tuple(*names)
+                self.__message_pool_names = tuple(names)
                 self.__message_pool_max = len(mes["content"])
                 self.__message_pool_time = mes["time"]
                 self.__message_pool_index = 0

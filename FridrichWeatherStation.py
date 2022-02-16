@@ -9,9 +9,11 @@ from fridrich.errors import AuthError, RegistryError
 from fridrich.backend import Connection
 from fridrich.classes import Daytime
 from contextlib import suppress
+from traceback import print_exc
 import binascii
 import serial
 import signal
+import socket
 import json
 import time
 import sys
@@ -90,6 +92,7 @@ def send_weather() -> None:
     login to the server, send weather data, logout
     """
     print(f"Running send_weather ({Daytime.now().to_string()})")
+    now = time.strftime("%Y.%m.%d")+"-"+Daytime.now().to_string()
     try:
         data = request_data()
 
@@ -113,42 +116,46 @@ def send_weather() -> None:
 
                 # collect weather data, replace the random values with the way you want to get weather data
 
+
                 # commit data to the server
                 try:
                     c.auth(USERNAME, PASSWORD)
                     if not c:
                         raise AuthError("Invalid credentials")
 
-                    c.commit_weather_data(station_name=NAME, weather_data=data, wait=True)  # if there was an error sending the message to the server, keep in buffer
+                    c.commit_weather_data(station_name=NAME, weather_data=data, wait=True, set_time=now)  # if there was an error sending the message to the server, keep in buffer
                     c.send()
 
                 except RegistryError:
                     print(f"Not registered, registering now")
                     c.register_station(station_name=NAME, location=LOCATION, wait=False)
 
-                    c.commit_weather_data(station_name=NAME, weather_data=data, wait=True)
+                    c.commit_weather_data(station_name=NAME, weather_data=data, wait=True, set_time=now)
                     c.send()
-
-                except ConnectionError:
-                    time.sleep(5)
-                    continue
 
                 # since the data could be sent, try to delete any existing temporary files
                 with suppress(FileNotFoundError):
                     os.remove("temp_weather.json")
 
-                return
+                return print(f"success sending data")
 
         except binascii.Error:
             # try to avoid incorrect padding error
+            print("incorrect padding")
             time.sleep(1)
+            continue
+
+        except (socket.gaierror,):
+            # when the station can't connect to the server (no internet)
+            print("gaierror")
+            time.sleep(5)
             continue
 
     else:
         # if the data couldn't be sent, saved it to a temporary file
         with open("temp_weather.json", "a") as out:
-            now_time = time.strftime("%Y.%m.%d")+"-"+Daytime.now().to_string()
-            out.write(f"{now_time}|||{json.dumps(data)}")
+            out.write(f"{now}|||{json.dumps(data)}\n")
+        print(f"failed to send data, wrote to file")
         time.sleep(60)
 
 
@@ -166,9 +173,10 @@ def main() -> None:
             time.sleep(.5)
 
         except KeyboardInterrupt:
-            return end(0)
+            return end()
 
         except AuthError:
+            print("Auth Error!")
             continue
 
 

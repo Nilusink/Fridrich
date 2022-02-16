@@ -31,10 +31,9 @@ def register(message: dict, user: User, *_args) -> None:
             user.send(mes, message_type="Error")
             return
 
-    tmp.append({
-        "station_name": message["station_name"],
-        "location": message["location"]
-    })
+    message.pop("type")
+
+    tmp.append(message)
 
     with open(Const.WeatherDir+"all.json", "w") as out_file:
         json.dump(tmp, out_file, indent=4)
