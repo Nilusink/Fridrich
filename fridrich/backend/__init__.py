@@ -66,7 +66,7 @@ class FridrichFuture:
 
 
 class Connection:
-    def __init__(self, debug_mode: str | None = False, host: str | None = ...) -> None:
+    def __init__(self, debug_mode: str | None = False, host: str | None = ..., port: int = 12345) -> None:
         """
         connect with any fridrich server
 
@@ -85,7 +85,7 @@ class Connection:
 
         if self._debug_mode in ('normal', 'full'):
             print(ConsoleColors.OKGREEN + 'Server IP: ' + self.server_ip + ConsoleColors.ENDC)
-        self.port = 33333   # set communication port with server
+        self.port = port   # set communication port with server
 
         self.__AuthKey = None
         self.__userN = None
