@@ -29,6 +29,9 @@ DATA_DESCRIPTION: Dict[str, str] = {    # label for the plot, mustn't be changed
 MISSING_VALUE = np.inf
 NUM_LABELS: int = 9
 
+# used to set the amount of values (all_values[DATES::]). here: last 288 values
+DATES: int = -288
+
 
 def main() -> None:
     """
@@ -48,7 +51,7 @@ def main() -> None:
             # append all log-times to the list
             print(f"getting {station['station_name']}")
             station_log = c.get_temps_log(station["station_name"])
-            for date in list(station_log)[-288::]:
+            for date in list(station_log)[DATES::]:
                 # remove second from date
                 short_date = ":".join(date.split(":")[:-1])
 
