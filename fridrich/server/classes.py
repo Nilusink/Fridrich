@@ -1,7 +1,6 @@
 from fridrich import cryption_tools, decorate_class
 from concurrent.futures import ThreadPoolExecutor
 from fridrich.server.accounts import USER_CONFIG
-from fridrich.errors import MessageError
 from fridrich.classes import Daytime
 from fridrich.server import DEBUGGER
 from contextlib import suppress
@@ -15,7 +14,7 @@ import json
 CONTROL_CHARACTER: bytes = b"|-|"
 
 
-@decorate_class(DEBUGGER.catch_traceback())
+@decorate_class(DEBUGGER.catch_traceback(raise_error=True))
 class User:
     def __init__(self, name: str, sec: str, key: str, user_id: int, cl: socket.socket, ip: str,
                  function_manager: typing.Callable, debugger) -> None:
@@ -48,6 +47,8 @@ class User:
         self.__message_pool_index: int = 0
         self.__message_pool_max: int = 0
         self.__message_pool_time: str = ""
+
+        self.__client_message_pool: dict = {}
 
         # for auto-disconnect
         self.__last_connection = Daytime.now()
@@ -106,28 +107,37 @@ class User:
                 # refresh auto-disconnect
                 self.__last_connection = Daytime.now()
 
-                if not mes.startswith(CONTROL_CHARACTER) and mes.endswith(CONTROL_CHARACTER):
-                    raise MessageError("Message got lost - only a part arrived")
+                if not mes.startswith(CONTROL_CHARACTER) or not mes.endswith(CONTROL_CHARACTER):
+                    print("Message got lost - only a part arrived")
+                    continue
 
                 cl = len(CONTROL_CHARACTER)
                 mes = mes[cl:-cl]
                 mes = json.loads(cryption_tools.MesCryp.decrypt(mes, self.__key.encode()))
 
-                # create message pool for request
-                names = [func_name["f_name"] if "f_name" in func_name else func_name["type"] 
-                         for func_name in mes["content"]]
-                self.__message_pool_names = tuple(names)
-                self.__message_pool_max = len(mes["content"])
-                self.__message_pool_time = mes["time"]
-                self.__message_pool_index = 0
+                if "type" not in mes:
+                    mes["type"] = "client_request"
 
-                if not mes or mes is None:
-                    self.send({'Error': 'MessageError', 'info': 'Invalid Message/AuthKey'},
-                              message_type="Error", force=True)
-                    continue
+                match mes["type"]:
+                    case "client_request":
+                        # create message pool for request
+                        names = [func_name["f_name"] if "f_name" in func_name else func_name["type"]
+                                 for func_name in mes["content"]]
+                        self.__message_pool_names = tuple(names)
+                        self.__message_pool_max = len(mes["content"])
+                        self.__message_pool_time = mes["time"]
+                        self.__message_pool_index = 0
 
-                for message in mes["content"]:
-                    self.exec_func(message)
+                        if not mes or mes is None:
+                            self.send({'Error': 'MessageError', 'info': 'Invalid Message/AuthKey'},
+                                      message_type="Error", force=True)
+                            continue
+
+                        for message in mes["content"]:
+                            self.exec_func(message)
+
+                    case "client_return":
+                        self.__client_message_pool[mes["time"]] = mes["content"]
 
             except cryption_tools.NotEncryptedError:
                 print("not encrypted")
@@ -176,19 +186,13 @@ class User:
         # process the message
         mes = {
             "content": self.__message_pool,
-            "time": self.__message_pool_time
+            "time": self.__message_pool_time,
+            "type": "server_return"
         }
-        string_mes = json.dumps(mes)
-        mes = CONTROL_CHARACTER+cryption_tools.MesCryp.encrypt(string_mes, key=self.__key.encode())+CONTROL_CHARACTER
-        length = pack('>Q', len(mes))   # get message length
 
-        # send to client
-        try:
-            self.__client.sendall(length)
-            self.__client.sendall(mes)
-
-        except (OSError, ConnectionResetError, ConnectionAbortedError):
-            return self.end()
+        # send the message
+        if not self.__send(mes):
+            return
 
         # reset message pool
         self.__message_pool = {}
@@ -197,15 +201,51 @@ class User:
         self.__message_pool_time = ""
         self.__message_pool_names = ()
 
+    def __send(self, to_send: dict) -> bool:
+        """
+        the actual sending part of the process
+        """
+        string_mes = json.dumps(to_send)
+        mes = CONTROL_CHARACTER + cryption_tools.MesCryp.encrypt(string_mes,
+                                                                 key=self.__key.encode()) + CONTROL_CHARACTER
+        length = pack('>Q', len(mes))  # get message length
+
+        # send to client
+        try:
+            self.__client.sendall(length)
+            self.__client.sendall(mes)
+
+        except (OSError, ConnectionResetError, ConnectionAbortedError):
+            self.end()
+            return False
+        return True
+
+    def direct_send(self, message: dict, message_type: str) -> float:
+        """
+        send a message bypassing the message-pool
+        :return: the timestamp of the message
+        """
+        mes = {
+            "content": message,
+            "time": time.time(),
+            "type": message_type
+        }
+        self.__send(mes)
+        return mes["time"]
+
     def __check_disconnect(self) -> None:
         """
         for auto-disconnect, check if there was no interaction with the user for self.__timeout
         """
         while self.loop:
             if Daytime.now()-self.__last_connection > self.__timeout:
-                print(f"disconnecting {self.name}, last contact: {self.__last_connection},"
-                      f"now: {Daytime.now()} ({self.__timeout=})")
-                return self.end("timeout")
+                try:
+                    self.ping()
+
+                except TimeoutError:
+                    print(f"disconnecting {self.name}, last contact: {self.__last_connection},"
+                          f"now: {Daytime.now()} ({self.__timeout=})")
+                    return self.end("timeout")
 
             time.sleep(.2)
 
@@ -223,17 +263,41 @@ class User:
     def end(self, reason: str = "kick") -> None:
         print(f"Disconnecting: {self} ({reason}), shutting down threads")
         # send disconnect message to client
-        self.send({
-            "reason": "timeout"
+        self.direct_send({
+            "type": "disconnect",
+            "reason": reason
         },
-            message_type=reason,
-            force=True
+            message_type="server_request",
         )
         self.__disconnect = True
         self.loop = False
         self.__client.close()
         self.__thread_pool.shutdown(wait=False)
         print(f"{self} is fully shut down and disconnected")
+
+    # functions for the server to request from the client
+    def ping(self) -> float:
+        """
+        send a ping to the client to measure latency
+        """
+        mes = {
+            "type": "ping",
+            "time": time.time()
+        }
+        timestamp = self.direct_send(mes, message_type="server_request")
+
+        start = time.time()
+        while timestamp not in self.__client_message_pool:
+            time.sleep(.01)
+
+            if time.time() - start > 5:
+                print(f"{timestamp} not in {self.__client_message_pool}")
+                raise TimeoutError
+
+        del self.__client_message_pool[timestamp]
+
+        ping = time.time()-mes["time"]
+        return ping
 
     def __getitem__(self, item) -> str:
         return dict(self)[item]

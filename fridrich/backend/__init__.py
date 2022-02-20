@@ -19,6 +19,7 @@ import os
 # fridrich imports
 from fridrich.file_transfer import send_receive, download_program as now_download_program
 from fridrich.file_transfer import download_progress as now_download_progress
+import fridrich.backend.server_request_handler as srh
 from fridrich.backend.debugging import Debugger
 from fridrich.classes import Daytime
 from fridrich import cryption_tools
@@ -30,7 +31,7 @@ from fridrich import *
 #                     global Variable definition                           #
 ############################################################################
 # Protocol version and information
-COMM_PROTOCOL_VERSION = "1.1.2"
+COMM_PROTOCOL_VERSION = "1.1.3"
 CONTROL_CHARACTER: bytes = b"|-|"
 
 # debugging
@@ -84,7 +85,7 @@ class Connection:
 
         if self._debug_mode in ('normal', 'full'):
             print(ConsoleColors.OKGREEN + 'Server IP: ' + self.server_ip + ConsoleColors.ENDC)
-        self.port = 12345   # set communication port with server
+        self.port = 33333   # set communication port with server
 
         self.__AuthKey = None
         self.__userN = None
@@ -92,8 +93,11 @@ class Connection:
 
         self.loop = True
 
+        # threading stuff
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.receive_thread = Future()
+
+        self.results_executor = ThreadPoolExecutor()
 
         # for down-/uploading
         self.load_state = str()
@@ -189,7 +193,7 @@ class Connection:
                     raise ServerError(f'{error}:\n{st.lstrip(f"raise {error}(").rstrip(")")}')
 
     @DEBUGGER.catch_and_write(raise_error=True, print_traceback=True)
-    def response_handler(self, responses: Dict[str, Any]) -> Dict[str, Any]:
+    def response_handler(self, responses: Dict[str, Any]) -> None:
         """
         if necessary, process each result
         """
@@ -248,7 +252,25 @@ class Connection:
 
                         responses[response] = out
 
-        return responses
+        self.__assign_results(responses)
+
+    @DEBUGGER.catch_and_write(raise_error=True, print_traceback=True)
+    def server_request_handler(self, request: dict, message_time: float) -> None:
+        """
+        handle incoming server requests
+        """
+        match request["type"]:
+            case "disconnect":
+                print(f"Server disconnect! reason: {request['reason']}")
+                self.end(revive=True)
+
+            case _:
+                funcs: list = [function for function in dir(srh) if not function.startswith("__")]
+                if not request["type"] in funcs:
+                    raise KeyError(f"Requested function \"{request['type']}\" does not exist!")
+
+                self.direct_send(message=eval(f"srh.{request['type']}({request})"), message_type="client_return",
+                                 message_time=message_time)
 
     def _send(self, dictionary: dict, wait: bool = False, check_auth: bool = True) -> float | None:
         """
@@ -289,6 +311,7 @@ class Connection:
 
         message = {
             "time": time.time(),
+            "type": "client_request",
             "content": self.__message_pool
         }
 
@@ -331,6 +354,19 @@ class Connection:
         res = self.wait_for_message(self.__send())
         return res
 
+    def direct_send(self, message: dict, message_type: str, message_time: float = ...) -> None:
+        """
+        directly send a message to the server bypassing the message-queue
+        """
+        mes = {
+            "time": time.time() if message_time is ... else message_time,
+            "type": message_type,
+            "content": message
+        }
+        string_mes = json.dumps(mes, ensure_ascii=False)
+        self.Server.send(CONTROL_CHARACTER +
+                         cryption_tools.MesCryp.encrypt(string_mes, key=self.__AuthKey.encode()) + CONTROL_CHARACTER)
+
     def __assign_results(self, results: dict) -> None:
         if self._debug_mode in ("normal", "full"):
             print(f"assigning {results=}")
@@ -355,13 +391,17 @@ class Connection:
         return self.__results_getters
 
     @DEBUGGER.catch_and_write(raise_error=True, print_traceback=True)
-    def receive(self):
+    def receive(self) -> None:
         """
         receive messages from server, decrypt them and raise incoming errors (meant as thread, run by default)
         """
         while self.loop:
             try:
-                bs = self.Server.recv(8)    # receive message length
+                bs = self.Server.recv(8)  # receive message length
+            except socket.timeout:
+                continue
+
+            try:
                 (length,) = struct.unpack('>Q', bs)
 
                 if self._debug_mode == "full":
@@ -385,14 +425,19 @@ class Connection:
                     if no_rec >= 100:  # if for 100 loops no packages were received, raise connection loss
                         raise socket.error('Failed receiving data - connection loss')
 
-            except (ConnectionResetError, struct.error, socket.timeout):
+            except (ConnectionResetError, struct.error, socket.timeout) as e:
+                self._messages["Error"] = {
+                    "Error": "NetworkError",
+                    "info": f"NetworkError while receiving message ({e})"
+                }
                 continue
 
             if self._debug_mode == "full":
                 print("received data")
 
             if not data.startswith(CONTROL_CHARACTER) or not data.endswith(CONTROL_CHARACTER):
-                raise MessageError("Message got lost - only a part arrived")
+                self._messages["Error"] = {"Error": "MessageError", "info": "Message got lost - only a part arrived"}
+                continue
 
             if self._debug_mode == "full":
                 print(f"starts and ends correctly, \"{data[:5]}\" : \"{data[-5::]}\"")
@@ -402,7 +447,10 @@ class Connection:
                 mes = cryption_tools.MesCryp.decrypt(data[cl:-cl], self.__AuthKey.encode())
 
             except (cryption_tools.InvalidToken, AttributeError):
-                self._messages["Error"] = {"Error": "MessageError", "info": f"cant decrypt: \"{data[:5]}\" : \"{data[-5::]}\""}
+                self._messages["Error"] = {
+                    "Error": "MessageError",
+                    "info": f"cant decrypt: \"{data[:5]}\" : \"{data[-5::]}\""
+                }
                 continue
 
             if self._debug_mode in ("full", "normal"):
@@ -419,26 +467,37 @@ class Connection:
 
             try:
                 # parse each message
-                for resp_type, message in mes["content"].items():
-                    match message["type"]:
-                        case "function":
-                            if mes["time"] not in self._messages:
-                                self._messages[mes["time"]] = {}
+                if "type"not in mes:
+                    mes["type"] = "server_return"
 
-                            self._messages[mes["time"]][resp_type] = message["content"]
+                match mes["type"]:
+                    case "server_return":
+                        for resp_type, message in mes["content"].items():
+                            match message["type"]:
+                                case "function":
+                                    if mes["time"] not in self._messages:
+                                        self._messages[mes["time"]] = {}
 
-                        case "Error":
-                            self._messages["Error"] = message["content"]
+                                    this_mes = message["content"]
+                                    self.results_executor.submit(self.response_handler, {
+                                        resp_type: this_mes
+                                    })
+                                    self._messages[mes["time"]][resp_type] = this_mes
 
-                        case "disconnect":
-                            print(f"Server disconnect! reason: {message['content']['reason']}")
-                            self.end(revive=True)
+                                case "Error":
+                                    self._messages["Error"] = message["content"]
 
-                        case "ServerRequest":
-                            self._server_messages[mes['time']] = message
+                                case _:
+                                    raise ServerError(f"server send message: {mes}")
 
-                        case _:
-                            raise ServerError(f"server send message: {mes}")
+                    case "server_request":
+                        self.server_request_handler(mes["content"], mes["time"])
+
+                    case "Error":
+                        self._messages["Error"] = mes["content"]
+
+                    case _:
+                        raise ServerError(f"server send invalid message type: {mes}")
 
             except KeyError:
                 with open("backend.err.log", 'a') as out:
@@ -481,9 +540,6 @@ class Connection:
 
             if len(out) == 0:
                 raise MessageError("received empty message pool from server")
-
-            out = self.response_handler(out)
-            self.__assign_results(out)
 
         if "Error" in self._messages:
             try:
