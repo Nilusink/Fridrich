@@ -1,5 +1,7 @@
 from fridrich import cryption_tools, decorate_class
 from concurrent.futures import ThreadPoolExecutor
+
+from fridrich.errors import MessageError
 from fridrich.server.accounts import USER_CONFIG
 from fridrich.classes import Daytime
 from fridrich.server import DEBUGGER
@@ -102,17 +104,17 @@ class User:
         self.__client.settimeout(.2)
         while self.loop:
             try:
-                mes = self.__client.recv(2048)
-
-                # refresh auto-disconnect
-                self.__last_connection = Daytime.now()
-
-                if not mes.startswith(CONTROL_CHARACTER) or not mes.endswith(CONTROL_CHARACTER):
-                    print("Message got lost - only a part arrived")
-                    continue
+                mes = self.__client.recv(8192)
 
                 cl = len(CONTROL_CHARACTER)
-                mes = mes[cl:-cl]
+                # if starts and ends with CONTROL_CHARACTER, strip them from the message
+                if mes.startswith(CONTROL_CHARACTER) and mes.endswith(CONTROL_CHARACTER):
+                    mes = mes[cl:-cl]
+
+                # if the message starts with it but doesn't end with it (or vice versa) raise an Error
+                elif mes.startswith(CONTROL_CHARACTER) != mes.endswith(CONTROL_CHARACTER):
+                    raise MessageError(f"only part of the message arrived {mes[:5]} : {mes[-5::]}")
+
                 mes = json.loads(cryption_tools.MesCryp.decrypt(mes, self.__key.encode()))
 
                 if "type" not in mes:
@@ -138,6 +140,9 @@ class User:
 
                     case "client_return":
                         self.__client_message_pool[mes["time"]] = mes["content"]
+
+                # refresh auto-disconnect
+                self.__last_connection = Daytime.now()
 
             except cryption_tools.NotEncryptedError:
                 print("not encrypted")

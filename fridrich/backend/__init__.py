@@ -87,11 +87,14 @@ class Connection:
             print(ConsoleColors.OKGREEN + 'Server IP: ' + self.server_ip + ConsoleColors.ENDC)
         self.port = port   # set communication port with server
 
+        # default variables
         self.__AuthKey = None
         self.__userN = None
         self.__pwd_hash = None
 
         self.loop = True
+
+        self.__max_server_recv_length: int = 8192
 
         # threading stuff
         self.executor = ThreadPoolExecutor(max_workers=1)
@@ -321,6 +324,10 @@ class Connection:
             mes = CONTROL_CHARACTER+cryption_tools.MesCryp.encrypt(string_mes,
                                                                    key=self.__AuthKey.encode())+CONTROL_CHARACTER
 
+            if len(mes) > self.__max_server_recv_length:
+                raise MessageError(f"Message is to big! (the server can't"
+                                   f"receive anything above {self.__max_server_recv_length} bytes)")
+
             try:
                 self.Server.send(mes)
                 # reset message pool only if the message was sent successfully
@@ -364,8 +371,14 @@ class Connection:
             "content": message
         }
         string_mes = json.dumps(mes, ensure_ascii=False)
-        self.Server.send(CONTROL_CHARACTER +
-                         cryption_tools.MesCryp.encrypt(string_mes, key=self.__AuthKey.encode()) + CONTROL_CHARACTER)
+        b_mes = cryption_tools.MesCryp.encrypt(string_mes, key=self.__AuthKey.encode())
+        b_mes = CONTROL_CHARACTER + b_mes + CONTROL_CHARACTER
+        if len(b_mes) > self.__max_server_recv_length:
+            raise MessageError(
+                f"Message is to big! The server can't receive anything above"
+                f"{self.__max_server_recv_length} bytes (message length: {len(b_mes)} bytes)")
+
+        self.Server.send(b_mes)
 
     def __assign_results(self, results: dict) -> None:
         if self._debug_mode in ("normal", "full"):
