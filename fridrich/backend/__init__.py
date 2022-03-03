@@ -295,7 +295,6 @@ class Connection:
 
         # we need those calls to happen after each other, so there are 2 ifs
         if check_auth and not self:
-            print(f"{check_auth=}")
             if not self.re_auth():
                 raise AuthError("Cannot send message - not authenticated yet!")
 
@@ -365,6 +364,10 @@ class Connection:
         """
         directly send a message to the server bypassing the message-queue
         """
+        if not self:
+            if not self.re_auth():
+                raise AuthError("Cannot send message - not authenticated yet!")
+
         mes = {
             "time": time.time() if message_time is ... else message_time,
             "type": message_type,
@@ -488,14 +491,18 @@ class Connection:
                         for resp_type, message in mes["content"].items():
                             match message["type"]:
                                 case "function":
-                                    if mes["time"] not in self._messages:
-                                        self._messages[mes["time"]] = {}
-
                                     this_mes = message["content"]
+                                    if mes["time"] not in self._messages:
+                                        self._messages[mes["time"]] = {
+                                            resp_type: this_mes
+                                        }
+                                    else:
+                                        self._messages[mes["time"]][resp_type] = this_mes
+
                                     self.results_executor.submit(self.response_handler, {
                                         resp_type: this_mes
                                     })
-                                    self._messages[mes["time"]][resp_type] = this_mes
+
 
                                 case "Error":
                                     self._messages["Error"] = message["content"]
@@ -529,7 +536,7 @@ class Connection:
         if self._debug_mode in ('full', 'normal'):
             print(f'waiting for message: {time_sent}')
 
-        while time_sent not in self._messages:  # wait for server message
+        while time_sent not in self._messages:    # wait for server message
             if self._debug_mode == 'full':
                 print(self._messages)
 

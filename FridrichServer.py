@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#! /usr/bin/python3.10
 """
 main program for the Server
 
@@ -24,7 +24,10 @@ from fridrich.server import *
 from fridrich.errors import *
 
 
-COM_PROTOCOL_VERSIONS: set = {"1.1.2", "1.1.3"}
+COM_PROTOCOL_VERSIONS: set = {
+    "1.1.2",
+    "1.1.3"
+}
 
 client: socket.socket
 Users = UserList()
@@ -127,7 +130,8 @@ def client_handler() -> None:
                         f"{mes['com_protocol_version']}, allowed: {COM_PROTOCOL_VERSIONS}")
             Communication.send(cl, {
                 "Error": "RuntimeError",
-                "info": f"Invalid COM_PROTOCOL_VERSION"
+                "info": f"Invalid COM_PROTOCOL_VERSION: {mes['com_protocol_version']} "
+                        f"not in ({', '.join(list(COM_PROTOCOL_VERSIONS))})"
             }, encryption=MesCryp.encrypt)
 
         verify(mes['Name'], mes['pwd'], cl, address)

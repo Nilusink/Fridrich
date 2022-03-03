@@ -55,7 +55,12 @@ class User:
         # for auto-disconnect
         self.__last_connection = Daytime.now()
         # if there wasn't any interaction with a client for 2 minutes, kick it (ping also counts as activity)
-        self.__timeout = Daytime(**USER_CONFIG["timeout"])
+        timeout: dict = USER_CONFIG["timeout"].copy()
+        self.__try_ping = True
+        if "try_ping" in timeout:
+            self.__try_ping: bool = timeout.pop("try_ping")
+
+        self.__timeout = Daytime(**timeout)
         self.__thread_pool = ThreadPoolExecutor(max_workers=2)
 
         # only if the user's security clearance requires auto-logout, start the thread
@@ -161,7 +166,7 @@ class User:
             "type": message_type
         }
 
-        # no fucking clue what this does
+        # no clue what this does nor how it works, but it works, so I won't touch it
         if self.__message_pool_max == sum([0 if element is None else 1
                                            for element in self.__message_pool]) and not force:
             print(f"Pool error: {self.__message_pool=}, {self.__message_pool_names=}, {message=}")
@@ -220,8 +225,8 @@ class User:
             self.__client.sendall(length)
             self.__client.sendall(mes)
 
-        except (OSError, ConnectionResetError, ConnectionAbortedError):
-            self.end()
+        except (OSError, ConnectionResetError, ConnectionAbortedError) as e:
+            self.end(str(e))
             return False
         return True
 
@@ -244,15 +249,20 @@ class User:
         """
         while self.loop:
             if Daytime.now()-self.__last_connection > self.__timeout:
-                try:
-                    self.ping()
+                if self.__try_ping:
+                    try:
+                        self.ping()
 
-                except TimeoutError:
-                    print(f"disconnecting {self.name}, last contact: {self.__last_connection},"
-                          f"now: {Daytime.now()} ({self.__timeout=})")
-                    return self.end("timeout")
+                    except TimeoutError:
+                        print(f"disconnecting {self.name}, last contact: {self.__last_connection},"
+                              f"now: {Daytime.now()} ({self.__timeout=})")
+                        return self.end("timeout")
+                    return
 
-            time.sleep(.2)
+                print(f"disconnecting {self.name}, last contact: {self.__last_connection},"
+                      f"now: {Daytime.now()} ({self.__timeout=})")
+                return self.end("timeout")
+        time.sleep(.2)
 
     def exec_func(self, message: dict):
         """
@@ -411,7 +421,7 @@ class UserList:
             for element in self._users:
                 if element.disconnect:
                     print(f"removing {element.name}")
-                    element.end()
+                    element.end("garbage collector")
                     self._users.remove(element)
             time.sleep(time_between_loops)
 

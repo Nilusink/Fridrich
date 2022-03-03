@@ -98,7 +98,7 @@ def main() -> None:
         if cnt == 0:
             new_data.pop(station)
 
-    all_values = [value for station in new_data for value in new_data[station] if value !=  MISSING_VALUE]
+    all_values = [value for station in new_data for value in new_data[station] if value != MISSING_VALUE]
 
     data = {"Dates": all_dates}
 
@@ -112,6 +112,10 @@ def main() -> None:
     data.plot()
 
     # configure graph
+    plt.xlabel("Date")
+    plt.ylabel(DATA_DESCRIPTION[DATA_POINT])
+
+    # x and y ticks
     plt.xticks(range(0, len(all_dates), len(all_dates)//NUM_LABELS),
                [all_dates[i] for i in range(0, len(all_dates), len(all_dates)//NUM_LABELS)])
 
@@ -131,6 +135,8 @@ def main() -> None:
 
     # show graph
     plt.show()
+
+    print(f"last measurement: {all_dates[-1]}")
 
 
 if __name__ == '__main__':

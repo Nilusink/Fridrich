@@ -34,11 +34,23 @@ if __name__ == '__main__':
             """
             list all the functions of fridrich.backend.Connection
             """
-            print(ConsoleColors.OKGREEN+'\nfunctions of Connection: '+ConsoleColors.ENDC)  # return all functions of the two classes
             funcs = dir(Connection)
+            functions, variables = [], []
             for element in funcs:
                 if not element.endswith('__'):
-                    print('  - '+ConsoleColors.HEADER+element+ConsoleColors.ENDC)
+                    if callable(eval(f"c.{element}")):
+                        functions.append(element)
+                        continue
+
+                    variables.append(element)
+
+            print(ConsoleColors.OKGREEN + '\nFunctions of Connection: ' + ConsoleColors.ENDC)
+            for func in functions:
+                print("  - " + ConsoleColors.HEADER + func + ConsoleColors.ENDC)
+
+            print(ConsoleColors.OKGREEN + '\nVariables of Connection: ' + ConsoleColors.ENDC)
+            for var in variables:
+                print("  - " + ConsoleColors.OKBLUE + var + ConsoleColors.ENDC)
 
         list_funcs()
 

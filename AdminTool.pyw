@@ -18,6 +18,7 @@ def sort_user_list(lst: list, flag='sec') -> list:
     """
     return a sorted list by "sec" | "Name" | "pwd"
     """
+    print(f"{lst=}")
     def sorter(element) -> int:
         element = element[flag]
         if element in secEquals:
