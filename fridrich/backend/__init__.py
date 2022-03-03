@@ -323,7 +323,8 @@ class Connection:
             mes = CONTROL_CHARACTER+cryption_tools.MesCryp.encrypt(string_mes,
                                                                    key=self.__AuthKey.encode())+CONTROL_CHARACTER
 
-            if len(mes) > self.__max_server_recv_length:
+            if len(mes) > self.__max_server_recv_length:    # TODO: automatic message split when the message is too long
+                print(string_mes, f"\nis too long ({len(mes)} bytes) !!!")
                 raise MessageError(f"Message is to big! (the server can't"
                                    f"receive anything above {self.__max_server_recv_length} bytes)")
 

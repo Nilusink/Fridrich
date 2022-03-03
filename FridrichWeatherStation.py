@@ -107,18 +107,6 @@ def send_weather() -> None:
     for _ in range(10):
         try:
             with Connection(host="server.fridrich.xyz") as c:
-                # try to send data backed up from the last time it couldn't be sent
-                if os.path.exists("temp_weather.json"):
-                    with open("temp_weather.json", "r") as in_file:
-                        for i, line in enumerate(in_file.readlines()):
-                            if "|||" not in line:
-                                print(f"Warning: \"|||\" not found in file \"temp_weather.json\""
-                                      f"at line {i}, skipping line")
-                                continue
-
-                            t, wd = line.rstrip("\n").split("|||")
-                            c.commit_weather_data(station_name=NAME, weather_data=json.loads(wd), wait=True, set_time=t)
-
                 # commit data to the server
                 try:
                     c.auth(USERNAME, PASSWORD)
@@ -136,8 +124,24 @@ def send_weather() -> None:
                     c.send()
 
                 # since the data could be sent, try to delete any existing temporary files
-                with suppress(FileNotFoundError):
-                    os.remove("temp_weather.json")
+                if os.path.exists("temp_weather.json"):
+                    with open("temp_weather.json", "r") as in_file:
+                        for i, line in enumerate(in_file.readlines()):
+                            if "|||" not in line:
+                                print(f"Warning: \"|||\" not found in file \"temp_weather.json\""
+                                      f"at line {i}, skipping line")
+                                continue
+
+                            t, wd = line.rstrip("\n").split("|||")
+                            c.commit_weather_data(station_name=NAME, weather_data=json.loads(wd), wait=True, set_time=t)
+
+                            # send every 5 packages so the message doesn't get too long
+                            if i % 5 == 0:
+                                c.send()
+                                time.sleep(1)
+
+                    with suppress(FileNotFoundError):
+                        os.remove("temp_weather.json")
 
                 return print(f"success sending data")
 
