@@ -1,0 +1,36 @@
+{
+    "port": 12345,
+    "ip": "0.0.0.0",
+    "Terminate": null,
+
+    "direc": "/home/pi/Server/data/",
+
+    "lastFile": "/home/pi/Server/data/yes.json",
+    "nowFile": "/home/pi/Server/data/now.json",
+    "strikeFile": "/home/pi/Server/data/strikes.json",
+
+    "logDirec": "/home/pi/Server/data/logs/",
+
+    "CalFile": "/home/pi/Server/data/Calendar.json",
+    "crypFile": "/home/pi/Server/data/users.enc",
+    "versFile": "/home/pi/Server/data/Version",
+    "tempLog": "/home/pi/Server/data/tempData.json",
+    "doubFile": "/home/pi/Server/data/dVotes.json",
+    "SerlogFile": "/home/pi/Server/data/Server.log",
+    "SerUpLogFile": "/home/pi/Server/data/Server.up.log",
+    "ChatFile": "/home/pi/Server/data/chat.json",
+    "VarsFile": "/home/pi/Server/data/vars.json",
+    "WeatherDir": "/home/pi/Server/weather/",
+
+    "logFile": "/home/pi/Server/data/temp.log",
+    "errFile": "/home/pi/Server/data/Server.err.log",
+    "tempFile": "/home/pi/Server/data/tempData.json",
+
+    "DoubleVotes": 1,
+
+    "DoubleVoteResetDay": "Mon",
+    "switchTime": "00:00",
+    "rebootTime": "03:00",
+
+    "AppStoreDirectory": "/home/pi/Server/USBApps/"
+}

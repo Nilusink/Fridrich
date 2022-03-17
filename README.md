@@ -57,10 +57,15 @@ pip3.10 -m pip install -r requirements.txt
 Copy the *data* directory from [this](https://www.github.com/Nilusink/FridrichServer-Docker/) repository
 into your directory.
 <br>
-### Step 5: Adjust settings.json
-The file *settings.json* can be found under **Fridrich/fridrich/server/** and contains
-all the settings for the server. In this file there are other settings as well, but the
-ones we need are those with filepaths in them.<br>
+### Step 5: Adjust the settings
+You now need to create a directory named ```config/``` in your Fridrich folder.
+<br>
+Inside this folder are all the configuration files for the server (and also WeatherStation, DiscordBot, ...).
+And example configuration can be found under ```examples/config/```. Note that you only
+need **KeyFile.enc**, **settings.json** and **user_config** for the server to run.
+<br>
+Now we need to edit ```config/settings.json```. In this file there are other settings as well, but the
+ones we need are the ones with filepaths in them.<br>
 Then for every directory replace **/home/pi/Server/** with your directory.
 
 Ex.:
@@ -91,45 +96,9 @@ python3 /path/do/your/server/FridrichDiscordBot.py &
 ```
 ## Description
 The Server is run on a Raspberry-Pi model 3b+ connected to the local network. It saves all the data in files and accepts requests, handles events like the 0 o'clock vote and some other "cool" stuff.
-<br><br><br>
-The **Calendar.json** file saves the configurations of the calendar in a dict:
-```json 
-{'10.10.2005' : ['stuff happened', 'some other things happened as well'], '11.10.2005' : []}
-```
-**dVotes.json** stores all the data about how many double votes each user has left in this week:
-```json
-{"User1": 1, "User2": 0}
-```
-The **KeyFile.enc** is the default key if the client hasn't yet authenticated or sends errors. It is encrypted with the cryption_tools.low class.
-**logs/*** are the files where all the voting results are stored (basically a *log*):
-```json
-{
-    "00.00.0000": "jesus",
-    "30.05.2021": "John",
-    "31.05.2021": "Will|John|Jack",
-    "01.06.2021": "Jack"
-}
-```
-The file **now.json** is used to save all current Votes (in case of a server restart/power off) and in newer versions generally used as the *Votes* Variable. It stores information like this:
-```json
-{
-    "GayKing":
-    {
-        "Will": "Trains",
-        "John": "Will"
-    },
-    "BestBusDriver":
-    {
-        "Will": "Tobi",
-        "Margaret": "Simon"
-    }
-}
-```
-
-In **users.enc** is a fridrich.cryption_tools.low encrypted dictionary with all users and passwords (low encryption because of speed)<br><br>
-The **Version** file stores information about the current version: *Version:0.3.7,MaxLen:20* (Managed by the GUI developer).
-**yes.json** is basically the same file as *now.json* but from yesterday.<br><br>
-All the files in the **fridrich** folder are just modules for the Server to run.
+<br>
+The server saves data in the *data/* directory and (if committed) weather data in the *weather/* directory.
+The server can also be configured by editing the files in the *config/* folder.1
 
 ## FridrichDiscordBot
 To run the discord bot you must replace the *TOKEN*

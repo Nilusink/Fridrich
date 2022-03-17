@@ -7,6 +7,12 @@ saved locally.
 
 Author: Nilusink
 """
+
+#  Copyright (c) 2022.
+#
+#  Author:
+#  Nilusink
+
 from concurrent.futures import ThreadPoolExecutor, Future
 from time import sleep
 import threading
@@ -123,7 +129,7 @@ class Window:
 
         self.info_line_length = 40
         try:
-            temp = open("data/AppStore.json", 'r')
+            temp = open("../../data/AppStore.json", 'r')
         except FileNotFoundError:
             temp = {}
         self.settings = FileVar(json.load(temp), "data/AppStore.json")

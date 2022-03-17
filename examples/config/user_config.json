@@ -1,0 +1,30 @@
+{
+    "timeout": {
+        "second": 5,
+        "try_ping": true
+    },
+    "admin": {
+        "multi_login_allowed": false,
+        "auto_logout": true
+    },
+    "user": {
+        "multi_login_allowed": true,
+        "auto_logout": true
+    },
+    "guest": {
+        "multi_login_allowed": true,
+        "auto_logout": true
+    },
+    "v_bot": {
+        "multi_login_allowed": true,
+        "auto_logout": true
+    },
+    "s_bot": {
+        "multi_login_allowed": true,
+        "auto_logout": true
+    },
+    "w_station": {
+        "multi_login_allowed": true,
+        "auto_logout": true
+    }
+}

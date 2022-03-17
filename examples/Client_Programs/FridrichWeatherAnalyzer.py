@@ -30,7 +30,7 @@ MISSING_VALUE = np.inf
 NUM_LABELS: int = 9
 
 # used to set the amount of values (all_values[DATES::]). here: last 288 values
-DATES: int = -288
+DATES: int = 0
 
 
 def main() -> None:

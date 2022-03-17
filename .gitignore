@@ -136,7 +136,6 @@ lsd.pyw
 tempCodeRunnerFile.pyw
 tempCodeRunnerFile.py
 Pull.py
-KeyFile.enc
 calendar.pyw
 calendar_Test.pyw
 nSendFile.py
@@ -146,7 +145,13 @@ nSendFile.py
 fridrich_old/
 tests/
 logs/
-config/
+Fridrich/config/
+Fridrich/AdminTool.pyw
+Fridrich/AppStore.pyw
+Fridrich/FridrichWeatherAnalyzer.py
+Fridrich/FridrichWeatherStation.py
+Fridrich/GayHistoryAnalyser.pyw
+Fridrich/VersionChanger.pyw
 testFile.py
 test.file
 test.txt
@@ -154,10 +159,6 @@ ChatElement.pyw
 direct_voting.py
 todo_list.py
 discord_token.json
-
-# didn't work for some reason
-setup.py
-pyproject.toml
 
 *.bat
 *.lnk

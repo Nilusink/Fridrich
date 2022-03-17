@@ -252,6 +252,7 @@ class User:
                 if self.__try_ping:
                     try:
                         self.ping()
+                        print("ping")
 
                     except TimeoutError:
                         print(f"disconnecting {self.name}, last contact: {self.__last_connection},"
