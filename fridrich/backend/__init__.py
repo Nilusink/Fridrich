@@ -440,7 +440,8 @@ class Connection:
                         no_rec = 0
 
                     if no_rec >= 100:  # if for 100 loops no packages were received, raise connection loss
-                        raise socket.error('Failed receiving data - connection loss')
+                        raise socket.error('Failed receiving data - connection loss ( received: '
+                                           f'{len(data)} / {length} )')
 
             except (ConnectionResetError, struct.error, socket.timeout) as e:
                 self._messages["Error"] = {
@@ -503,7 +504,6 @@ class Connection:
                                     self.results_executor.submit(self.response_handler, {
                                         resp_type: this_mes
                                     })
-
 
                                 case "Error":
                                     self._messages["Error"] = message["content"]

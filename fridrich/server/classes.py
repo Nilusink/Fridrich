@@ -211,7 +211,7 @@ class User:
         self.__message_pool_time = ""
         self.__message_pool_names = ()
 
-    def __send(self, to_send: dict) -> bool:
+    def __send(self, to_send: dict, no_traceback: bool = False) -> bool:
         """
         the actual sending part of the process
         """
@@ -222,15 +222,22 @@ class User:
 
         # send to client
         try:
+            self.__client.settimeout(None)
             self.__client.sendall(length)
             self.__client.sendall(mes)
+            self.__client.settimeout(.2)
 
         except (OSError, ConnectionResetError, ConnectionAbortedError) as e:
+            if no_traceback:
+                return False
+
+            print(f"Exception in send: {e}")
             self.end(str(e))
             return False
+
         return True
 
-    def direct_send(self, message: dict, message_type: str) -> float:
+    def direct_send(self, message: dict, message_type: str, no_traceback: bool = False) -> float:
         """
         send a message bypassing the message-pool
         :return: the timestamp of the message
@@ -240,7 +247,7 @@ class User:
             "time": time.time(),
             "type": message_type
         }
-        self.__send(mes)
+        self.__send(mes, no_traceback=no_traceback)
         return mes["time"]
 
     def __check_disconnect(self) -> None:
@@ -284,12 +291,15 @@ class User:
             "reason": reason
         },
             message_type="server_request",
+            no_traceback=True
         )
-        self.__disconnect = True
+        self.__client.settimeout(.2)
         self.loop = False
         self.__client.close()
         self.__thread_pool.shutdown(wait=False)
+
         print(f"{self} is fully shut down and disconnected")
+        self.__disconnect = True
 
     # functions for the server to request from the client
     def ping(self) -> float:

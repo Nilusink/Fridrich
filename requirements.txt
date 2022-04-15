@@ -6,6 +6,7 @@ cryptography==3.3.2
 matplotlib
 seaborn
 pandas
+scipy
 
 # only for FridrichDiscordBot
 discord.py

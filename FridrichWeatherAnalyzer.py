@@ -4,12 +4,12 @@ An analyzer for the fridrich weather-station network.
 Author:
 Nilusink
 """
+from scipy.ndimage import gaussian_filter1d
 from fridrich.backend import Connection
 import matplotlib.pyplot as plt
 from typing import Dict, List
 import pandas as pd
 import numpy as np
-
 
 # Bot login
 USERNAME: str = "StatsBot"
@@ -30,7 +30,7 @@ MISSING_VALUE = np.inf
 NUM_LABELS: int = 9
 
 # used to set the amount of values (all_values[DATES::]). here: last 288 values
-DATES: int = 0
+DATES: int = -288
 
 
 def main() -> None:
@@ -51,7 +51,7 @@ def main() -> None:
             # append all log-times to the list
             print(f"getting {station['station_name']}")
             station_log = c.get_temps_log(station["station_name"])
-            for date in list(station_log)[DATES::]:
+            for date in list(station_log):
                 # remove second from date
                 short_date = ":".join(date.split(":")[:-1])
 
@@ -83,7 +83,7 @@ def main() -> None:
                         temp_graphs[station][date] = MISSING_VALUE
 
     # configure data for graphing
-    all_dates: list = sorted(list(all_dates))
+    all_dates: list = sorted(list(all_dates))[DATES:]
 
     new_data = {}
     for station in temp_graphs:
@@ -102,14 +102,15 @@ def main() -> None:
 
     data = {"Dates": all_dates}
 
+    # append the data of each individual station and smooth the curve using a gaussian filter
     data.update({
-        station: new_data[station] for station in new_data
+        station: gaussian_filter1d(new_data[station], sigma=2) for station in new_data
     })
 
-    data = pd.DataFrame(data)
+    df = pd.DataFrame(data)
 
     # make graph
-    data.plot()
+    df.plot()
 
     # configure graph
     plt.xlabel("Date")
