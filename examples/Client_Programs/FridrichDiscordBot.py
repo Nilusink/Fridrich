@@ -10,12 +10,14 @@ from fridrich.classes import Daytime
 from fridrich.errors import Error
 
 from contextlib import suppress, contextmanager
+from scipy.ndimage import gaussian_filter1d
 from discord.ext import commands, tasks
 from traceback import print_exc
 import matplotlib.pyplot as plt
-from typing import Any, Dict
-import seaborn as sns
+from scipy import interpolate
 import pandas as pd
+import typing as tp
+import numpy as np
 import binascii
 import discord
 import asyncio
@@ -37,7 +39,7 @@ except KeyError:
     raise KeyError("the discord_bot config file doesn't contain the correct values!")
 
 
-VOTINGS_CHANNEL: Any = None
+VOTINGS_CHANNEL: tp.Any = None
 
 bot = commands.Bot(command_prefix='!')
 stats_c = Connection(host="127.0.0.1")
@@ -45,10 +47,10 @@ stats_c = Connection(host="127.0.0.1")
 command_warning_interval = Daytime(minute=10)  # interval of 10 minutes
 last_command_warning = Daytime.now() - command_warning_interval
 
-LOGGED_IN_USERS: Dict[str, Connection] = {}
+LOGGED_IN_USERS: tp.Dict[str, Connection] = {}
 USER_TIMEOUT = Daytime(minute=2)
 
-DATA_DESCRIPTION: Dict[str, str] = {    # label for the plot, mustn't be changed
+DATA_DESCRIPTION: tp.Dict[str, str] = {    # label for the plot, mustn't be changed
     "Temperature": "Temperature in °C",
     "hum": "Humidity in %",
     "Humidity": "Humidity in %",
@@ -71,10 +73,11 @@ def print_traceback():
         raise Error(e)
 
 
-def make_graph(values: int, outfile: str, data_point) -> None:
+def get_all_weather_data(data_point: str, values_start: int) -> tuple[list, dict[str, dict]]:
+
     stations = c.get_weather_stations()
 
-    temp_graphs: Dict[str, Dict[str, float | None]] = {}
+    temp_graphs: tp.Dict[str, tp.Dict[str, float | None]] = {}
     for station in stations:
         temp_graphs[station["station_name"]]: dict = {}
 
@@ -112,41 +115,110 @@ def make_graph(values: int, outfile: str, data_point) -> None:
                     temp_graphs[station][date] = None
 
     # configure data for graphing
-    all_dates: list = sorted(list(all_dates))[-values::]
+    all_dates: list = sorted(list(all_dates))[values_start:]
 
     new_data = {}
     for station in temp_graphs:
-        new_data[station] = []
+        new_data[station]: dict = {}
         cnt = 0
         for date in all_dates:
             now = temp_graphs[station][date]
-            new_data[station].append(now)
+            new_data[station][date] = now
             cnt += now if now is not None else 0
 
         # remove all stations that don't actually have data for this period
         if cnt == 0:
             new_data.pop(station)
 
+    return all_dates, new_data
+
+
+def make_graph(values: int, outfile: str, data_point) -> None:
+    all_dates, new_data = get_all_weather_data(data_point, -values)
+
     data = {"dates": all_dates}
+
     data.update({
-        station: new_data[station] for station in new_data
+        station: gaussian_filter1d(new_data[station]) for station in new_data
     })
+
     all_points = [value for values in data.values() for value in values if type(value) in (int, float)]
     if len(all_points) == 0:
         raise ValueError("No points for selected range")
 
-    data = pd.DataFrame(data)
+    plt.figure(figsize=(16, 8))
+    ax = pd.DataFrame(data).plot(linestyle="dotted")
+
+    data = {"dates": all_dates}
+
+    # daily average
+    days: tp.List[str] = list({date.split("-")[0] for date in all_dates})
+    days.sort()
+
+    # calculate the average value per day
+    average_data: tp.Dict[str, list] = {}
+    for station in new_data:
+        # check if the key already exists in the dictionary
+        if station not in average_data:
+            average_data[station] = []
+
+        # collect all values across a day
+        for day in days:
+            daily_values = []
+            new_data[station]: tp.Dict[str, float]
+            for date in all_dates:
+                value = new_data[station][date]
+                if day in date:
+                    if value is not None:
+                        daily_values.append(value)
+                        continue
+
+            # calculate average
+            if len(daily_values) == 0:
+                average_data[station].append(np.inf)
+                continue
+
+            average_data[station].append(sum(daily_values) / len(daily_values))
+
+    d_r = list(range(0, len(days) * 288, 288))
+    n_r = list(range(len(all_dates)))
+    for station in average_data:
+        f = interpolate.interp1d(d_r, average_data[station])
+        new_d = gaussian_filter1d(f(n_r), sigma=50)
+        data.update({
+            station + " daily average": new_d
+        })
 
     # make graph
-    plt.figure(figsize=(16, 8))
-    g = sns.lineplot(x="dates", y="value", hue="variable", data=pd.melt(data, ["dates"]), ci=None)
+    pd.DataFrame(data).plot(ax=ax)
+    # g = sns.lineplot(x="dates", y="value", hue="variable", data=pd.melt(data, ["dates"]), ci=None)
 
     # configure graph
     p = data_point[0] if type(data_point) == tuple else data_point
-    g.set(ylabel=DATA_DESCRIPTION[p] if p in DATA_DESCRIPTION else data_point, xlabel="Date")
 
     labels = 8
-    plt.xticks([all_dates[i] for i in range(0, values, int((values//labels)*(1+(1/labels))))])
+    # x and y ticks
+    # calculate the step for the y-axis
+    all_values = [value for station in new_data for value in new_data[station].values() if value is not None]
+    lower_limit = int(min(all_values)-1)
+    upper_limit = int(max(all_values)+1)
+
+    v_n = len(all_dates) // labels
+    v_n = v_n if v_n != 0 else len(all_dates)
+    plt.xticks(range(0, len(all_dates), v_n),
+               [all_dates[i] for i in range(0, len(all_dates), v_n)])
+
+    potential_steps = (.1, .2, .5, 1, 2, 5, 10)
+    max_values = 40
+    step: float = .1
+    for step in potential_steps:
+        if (upper_limit-lower_limit) / step < max_values:
+            break
+
+    plt.yticks(np.arange(lower_limit, upper_limit, step))
+    plt.legend(title="Weather Stations")
+    plt.grid()
+
     plt.legend(title="Weather Station")
     plt.grid()
 
@@ -425,6 +497,10 @@ class WeatherStations(commands.Cog):
             # wait for a little and then remove the file
             await asyncio.sleep(1)
             os.remove("tmp.png")
+
+    @weather.command(name="daily", help="make a graph based on the daily average")
+    async def daily(self, ctx, data_point: str = "Temperature"):
+        ...
 
 
 @bot.event

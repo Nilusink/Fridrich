@@ -10,6 +10,11 @@ Nilusink
 """
 
 
+STORAGE_SIZES: tuple = (
+    "b", "Mb", "Kb", "Gb", "Tb", "Pb", "Eb", "Zb", "Yb"
+)
+
+
 ###########################################################################
 #                  classes and functions used everywhere                  #
 ###########################################################################
@@ -24,6 +29,15 @@ def decorate_class(decorator, dont_decorate: list = ()):
                 setattr(cls, attr, decorator(getattr(cls, attr)))
         return cls
     return decorate
+
+
+def bytes_to_readable(n: int, rnd: int = 2) -> str:
+    num_shrunk = 0
+    while n > 1024 and num_shrunk < len(STORAGE_SIZES)-1:
+        num_shrunk += 1
+        n /= 1024
+
+    return f"{round(n, rnd)} {STORAGE_SIZES[num_shrunk]}"
 
 
 class ConsoleColors:

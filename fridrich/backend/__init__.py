@@ -354,11 +354,11 @@ class Connection:
 
         return message["time"]
 
-    def send(self) -> dict:
+    def send(self, timeout: int = 10) -> dict:
         """
         send the messages and also receive them
         """
-        res = self.wait_for_message(self.__send())
+        res = self.wait_for_message(self.__send(), timeout=timeout)
         return res
 
     def direct_send(self, message: dict, message_type: str, message_time: float = ...) -> None:
@@ -441,7 +441,7 @@ class Connection:
 
                     if no_rec >= 100:  # if for 100 loops no packages were received, raise connection loss
                         raise socket.error('Failed receiving data - connection loss ( received: '
-                                           f'{len(data)} / {length} )')
+                                           f'{bytes_to_readable(len(data))} / {bytes_to_readable(length)} )')
 
             except (ConnectionResetError, struct.error, socket.timeout) as e:
                 self._messages["Error"] = {
@@ -712,7 +712,7 @@ class Connection:
         res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
-            self.send()
+            self.send(20)
             return res.result
         return res
 
@@ -956,7 +956,7 @@ class Connection:
         res = FridrichFuture()
         self.__results_getters[msg["type"]] = res
         if not wait:
-            self.send()
+            self.send(30)
             return res.result
         return res
 
